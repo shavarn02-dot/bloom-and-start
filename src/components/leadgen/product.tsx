@@ -218,7 +218,7 @@ export function LeadTable({
     : ["Lead", "Company", "Role", "Location", "Match", "Status"];
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       <table className="w-full min-w-[640px] text-left">
         <thead>
           <tr className="border-b border-border bg-cream/40">
