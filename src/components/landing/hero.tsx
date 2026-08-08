@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import founder from "@/assets/founder-cutout.png";
-import { Annotation, HandUnderline } from "@/components/leadgen/marks";
+import { HeroPortraits } from "@/components/landing/hero-portraits";
+import { HandUnderline } from "@/components/leadgen/marks";
 
 /**
  * Editorial hero: copy + cutout portrait over an irregular polygon field.
@@ -65,30 +65,9 @@ export function Hero() {
           </p>
         </div>
 
-        {/* Portrait + handwritten annotation */}
+        {/* Rotating portraits + the visitor's handwritten thought */}
         <div className="relative flex items-center justify-center lg:items-start lg:justify-end">
-          <div className="relative mx-auto w-full max-w-md lg:mx-0 lg:max-w-none">
-            {/* Angular plate behind the subject */}
-            <div
-              aria-hidden="true"
-              className="absolute inset-x-2 top-6 bottom-10 bg-primary-soft/50"
-              style={{ clipPath: "polygon(14% 0, 100% 6%, 88% 100%, 0 92%)" }}
-            />
-            <img
-              src={founder}
-              alt="A small-business founder using LeadGen AI"
-              width={912}
-              height={1200}
-              className="relative z-10 mx-auto w-[86%] max-w-[380px] object-contain drop-shadow-[var(--shadow-contact)] lg:mx-0 lg:w-[92%] lg:max-w-[460px]"
-              style={{
-                clipPath: "polygon(6% 0, 100% 3%, 94% 97%, 0 100%)",
-              }}
-            />
-
-            <Annotation className="absolute top-4 right-0 z-20 hidden lg:block">
-              Let's find them →
-            </Annotation>
-          </div>
+          <HeroPortraits />
         </div>
       </div>
     </section>
