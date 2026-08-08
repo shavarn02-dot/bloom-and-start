@@ -1,4 +1,5 @@
 import { Annotation, SectionLabel } from "@/components/leadgen/marks";
+import { Reveal } from "@/components/leadgen/reveal";
 import {
   BusinessProfilePanel,
   CampaignProgressPanel,
@@ -49,10 +50,12 @@ export function HowItWorks() {
   return (
     <section id="how-it-works" className="border-y border-border bg-paper">
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8 lg:py-28">
-        <SectionLabel>How it works</SectionLabel>
-        <h2 className="mt-4 max-w-2xl text-[2rem] leading-tight font-semibold sm:text-[2.5rem]">
-          Three steps, and none of them are a chatbot.
-        </h2>
+        <Reveal>
+          <SectionLabel>How it works</SectionLabel>
+          <h2 className="mt-4 max-w-2xl text-[2rem] leading-tight font-semibold sm:text-[2.5rem]">
+            Three steps, and none of them are a chatbot.
+          </h2>
+        </Reveal>
 
         <div className="mt-14 space-y-16 lg:space-y-24">
           {steps.map((step, i) => (
@@ -60,7 +63,7 @@ export function HowItWorks() {
               key={step.number}
               className="grid gap-8 lg:grid-cols-2 lg:items-center lg:gap-14"
             >
-              <div className={i % 2 === 1 ? "lg:order-2" : undefined}>
+              <Reveal className={i % 2 === 1 ? "lg:order-2" : undefined}>
                 <p className="font-mono text-[13px] tracking-[0.14em] text-primary">
                   {step.number}
                 </p>
@@ -71,10 +74,14 @@ export function HowItWorks() {
                 {step.note && (
                   <Annotation className="mt-4 block">"{step.note}"</Annotation>
                 )}
-              </div>
-              <div className={i % 2 === 1 ? "lg:order-1" : undefined}>
+              </Reveal>
+              <Reveal
+                variant={i % 2 === 1 ? "wipe" : "scale"}
+                delay={100}
+                className={i % 2 === 1 ? "lg:order-1" : undefined}
+              >
                 {step.render()}
-              </div>
+              </Reveal>
             </div>
           ))}
         </div>
