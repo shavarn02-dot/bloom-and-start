@@ -3,14 +3,16 @@ import { SiteHeader } from "@/components/leadgen/site-header";
 import { SiteFooter } from "@/components/leadgen/site-footer";
 import { Hero } from "@/components/landing/hero";
 import { TrustStrip } from "@/components/landing/trust-strip";
+import { ManualResearch } from "@/components/landing/manual-research";
 import { Problem } from "@/components/landing/problem";
 import { HowItWorks } from "@/components/landing/how-it-works";
 import { ProductMovie } from "@/components/landing/product-movie";
 import { ProductDemo } from "@/components/landing/product-demo";
 import { Documents } from "@/components/landing/documents";
 import { LeadQuality } from "@/components/landing/lead-quality";
+import { ContextFlow } from "@/components/landing/context-flow";
 import { BusinessContext } from "@/components/landing/business-context";
-import { AiWorkflow } from "@/components/landing/ai-workflow";
+import { LaptopMoment } from "@/components/landing/laptop-moment";
 import { Security } from "@/components/landing/security";
 import { Pricing } from "@/components/landing/pricing";
 import { TrustSection } from "@/components/landing/trust";
@@ -42,16 +44,16 @@ function Index() {
       <main>
         <Hero />
         <TrustStrip />
+        <ManualResearch />
         <Problem />
         <HowItWorks />
         <ProductMovie />
-        <ProductDemo />
         <LeadQuality />
+        <ContextFlow />
         <BusinessContext />
         <Documents />
-        <AiWorkflow />
-
-
+        <ProductDemo />
+        <LaptopMoment />
         <Security />
         <Pricing />
         <TrustSection />
@@ -62,3 +64,4 @@ function Index() {
     </div>
   );
 }
+

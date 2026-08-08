@@ -2,7 +2,7 @@ const facts = ["No credit card", "Free to start", "Multi-provider AI", "CSV expo
 
 export function TrustStrip() {
   return (
-    <section className="border-y border-border bg-paper">
+    <section className="bg-paper">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-8 gap-y-3 px-5 py-4 sm:gap-x-12 sm:px-8">
         {facts.map((fact, i) => (
           <div key={fact} className="flex items-center gap-8 sm:gap-12">

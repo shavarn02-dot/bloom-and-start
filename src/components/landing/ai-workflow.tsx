@@ -30,7 +30,7 @@ export function AiWorkflow() {
   const { ref, inView } = useInView<HTMLOListElement>({ threshold: 0.3 });
 
   return (
-    <section className="border-y border-border bg-cream">
+    <section className="bg-cream">
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8 lg:py-28">
         <Reveal className="max-w-2xl">
           <SectionLabel>Under the hood</SectionLabel>

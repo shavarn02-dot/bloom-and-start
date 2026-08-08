@@ -14,7 +14,7 @@ const features = [
 
 export function Pricing() {
   return (
-    <section id="pricing" className="border-y border-border bg-paper">
+    <section id="pricing" className="bg-paper">
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8 lg:py-28">
         <Reveal className="max-w-2xl">
           <SectionLabel>Pricing</SectionLabel>
