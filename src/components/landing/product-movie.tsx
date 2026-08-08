@@ -16,11 +16,6 @@ const stages = [
     caption: "Roles, regions and company shapes are worked out.",
   },
   {
-    key: "strategy",
-    label: "Search strategy",
-    caption: "Roles, regions and company shapes are worked out.",
-  },
-  {
     key: "discovery",
     label: "Discovery",
     caption: "Companies and people are gathered from public sources.",
