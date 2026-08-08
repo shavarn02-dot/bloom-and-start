@@ -88,15 +88,26 @@ export function BusinessProfilePanel({
 export function CampaignProgressPanel({
   progress = 63,
   animated = true,
+  activeIndex,
 }: {
   progress?: number;
   animated?: boolean;
+  /** Overrides the static example states so motion can drive the sequence. */
+  activeIndex?: number;
 }) {
+  const steps = campaignSteps.map((step, i) => {
+    if (activeIndex === undefined) return step;
+    return {
+      label: step.label,
+      state: i < activeIndex ? "done" : i === activeIndex ? "active" : "todo",
+    } as (typeof campaignSteps)[number];
+  });
+
   return (
     <div className="px-4 py-4">
       <p className="text-[13px] font-semibold text-foreground">Finding your leads</p>
       <ul className="mt-3 space-y-2.5">
-        {campaignSteps.map((step) => (
+        {steps.map((step) => (
           <li key={step.label} className="flex items-center gap-2.5 text-[13px]">
             {step.state === "done" ? (
               <span className="inline-flex size-4 items-center justify-center rounded-full bg-primary text-primary-foreground">
@@ -116,6 +127,7 @@ export function CampaignProgressPanel({
             )}
             <span
               className={cn(
+                "transition-colors duration-300",
                 step.state === "todo" ? "text-muted-foreground" : "text-foreground",
               )}
             >
@@ -131,29 +143,38 @@ export function CampaignProgressPanel({
             className="h-full rounded-full bg-primary transition-[width] duration-500"
             style={{ width: `${progress}%` }}
           />
-          {animated && (
+          {animated && progress < 100 && (
             <span className="absolute inset-y-0 left-0 w-8 animate-sweep bg-primary-soft/60" />
           )}
         </div>
         <span className="text-[12px] font-medium tabular-nums text-muted-foreground">
-          {progress}%
+          {Math.round(progress)}%
         </span>
       </div>
     </div>
   );
 }
 
-export function MatchBadge({ value }: { value: number }) {
+export function MatchBadge({
+  value,
+  animate = false,
+}: {
+  value: number;
+  animate?: boolean;
+}) {
+  const shown = useCountUp(value, animate);
+  const display = animate ? shown : value;
+
   return (
     <span className="inline-flex items-center gap-2">
       <span className="h-1 w-10 overflow-hidden rounded-full bg-muted">
         <span
-          className="block h-full rounded-full bg-primary"
-          style={{ width: `${value}%` }}
+          className="block h-full rounded-full bg-primary transition-[width] duration-700"
+          style={{ width: `${display}%` }}
         />
       </span>
       <span className="text-[12.5px] font-medium tabular-nums text-foreground">
-        {value}
+        {display}
       </span>
     </span>
   );
