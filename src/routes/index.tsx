@@ -44,21 +44,22 @@ function Index() {
       <main>
         <Hero />
         <TrustStrip />
-        <ManualResearch />
         <Problem />
+        <ManualResearch />
         <HowItWorks />
         <ProductMovie />
+        <LaptopMoment />
         <LeadQuality />
-        <ContextFlow />
         <BusinessContext />
         <Documents />
+        <ContextFlow />
         <ProductDemo />
-        <LaptopMoment />
         <Security />
         <Pricing />
         <TrustSection />
         <Faq />
         <FinalCta />
+
       </main>
       <SiteFooter />
     </div>
