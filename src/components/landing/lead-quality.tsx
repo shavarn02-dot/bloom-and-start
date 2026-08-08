@@ -7,7 +7,7 @@ export function LeadQuality() {
   const { ref, inView } = useInView<HTMLDivElement>({ threshold: 0.25 });
 
   return (
-    <section id="lead-quality" className="border-y border-border bg-paper">
+    <section id="lead-quality" className="bg-paper">
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8 lg:py-28">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)] lg:items-center lg:gap-14">
           <Reveal>
