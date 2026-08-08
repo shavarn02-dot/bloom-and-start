@@ -9,23 +9,36 @@ import {
   ProductFrame,
 } from "@/components/leadgen/product";
 import { exampleLeads } from "@/data/example";
+import { usePrefersReducedMotion } from "@/hooks/use-reveal";
 import { cn } from "@/lib/utils";
 
+/**
+ * Hero product loop, roughly 11 seconds end to end.
+ * Profile → strategy → discovery → rows arriving → scores → verification,
+ * then it resets. Only the product UI moves; the photograph never does.
+ */
 const STAGES = [
-  { key: "profile", caption: "Business profile" },
-  { key: "strategy", caption: "Search strategy" },
-  { key: "progress", caption: "Verifying contacts" },
-  { key: "leads", caption: "Scored leads" },
+  { key: "profile", caption: "Business profile", ms: 1900 },
+  { key: "strategy", caption: "Search strategy", ms: 1900 },
+  { key: "discovery", caption: "Discovering companies", ms: 1900 },
+  { key: "rows", caption: "Leads arriving", ms: 1800 },
+  { key: "scores", caption: "Scoring leads", ms: 1800 },
+  { key: "verified", caption: "Verifying contacts", ms: 2000 },
 ] as const;
 
 export function Hero() {
   const [stage, setStage] = useState(0);
+  const reduced = usePrefersReducedMotion();
   const current = STAGES[stage] ?? STAGES[0];
 
   useEffect(() => {
-    const id = window.setInterval(() => setStage((s) => (s + 1) % STAGES.length), 3200);
-    return () => window.clearInterval(id);
-  }, []);
+    if (reduced) return;
+    const id = window.setTimeout(
+      () => setStage((s) => (s + 1) % STAGES.length),
+      current.ms,
+    );
+    return () => window.clearTimeout(id);
+  }, [stage, current.ms, reduced]);
 
   return (
     <section className="relative overflow-hidden pt-28 pb-16 sm:pt-32 lg:pt-40 lg:pb-24">
@@ -65,9 +78,10 @@ export function Hero() {
           <div className="mt-8 flex flex-wrap items-center gap-3">
             <Link
               to="/app"
-              className="inline-flex h-11 items-center rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary/90"
+              className="lg-cta group inline-flex h-11 items-center rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground transition-all duration-200 hover:bg-primary/90 hover:shadow-[var(--shadow-lift)]"
             >
-              Start finding leads&nbsp;→
+              Start finding leads
+              <span className="lg-cta-arrow ml-2">→</span>
             </Link>
             <a
               href="#how-it-works"
@@ -105,17 +119,46 @@ export function Hero() {
             <Annotation className="absolute top-4 right-0 z-20 hidden lg:block">
               Let's find them →
             </Annotation>
+
+            {/* Small floating product detail sitting inside her workspace */}
+            <div
+              className={cn(
+                "absolute top-1/3 -left-2 z-20 hidden rounded-md border border-border bg-paper px-3 py-2 shadow-paper lg:block",
+                !reduced && "animate-float",
+              )}
+            >
+              <p className="text-[10.5px] tracking-wide text-muted-foreground uppercase">
+                Contacts verified
+              </p>
+              <p className="text-[13px] font-semibold tabular-nums text-foreground">
+                {stage >= 5 ? "38 of 41" : "checking…"}
+              </p>
+            </div>
           </div>
 
           {/* Product layer overlaps the subject */}
-          <div className="relative z-20 -mt-10 lg:absolute lg:right-0 lg:-bottom-6 lg:mt-0 lg:w-[74%]">
-            <ProductFrame title={current.caption} className="shadow-lift">
+          <div className="group relative z-20 -mt-10 lg:absolute lg:right-0 lg:-bottom-6 lg:mt-0 lg:w-[74%]">
+            <ProductFrame
+              title={current.caption}
+              className="shadow-lift transition-transform duration-300 group-hover:-translate-y-1"
+            >
               <div key={stage} className="animate-fade-up">
-                {stage === 0 && <BusinessProfilePanel compact />}
+                {stage === 0 && <BusinessProfilePanel compact revealCount={4} />}
                 {stage === 1 && <StrategyPanel />}
-                {stage === 2 && <CampaignProgressPanel progress={63} />}
+                {stage === 2 && <CampaignProgressPanel progress={44} />}
                 {stage === 3 && (
-                  <LeadTable leads={exampleLeads.slice(0, 3)} dense />
+                  <LeadTable leads={exampleLeads.slice(0, 3)} dense animateRows />
+                )}
+                {stage === 4 && (
+                  <LeadTable leads={exampleLeads.slice(0, 3)} dense animateScores />
+                )}
+                {stage === 5 && (
+                  <LeadTable
+                    leads={exampleLeads.slice(0, 3)}
+                    dense
+                    animateRows
+                    showVerification
+                  />
                 )}
               </div>
             </ProductFrame>
@@ -136,7 +179,7 @@ export function Hero() {
       </div>
 
       <div className="relative mx-auto mt-14 hidden max-w-6xl items-center gap-2 px-8 lg:flex">
-        <HandArrow className="rotate-6" />
+        <HandArrow className="rotate-6" animated={!reduced} />
         <Annotation>Real product screens, not illustrations.</Annotation>
       </div>
     </section>
@@ -154,8 +197,12 @@ function StrategyPanel() {
     <div className="px-4 py-4">
       <p className="text-[13px] font-semibold text-foreground">Search strategy</p>
       <ul className="mt-3 space-y-2">
-        {items.map((item) => (
-          <li key={item} className="flex items-start gap-2 text-[13px] text-secondary-foreground">
+        {items.map((item, i) => (
+          <li
+            key={item}
+            className="flex animate-row-in items-start gap-2 text-[13px] text-secondary-foreground"
+            style={{ animationDelay: `${i * 90}ms` }}
+          >
             <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
             {item}
           </li>
