@@ -34,7 +34,7 @@ export function LaptopMoment() {
           {/* Photographed founder perched on the top edge of the product surface. */}
           <Reveal
             variant="fade"
-            className="pointer-events-none absolute -top-[9.5rem] left-6 z-20 hidden sm:block lg:left-16"
+            className="pointer-events-none absolute top-0 right-10 z-20 hidden -translate-y-[84%] sm:block lg:right-24"
           >
             <img
               src={founderSeated}
