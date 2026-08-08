@@ -120,20 +120,6 @@ export function Hero() {
               Let's find them →
             </Annotation>
 
-            {/* Small floating product detail sitting inside her workspace */}
-            <div
-              className={cn(
-                "absolute top-1/3 -left-2 z-20 hidden rounded-md border border-border bg-paper px-3 py-2 shadow-paper lg:block",
-                !reduced && "animate-float",
-              )}
-            >
-              <p className="text-[10.5px] tracking-wide text-muted-foreground uppercase">
-                Contacts verified
-              </p>
-              <p className="text-[13px] font-semibold tabular-nums text-foreground">
-                {stage >= 5 ? "38 of 41" : "checking…"}
-              </p>
-            </div>
           </div>
 
           {/* Product layer overlaps the subject */}
