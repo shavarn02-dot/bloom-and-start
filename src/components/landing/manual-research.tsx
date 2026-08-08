@@ -72,13 +72,14 @@ export function ManualResearch() {
 
       <Reveal className="mx-auto max-w-6xl px-5 pt-14 pb-4 text-center sm:px-8 lg:pt-20">
         <p className="mx-auto max-w-2xl text-[1.6rem] leading-snug font-semibold sm:text-[2.1rem]">
-          LeadGen does the tedious part.
+          You didn't start a business to do this all day.
         </p>
         <p className="mx-auto mt-3 max-w-lg text-[15.5px] text-muted-foreground">
-          You keep the part that actually needs you: deciding who is worth a
-          conversation.
+          LeadGen does the tedious part. You keep the part that actually needs you:
+          deciding who is worth a conversation.
         </p>
       </Reveal>
+
     </section>
   );
 }
