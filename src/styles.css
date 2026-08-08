@@ -135,6 +135,27 @@ html {
   background-color: var(--background);
 }
 
+/*
+ * Browsers with OS/auto dark mode (Chrome "Auto Dark Mode for Web Contents")
+ * only skip auto-darkening a page when it explicitly answers the dark query.
+ * We answer it by re-asserting the exact same light palette, so the brand
+ * stays paper-white in a dark browser.
+ */
+@media (prefers-color-scheme: dark) {
+  :root,
+  html {
+    color-scheme: light;
+    background-color: var(--background);
+    forced-color-adjust: none;
+  }
+
+  html,
+  body {
+    background-color: var(--background) !important;
+    color: var(--foreground) !important;
+  }
+}
+
 
 @layer base {
   * {
