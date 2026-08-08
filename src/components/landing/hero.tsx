@@ -1,0 +1,165 @@
+import { Link } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
+import founder from "@/assets/founder-cutout.png";
+import { Annotation, HandArrow, HandUnderline } from "@/components/leadgen/marks";
+import {
+  BusinessProfilePanel,
+  CampaignProgressPanel,
+  LeadTable,
+  ProductFrame,
+} from "@/components/leadgen/product";
+import { exampleLeads } from "@/data/example";
+import { cn } from "@/lib/utils";
+
+const STAGES = [
+  { key: "profile", caption: "Business profile" },
+  { key: "strategy", caption: "Search strategy" },
+  { key: "progress", caption: "Verifying contacts" },
+  { key: "leads", caption: "Scored leads" },
+] as const;
+
+export function Hero() {
+  const [stage, setStage] = useState(0);
+  const current = STAGES[stage] ?? STAGES[0];
+
+  useEffect(() => {
+    const id = window.setInterval(() => setStage((s) => (s + 1) % STAGES.length), 3200);
+    return () => window.clearInterval(id);
+  }, []);
+
+  return (
+    <section className="relative overflow-hidden pt-28 pb-16 sm:pt-32 lg:pt-40 lg:pb-24">
+      {/* Editorial polygon environment — flat warm shapes, no gradients or glows. */}
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0">
+        <svg
+          className="absolute top-0 right-0 h-full w-[62%] text-cream"
+          viewBox="0 0 600 800"
+          preserveAspectRatio="none"
+        >
+          <polygon points="120,0 600,0 600,800 40,800 210,420" fill="currentColor" />
+          <polygon
+            points="300,0 600,0 600,300 380,180"
+            fill="currentColor"
+            opacity="0.7"
+          />
+        </svg>
+        <div className="paper-grain absolute inset-0 opacity-60" />
+      </div>
+
+      <div className="relative mx-auto grid max-w-6xl gap-12 px-5 sm:px-8 lg:grid-cols-[minmax(0,53%)_minmax(0,47%)] lg:gap-8">
+        {/* Copy */}
+        <div className="lg:pt-6">
+          <p className="font-hand text-[22px] text-primary">
+            Built for people who actually sell.
+          </p>
+          <h1 className="mt-3 text-[2.6rem] leading-[1.06] font-semibold sm:text-[3.4rem] lg:text-[3.75rem]">
+            Find the people your{" "}
+            <HandUnderline>business should be talking to</HandUnderline>.
+          </h1>
+          <p className="mt-6 max-w-lg text-[16.5px] leading-relaxed text-muted-foreground">
+            Tell us what your business does and who you're trying to reach. LeadGen AI
+            helps turn that context into a focused list of prospects worth exploring.
+          </p>
+
+          <div className="mt-8 flex flex-wrap items-center gap-3">
+            <Link
+              to="/app"
+              className="inline-flex h-11 items-center rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary/90"
+            >
+              Start finding leads&nbsp;→
+            </Link>
+            <a
+              href="#how-it-works"
+              className="inline-flex h-11 items-center rounded-md border border-border-strong bg-paper px-5 text-sm font-medium text-foreground transition-colors duration-200 hover:bg-cream"
+            >
+              See how it works
+            </a>
+          </div>
+
+          <p className="mt-5 text-[13px] text-muted-foreground">
+            No credit card required · Free to start
+          </p>
+        </div>
+
+        {/* Composition: cutout + live product layer */}
+        <div className="relative">
+          <div className="relative mx-auto max-w-md lg:max-w-none">
+            {/* Angular plate behind the subject */}
+            <div
+              aria-hidden="true"
+              className="absolute inset-x-2 top-6 bottom-10 bg-primary-soft/50"
+              style={{ clipPath: "polygon(14% 0, 100% 6%, 88% 100%, 0 92%)" }}
+            />
+            <img
+              src={founder}
+              alt="A small-business founder using LeadGen AI"
+              width={912}
+              height={1200}
+              className="relative z-10 mx-auto w-[78%] max-w-[340px] object-contain drop-shadow-[var(--shadow-contact)] lg:w-[86%] lg:max-w-[400px]"
+              style={{
+                clipPath: "polygon(6% 0, 100% 3%, 94% 97%, 0 100%)",
+              }}
+            />
+
+            <Annotation className="absolute top-4 right-0 z-20 hidden lg:block">
+              Let's find them →
+            </Annotation>
+          </div>
+
+          {/* Product layer overlaps the subject */}
+          <div className="relative z-20 -mt-10 lg:absolute lg:right-0 lg:-bottom-6 lg:mt-0 lg:w-[74%]">
+            <ProductFrame title={current.caption} className="shadow-lift">
+              <div key={stage} className="animate-fade-up">
+                {stage === 0 && <BusinessProfilePanel compact />}
+                {stage === 1 && <StrategyPanel />}
+                {stage === 2 && <CampaignProgressPanel progress={63} />}
+                {stage === 3 && (
+                  <LeadTable leads={exampleLeads.slice(0, 3)} dense />
+                )}
+              </div>
+            </ProductFrame>
+
+            <div className="mt-3 flex items-center gap-1.5">
+              {STAGES.map((s, i) => (
+                <span
+                  key={s.key}
+                  className={cn(
+                    "h-1 rounded-full transition-all duration-300",
+                    i === stage ? "w-6 bg-primary" : "w-2.5 bg-border-strong",
+                  )}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="relative mx-auto mt-14 hidden max-w-6xl items-center gap-2 px-8 lg:flex">
+        <HandArrow className="rotate-6" />
+        <Annotation>Real product screens, not illustrations.</Annotation>
+      </div>
+    </section>
+  );
+}
+
+function StrategyPanel() {
+  const items = [
+    "Manufacturers, 50–500 staff",
+    "Operations & procurement roles",
+    "India, UK, EU",
+    "Sourcing sustainable fabric",
+  ];
+  return (
+    <div className="px-4 py-4">
+      <p className="text-[13px] font-semibold text-foreground">Search strategy</p>
+      <ul className="mt-3 space-y-2">
+        {items.map((item) => (
+          <li key={item} className="flex items-start gap-2 text-[13px] text-secondary-foreground">
+            <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
+            {item}
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
