@@ -12,12 +12,11 @@ import { usePrefersReducedMotion } from "@/hooks/use-reveal";
 import { cn } from "@/lib/utils";
 
 /**
- * Hero product loop, roughly 9 seconds end to end.
- * Strategy → discovery → rows arriving → scores → verification,
+ * Hero product loop, roughly 7 seconds end to end.
+ * Discovery → rows arriving → scores → verification,
  * then it resets. Only the product UI moves; the photograph never does.
  */
 const STAGES = [
-  { key: "strategy", caption: "Search strategy", ms: 1900 },
   { key: "discovery", caption: "Discovering companies", ms: 1900 },
   { key: "rows", caption: "Leads arriving", ms: 1800 },
   { key: "scores", caption: "Scoring leads", ms: 1800 },
@@ -127,15 +126,14 @@ export function Hero() {
               className="shadow-lift transition-transform duration-300 group-hover:-translate-y-1"
             >
               <div key={stage} className="animate-fade-up">
-                {stage === 0 && <StrategyPanel />}
-                {stage === 1 && <CampaignProgressPanel progress={44} />}
-                {stage === 2 && (
+                {stage === 0 && <CampaignProgressPanel progress={44} />}
+                {stage === 1 && (
                   <LeadTable leads={exampleLeads.slice(0, 3)} dense animateRows />
                 )}
-                {stage === 3 && (
+                {stage === 2 && (
                   <LeadTable leads={exampleLeads.slice(0, 3)} dense animateScores />
                 )}
-                {stage === 4 && (
+                {stage === 3 && (
                   <LeadTable
                     leads={exampleLeads.slice(0, 3)}
                     dense
@@ -169,28 +167,3 @@ export function Hero() {
   );
 }
 
-function StrategyPanel() {
-  const items = [
-    "Manufacturers, 50–500 staff",
-    "Operations & procurement roles",
-    "India, UK, EU",
-    "Sourcing sustainable fabric",
-  ];
-  return (
-    <div className="px-4 py-4">
-      <p className="text-[13px] font-semibold text-foreground">Search strategy</p>
-      <ul className="mt-3 space-y-2">
-        {items.map((item, i) => (
-          <li
-            key={item}
-            className="flex animate-row-in items-start gap-2 text-[13px] text-secondary-foreground"
-            style={{ animationDelay: `${i * 90}ms` }}
-          >
-            <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
-            {item}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
