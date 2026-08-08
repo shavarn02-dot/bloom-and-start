@@ -1,4 +1,7 @@
 import { Annotation, SectionLabel } from "@/components/leadgen/marks";
+import { Reveal } from "@/components/leadgen/reveal";
+import { useInView } from "@/hooks/use-reveal";
+import { cn } from "@/lib/utils";
 
 const symptoms = [
   "Hours lost scrolling directories that were out of date last year.",
@@ -11,43 +14,49 @@ export function Problem() {
     <section className="mx-auto max-w-6xl px-5 py-20 sm:px-8 lg:py-28">
       <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)] lg:items-center">
         <div>
-          <SectionLabel>The problem</SectionLabel>
-          <h2 className="mt-4 text-[2rem] leading-tight font-semibold sm:text-[2.5rem]">
-            Finding leads shouldn't feel like a second job.
-          </h2>
-          <p className="mt-5 max-w-lg text-[16px] leading-relaxed text-muted-foreground">
-            Most teams already know who they want to sell to. What they don't have is a
-            calm way to go from that knowledge to a short, workable list of names.
-          </p>
+          <Reveal>
+            <SectionLabel>The problem</SectionLabel>
+            <h2 className="mt-4 text-[2rem] leading-tight font-semibold sm:text-[2.5rem]">
+              Finding leads shouldn't feel like a second job.
+            </h2>
+            <p className="mt-5 max-w-lg text-[16px] leading-relaxed text-muted-foreground">
+              Most teams already know who they want to sell to. What they don't have is a
+              calm way to go from that knowledge to a short, workable list of names.
+            </p>
+          </Reveal>
           <ul className="mt-8 space-y-4">
-            {symptoms.map((s) => (
-              <li key={s} className="flex gap-3 text-[15px] leading-relaxed">
+            {symptoms.map((s, i) => (
+              <Reveal as="li" key={s} delay={i * 110} className="flex gap-3 text-[15px] leading-relaxed">
                 <span className="mt-2 h-px w-5 shrink-0 bg-border-strong" />
                 <span className="text-secondary-foreground">{s}</span>
-              </li>
+              </Reveal>
             ))}
           </ul>
         </div>
 
-        <figure className="relative rounded-lg border border-border bg-cream p-6">
+        <Reveal variant="scale" as="figure" className="relative rounded-lg border border-border bg-cream p-6">
           <DeskSketch />
           <figcaption className="mt-4 flex items-start gap-2">
-            <Annotation>
-              Twelve tabs open, still nobody worth emailing.
-            </Annotation>
+            <Annotation>Twelve tabs open, still nobody worth emailing.</Annotation>
           </figcaption>
-        </figure>
+        </Reveal>
       </div>
     </section>
   );
 }
 
-/** Hand-drawn line illustration — no stock art, no AI graphics. */
+/**
+ * Hand-drawn line illustration — no stock art, no AI graphics.
+ * Strokes draw themselves once, then hold still.
+ */
 function DeskSketch() {
+  const { ref, inView } = useInView<SVGSVGElement>({ threshold: 0.35 });
+
   return (
     <svg
+      ref={ref}
       viewBox="0 0 420 260"
-      className="w-full text-border-strong"
+      className={cn("w-full text-border-strong lg-sketch", inView && "lg-sketch-on")}
       fill="none"
       aria-hidden="true"
     >

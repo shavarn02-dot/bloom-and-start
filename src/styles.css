@@ -219,3 +219,161 @@
 @utility animate-sweep {
   animation: lg-sweep 2.4s ease-in-out infinite;
 }
+
+/* ---------------------------------------------------------------------------
+ * Motion system.
+ * Purposeful only: reveals explain reading order, product motion explains
+ * the workflow. Everything is opacity/transform (GPU friendly) and every
+ * rule is disabled under prefers-reduced-motion.
+ * ------------------------------------------------------------------------ */
+
+.lg-reveal {
+  transition:
+    opacity 760ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    transform 760ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    clip-path 900ms cubic-bezier(0.22, 0.61, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.lg-reveal-up {
+  opacity: 0;
+  transform: translate3d(0, 18px, 0);
+}
+
+.lg-reveal-fade {
+  opacity: 0;
+}
+
+.lg-reveal-scale {
+  opacity: 0;
+  transform: scale(0.97);
+}
+
+.lg-reveal-wipe {
+  opacity: 0;
+  clip-path: inset(0 22% 0 0);
+}
+
+.lg-reveal-polygon {
+  opacity: 0;
+  clip-path: polygon(0 0, 0 0, 0 100%, 0 100%);
+}
+
+.lg-reveal[data-visible="true"] {
+  opacity: 1;
+  transform: none;
+  clip-path: inset(0 0 0 0);
+  will-change: auto;
+}
+
+.lg-reveal-polygon[data-visible="true"] {
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 0 100%);
+}
+
+/* Handwritten underline: brushed on left → right when it enters view. */
+.lg-draw {
+  clip-path: inset(0 100% 0 0);
+  transition: clip-path 900ms cubic-bezier(0.33, 1, 0.68, 1) 260ms;
+}
+
+.lg-draw[data-visible="true"] {
+  clip-path: inset(0 0 0 0);
+}
+
+@keyframes lg-float {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(0, -6px, 0);
+  }
+}
+
+@utility animate-float {
+  animation: lg-float 6s ease-in-out infinite;
+}
+
+@keyframes lg-nudge {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0);
+  }
+  50% {
+    transform: translate3d(3px, 0, 0);
+  }
+}
+
+@utility animate-nudge {
+  animation: lg-nudge 1.8s ease-in-out infinite;
+}
+
+@keyframes lg-row-in {
+  from {
+    opacity: 0;
+    transform: translate3d(-6px, 4px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@utility animate-row-in {
+  animation: lg-row-in 420ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+/* CTA arrow slides on hover; nothing bounces. */
+.lg-cta-arrow {
+  display: inline-block;
+  transition: transform 240ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.group:hover .lg-cta-arrow,
+.lg-cta:hover .lg-cta-arrow {
+  transform: translateX(3px);
+}
+
+/* Hand-drawn illustrations draw themselves in once, then hold. */
+.lg-sketch path,
+.lg-sketch rect,
+.lg-sketch circle {
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 1200;
+  transition: stroke-dashoffset 1.5s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.lg-sketch-on path,
+.lg-sketch-on rect,
+.lg-sketch-on circle {
+  stroke-dashoffset: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lg-reveal,
+  .lg-draw {
+    transition: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+    clip-path: none !important;
+  }
+
+  .lg-sketch path,
+  .lg-sketch rect,
+  .lg-sketch circle {
+    stroke-dasharray: none !important;
+    stroke-dashoffset: 0 !important;
+    transition: none !important;
+  }
+
+
+  .animate-float,
+  .animate-nudge,
+  .animate-sweep,
+  .animate-row-in,
+  .animate-fade-up,
+  .lg-cta-arrow {
+    animation: none !important;
+    transition: none !important;
+  }
+}

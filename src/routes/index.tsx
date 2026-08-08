@@ -5,7 +5,9 @@ import { Hero } from "@/components/landing/hero";
 import { TrustStrip } from "@/components/landing/trust-strip";
 import { Problem } from "@/components/landing/problem";
 import { HowItWorks } from "@/components/landing/how-it-works";
+import { ProductMovie } from "@/components/landing/product-movie";
 import { ProductDemo } from "@/components/landing/product-demo";
+import { Documents } from "@/components/landing/documents";
 import { LeadQuality } from "@/components/landing/lead-quality";
 import { BusinessContext } from "@/components/landing/business-context";
 import { AiWorkflow } from "@/components/landing/ai-workflow";
@@ -42,10 +44,14 @@ function Index() {
         <TrustStrip />
         <Problem />
         <HowItWorks />
+        <ProductMovie />
         <ProductDemo />
         <LeadQuality />
         <BusinessContext />
+        <Documents />
         <AiWorkflow />
+
+
         <Security />
         <Pricing />
         <TrustSection />

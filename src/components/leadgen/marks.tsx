@@ -1,9 +1,11 @@
 import type { ReactNode } from "react";
+import { useInView } from "@/hooks/use-reveal";
 import { cn } from "@/lib/utils";
 
 /**
  * Signature shaded underline: a slightly irregular, hand-drawn highlight
  * brushed behind a short phrase. Never use it on whole paragraphs.
+ * The stroke draws itself left → right the first time it enters view.
  */
 export function HandUnderline({
   children,
@@ -14,12 +16,15 @@ export function HandUnderline({
   tone?: "highlight" | "primary";
   className?: string;
 }) {
+  const { ref, inView } = useInView<HTMLSpanElement>({ threshold: 0.6 });
+
   return (
-    <span className={cn("relative inline-block", className)}>
+    <span ref={ref} className={cn("relative inline-block", className)}>
       <span className="relative z-10">{children}</span>
       <svg
+        data-visible={inView ? "true" : "false"}
         className={cn(
-          "absolute inset-x-[-0.14em] bottom-[-0.06em] z-0 h-[0.52em] w-[calc(100%+0.28em)]",
+          "lg-draw absolute inset-x-[-0.14em] bottom-[-0.06em] z-0 h-[0.52em] w-[calc(100%+0.28em)]",
           tone === "highlight" ? "text-highlight" : "text-primary-soft",
         )}
         viewBox="0 0 300 24"
@@ -66,11 +71,21 @@ export function Annotation({
 }
 
 /** Hand-drawn arrow used beside annotations. */
-export function HandArrow({ className }: { className?: string }) {
+export function HandArrow({
+  className,
+  animated = false,
+}: {
+  className?: string;
+  animated?: boolean;
+}) {
   return (
     <svg
       viewBox="0 0 90 40"
-      className={cn("h-8 w-20 text-border-strong", className)}
+      className={cn(
+        "h-8 w-20 text-border-strong",
+        animated && "animate-nudge",
+        className,
+      )}
       fill="none"
       aria-hidden="true"
       focusable="false"

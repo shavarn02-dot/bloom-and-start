@@ -1,5 +1,6 @@
 import securityDesk from "@/assets/security-desk.jpg";
 import { SectionLabel } from "@/components/leadgen/marks";
+import { Reveal } from "@/components/leadgen/reveal";
 
 const facts = [
   {
@@ -25,28 +26,30 @@ export function Security() {
     <section id="security" className="mx-auto max-w-6xl px-5 py-20 sm:px-8 lg:py-28">
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,0.85fr)] lg:gap-14">
         <div>
-          <SectionLabel>Data handling</SectionLabel>
-          <h2 className="mt-4 text-[2rem] leading-tight font-semibold sm:text-[2.5rem]">
-            What we do with your information.
-          </h2>
-          <p className="mt-5 max-w-lg text-[16px] leading-relaxed text-muted-foreground">
-            Plainly stated, with no claims we haven't earned. If a certification isn't
-            listed here, we don't have it yet.
-          </p>
+          <Reveal>
+            <SectionLabel>Data handling</SectionLabel>
+            <h2 className="mt-4 text-[2rem] leading-tight font-semibold sm:text-[2.5rem]">
+              What we do with your information.
+            </h2>
+            <p className="mt-5 max-w-lg text-[16px] leading-relaxed text-muted-foreground">
+              Plainly stated, with no claims we haven't earned. If a certification isn't
+              listed here, we don't have it yet.
+            </p>
+          </Reveal>
 
           <dl className="mt-8 grid gap-6 sm:grid-cols-2">
-            {facts.map((f) => (
-              <div key={f.title}>
+            {facts.map((f, i) => (
+              <Reveal key={f.title} delay={i * 90}>
                 <dt className="text-[14.5px] font-semibold text-foreground">{f.title}</dt>
                 <dd className="mt-1.5 text-[13.5px] leading-relaxed text-muted-foreground">
                   {f.copy}
                 </dd>
-              </div>
+              </Reveal>
             ))}
           </dl>
         </div>
 
-        <figure className="self-end">
+        <Reveal variant="polygon" as="figure" className="self-end">
           <img
             src={securityDesk}
             alt="A founder working at a laptop at a desk"
@@ -59,7 +62,7 @@ export function Security() {
           <figcaption className="mt-3 text-[12.5px] text-muted-foreground">
             Campaigns run in the background — you don't have to sit and watch them.
           </figcaption>
-        </figure>
+        </Reveal>
       </div>
     </section>
   );
