@@ -53,12 +53,27 @@ export function LaptopMoment() {
             </ProductFrame>
           </Reveal>
 
+          <Reveal
+            delay={200}
+            className="mt-5 flex flex-wrap items-center gap-2 text-[12.5px]"
+          >
+            {["Add a note", "Update status", "Remove lead", "Export CSV"].map((action) => (
+              <span
+                key={action}
+                className="rounded-full border border-border-strong bg-paper px-3 py-1.5 text-secondary-foreground transition-colors duration-200 hover:bg-cream"
+              >
+                {action}
+              </span>
+            ))}
+          </Reveal>
+
           <div className="mt-6 flex items-start gap-2">
             <SketchArrow flip className="hidden sm:block" />
             <Annotation className="mt-2 block -rotate-1 text-[19px]">
               You stay in charge of the list.
             </Annotation>
           </div>
+
         </div>
       </div>
     </section>
