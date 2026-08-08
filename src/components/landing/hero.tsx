@@ -1,7 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import founder from "@/assets/founder-cutout.png";
-import { Annotation, HandArrow, HandUnderline } from "@/components/leadgen/marks";
-import { usePrefersReducedMotion } from "@/hooks/use-reveal";
+import { Annotation, HandUnderline } from "@/components/leadgen/marks";
 
 /**
  * Editorial hero: copy + cutout portrait over an irregular polygon field.
