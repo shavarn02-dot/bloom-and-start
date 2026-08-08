@@ -54,8 +54,9 @@ export function Hero() {
           </p>
           <h1 className="mt-3 text-[2.6rem] leading-[1.06] font-semibold sm:text-[3.4rem] lg:text-[3.75rem]">
             Find the people your{" "}
-            <HandUnderline>business should be talking to</HandUnderline>.
+            <HandUnderline>business should be talking to.</HandUnderline>
           </h1>
+
           <p className="mt-6 max-w-lg text-[16.5px] leading-relaxed text-muted-foreground">
             Tell us what your business does and who you're trying to reach. LeadGen AI
             helps turn that context into a focused list of prospects worth exploring.
