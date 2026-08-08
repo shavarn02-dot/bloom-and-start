@@ -17,7 +17,6 @@ import { cn } from "@/lib/utils";
  * then it resets. Only the product UI moves; the photograph never does.
  */
 const STAGES = [
-  { key: "strategy", caption: "Search strategy", ms: 1900 },
   { key: "discovery", caption: "Discovering companies", ms: 1900 },
   { key: "rows", caption: "Leads arriving", ms: 1800 },
   { key: "scores", caption: "Scoring leads", ms: 1800 },
