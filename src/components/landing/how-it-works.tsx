@@ -63,7 +63,7 @@ export function HowItWorks() {
               key={step.number}
               className="grid gap-8 lg:grid-cols-2 lg:items-center lg:gap-14"
             >
-              <Reveal className={i % 2 === 1 ? "lg:order-2" : undefined}>
+              <Reveal className={i % 2 === 1 ? "lg:order-2" : ""}>
                 <p className="font-mono text-[13px] tracking-[0.14em] text-primary">
                   {step.number}
                 </p>
@@ -78,7 +78,7 @@ export function HowItWorks() {
               <Reveal
                 variant={i % 2 === 1 ? "wipe" : "scale"}
                 delay={100}
-                className={i % 2 === 1 ? "lg:order-1" : undefined}
+                className={i % 2 === 1 ? "lg:order-1" : ""}
               >
                 {step.render()}
               </Reveal>
