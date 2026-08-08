@@ -1,27 +1,13 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
 import founder from "@/assets/founder-cutout.png";
 import { Annotation, HandArrow, HandUnderline } from "@/components/leadgen/marks";
-import {
-  CampaignProgressPanel,
-  LeadTable,
-  ProductFrame,
-} from "@/components/leadgen/product";
-import { exampleLeads } from "@/data/example";
 import { usePrefersReducedMotion } from "@/hooks/use-reveal";
-import { cn } from "@/lib/utils";
 
 /**
- * Hero product loop, roughly 7 seconds end to end.
- * Discovery → rows arriving → scores → verification,
- * then it resets. Only the product UI moves; the photograph never does.
+ * Editorial hero: copy + cutout portrait over an irregular polygon field.
+ * No floating product UI — just the photograph, the background, and the
+ * handwritten annotation.
  */
-const STAGES = [
-  { key: "discovery", caption: "Discovering companies", ms: 1900 },
-  { key: "rows", caption: "Leads arriving", ms: 1800 },
-  { key: "scores", caption: "Scoring leads", ms: 1800 },
-  { key: "verified", caption: "Verifying contacts", ms: 2000 },
-] as const;
 
 export function Hero() {
   const [stage, setStage] = useState(0);
