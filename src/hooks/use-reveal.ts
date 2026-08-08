@@ -19,7 +19,7 @@ export function usePrefersReducedMotion() {
  * Reveal-on-scroll primitive. Observes the element once and flips to visible;
  * CSS handles the actual transition so animation stays on the compositor.
  */
-export function useInView<T extends HTMLElement = HTMLDivElement>({
+export function useInView<T extends Element = HTMLDivElement>({
   threshold = 0.2,
   rootMargin = "0px 0px -10% 0px",
   once = true,
