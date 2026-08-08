@@ -1,4 +1,8 @@
 {
-  "name": "leadflowx",
-  "pages_build_output_dir": "./dist"
+  "name": "shavarn02-dot-bloom-and-start",
+  "compatibility_date": "2026-08-08",
+  "main": "dist/_worker.js/index.js",
+  "assets": {
+    "directory": "./dist"
+  }
 }
