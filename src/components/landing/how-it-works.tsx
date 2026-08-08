@@ -1,11 +1,11 @@
 import { Annotation, SectionLabel } from "@/components/leadgen/marks";
 import { Reveal } from "@/components/leadgen/reveal";
 import {
-  BusinessProfilePanel,
   CampaignProgressPanel,
   LeadTable,
   LeadToolbar,
   ProductFrame,
+  UploadPanel,
 } from "@/components/leadgen/product";
 import { exampleLeads } from "@/data/example";
 
@@ -16,8 +16,8 @@ const steps = [
     copy: "Your offer, your buyers, your regions. Upload a PDF if the detail already lives in a document.",
     note: "Start with what you already know.",
     render: () => (
-      <ProductFrame title="Business profile">
-        <BusinessProfilePanel compact />
+      <ProductFrame title="Upload business context">
+        <UploadPanel />
       </ProductFrame>
     ),
   },

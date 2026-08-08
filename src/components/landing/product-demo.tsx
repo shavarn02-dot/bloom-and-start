@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { SectionLabel } from "@/components/leadgen/marks";
 import {
-  BusinessProfilePanel,
   CampaignProgressPanel,
   LeadTable,
   LeadToolbar,
@@ -10,13 +9,12 @@ import {
 import { cn } from "@/lib/utils";
 
 const tabs = [
-  { id: "profile", label: "Business profile", title: "Business profile" },
   { id: "progress", label: "Campaign progress", title: "Finding your leads" },
   { id: "leads", label: "Lead results", title: "Your leads" },
 ] as const;
 
 export function ProductDemo() {
-  const [active, setActive] = useState<(typeof tabs)[number]["id"]>("profile");
+  const [active, setActive] = useState<(typeof tabs)[number]["id"]>("progress");
   const current = tabs.find((t) => t.id === active) ?? tabs[0];
 
   return (
@@ -27,7 +25,7 @@ export function ProductDemo() {
           The whole workflow, on one screen.
         </h2>
         <p className="mt-5 text-[16px] leading-relaxed text-muted-foreground">
-          Move through the three screens you'll actually use. These are the real product
+          Move through the screens you'll actually use. These are the real product
           surfaces, filled with clearly labelled example content.
         </p>
       </div>
@@ -54,7 +52,6 @@ export function ProductDemo() {
       <div className="mt-6">
         <ProductFrame title={current.title} className="shadow-lift">
           <div key={active} className="animate-fade-up">
-            {active === "profile" && <BusinessProfilePanel />}
             {active === "progress" && <CampaignProgressPanel progress={63} />}
             {active === "leads" && (
               <>
