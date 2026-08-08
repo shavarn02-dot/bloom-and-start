@@ -1,3 +1,12 @@
 {
-  "name": "leadflowx"
+  "$schema": "https://developers.cloudflare.com/workers/wrangler/config-schema.json",
+  "name": "leadgen-api",
+  "main": "workers/api/src/index.ts",
+  "compatibility_date": "2026-08-08",
+  "compatibility_flags": ["nodejs_compat"],
+  "vars": {
+    "SUPABASE_URL": "https://vkwerkdqffvcydksmebn.supabase.co",
+    "SUPABASE_ANON_KEY": "sb_publishable_2yjgPV4IIo5uXGuy1ETAEg_rRxlyZ2W",
+    "MODAL_WEBHOOK_URL": "https://sarthak2005shavarn--leadflowx-engine-trigger-campaign.modal.run"
+  }
 }
