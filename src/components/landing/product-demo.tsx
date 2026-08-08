@@ -20,7 +20,7 @@ export function ProductDemo() {
   const current = tabs.find((t) => t.id === active) ?? tabs[0];
 
   return (
-    <section id="product" className="mx-auto max-w-6xl px-5 py-20 sm:px-8 lg:py:28">
+    <section id="product" className="mx-auto max-w-6xl px-5 py-20 sm:px-8 lg:py-28">
       <div className="max-w-2xl">
         <SectionLabel>See it working</SectionLabel>
         <h2 className="mt-4 text-[2rem] leading-tight font-semibold sm:text-[2.5rem]">
