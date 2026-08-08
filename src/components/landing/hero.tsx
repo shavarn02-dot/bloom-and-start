@@ -10,18 +10,7 @@ import { usePrefersReducedMotion } from "@/hooks/use-reveal";
  */
 
 export function Hero() {
-  const [stage, setStage] = useState(0);
   const reduced = usePrefersReducedMotion();
-  const current = STAGES[stage] ?? STAGES[0];
-
-  useEffect(() => {
-    if (reduced) return;
-    const id = window.setTimeout(
-      () => setStage((s) => (s + 1) % STAGES.length),
-      current.ms,
-    );
-    return () => window.clearTimeout(id);
-  }, [stage, current.ms, reduced]);
 
   return (
     <section className="relative overflow-hidden pt-28 pb-16 sm:pt-32 lg:pt-40 lg:pb-24">
