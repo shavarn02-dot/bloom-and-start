@@ -3,7 +3,6 @@ import { useEffect, useState } from "react";
 import founder from "@/assets/founder-cutout.png";
 import { Annotation, HandArrow, HandUnderline } from "@/components/leadgen/marks";
 import {
-  BusinessProfilePanel,
   CampaignProgressPanel,
   LeadTable,
   ProductFrame,
@@ -13,12 +12,11 @@ import { usePrefersReducedMotion } from "@/hooks/use-reveal";
 import { cn } from "@/lib/utils";
 
 /**
- * Hero product loop, roughly 11 seconds end to end.
- * Profile → strategy → discovery → rows arriving → scores → verification,
+ * Hero product loop, roughly 9 seconds end to end.
+ * Strategy → discovery → rows arriving → scores → verification,
  * then it resets. Only the product UI moves; the photograph never does.
  */
 const STAGES = [
-  { key: "profile", caption: "Business profile", ms: 1900 },
   { key: "strategy", caption: "Search strategy", ms: 1900 },
   { key: "discovery", caption: "Discovering companies", ms: 1900 },
   { key: "rows", caption: "Leads arriving", ms: 1800 },
@@ -129,16 +127,15 @@ export function Hero() {
               className="shadow-lift transition-transform duration-300 group-hover:-translate-y-1"
             >
               <div key={stage} className="animate-fade-up">
-                {stage === 0 && <BusinessProfilePanel compact revealCount={4} />}
-                {stage === 1 && <StrategyPanel />}
-                {stage === 2 && <CampaignProgressPanel progress={44} />}
-                {stage === 3 && (
+                {stage === 0 && <StrategyPanel />}
+                {stage === 1 && <CampaignProgressPanel progress={44} />}
+                {stage === 2 && (
                   <LeadTable leads={exampleLeads.slice(0, 3)} dense animateRows />
                 )}
-                {stage === 4 && (
+                {stage === 3 && (
                   <LeadTable leads={exampleLeads.slice(0, 3)} dense animateScores />
                 )}
-                {stage === 5 && (
+                {stage === 4 && (
                   <LeadTable
                     leads={exampleLeads.slice(0, 3)}
                     dense
