@@ -45,7 +45,7 @@ const PORTRAITS: Portrait[] = [
     src: founder02,
     alt: "A business owner, photographed for illustration",
     thought: "What if I could finally reach the right customers?",
-    plate: "bg-cream",
+    plate: "bg-primary-soft/35",
   },
   {
     src: founder03,
@@ -69,7 +69,7 @@ const PORTRAITS: Portrait[] = [
     src: founder06,
     alt: "A business owner, photographed for illustration",
     thought: "This could change how I find customers.",
-    plate: "bg-cream",
+    plate: "bg-primary-soft/35",
   },
   {
     src: founder07,
