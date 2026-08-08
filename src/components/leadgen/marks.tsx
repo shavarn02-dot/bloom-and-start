@@ -71,11 +71,21 @@ export function Annotation({
 }
 
 /** Hand-drawn arrow used beside annotations. */
-export function HandArrow({ className }: { className?: string }) {
+export function HandArrow({
+  className,
+  animated = false,
+}: {
+  className?: string;
+  animated?: boolean;
+}) {
   return (
     <svg
       viewBox="0 0 90 40"
-      className={cn("h-8 w-20 text-border-strong", className)}
+      className={cn(
+        "h-8 w-20 text-border-strong",
+        animated && "animate-nudge",
+        className,
+      )}
       fill="none"
       aria-hidden="true"
       focusable="false"
