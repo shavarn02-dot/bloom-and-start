@@ -201,17 +201,28 @@ export function LeadTable({
   leads = exampleLeads,
   onSelect,
   dense = false,
+  animateRows = false,
+  animateScores = false,
+  showVerification = false,
 }: {
   leads?: ExampleLead[];
   onSelect?: (lead: ExampleLead) => void;
   dense?: boolean;
+  /** Rows arrive one after another, the way results land in a real campaign. */
+  animateRows?: boolean;
+  animateScores?: boolean;
+  showVerification?: boolean;
 }) {
+  const headers = showVerification
+    ? ["Lead", "Company", "Role", "Email", "Match", "Status"]
+    : ["Lead", "Company", "Role", "Location", "Match", "Status"];
+
   return (
     <div className="overflow-x-auto">
       <table className="w-full min-w-[640px] text-left">
         <thead>
           <tr className="border-b border-border bg-cream/40">
-            {["Lead", "Company", "Role", "Location", "Match", "Status"].map((h) => (
+            {headers.map((h) => (
               <th
                 key={h}
                 scope="col"
@@ -223,24 +234,42 @@ export function LeadTable({
           </tr>
         </thead>
         <tbody className="divide-y divide-border">
-          {leads.map((lead) => (
+          {leads.map((lead, i) => (
             <tr
               key={lead.id}
               onClick={() => onSelect?.(lead)}
               className={cn(
-                "transition-colors duration-150",
-                onSelect && "cursor-pointer hover:bg-cream/60",
+                "transition-colors duration-150 hover:bg-cream/50",
+                onSelect && "cursor-pointer",
+                animateRows && "animate-row-in",
                 dense ? "text-[13px]" : "text-[13.5px]",
               )}
+              style={animateRows ? { animationDelay: `${i * 110}ms` } : undefined}
             >
               <td className="px-4 py-3 font-medium text-foreground">
                 {lead.firstName} {lead.lastName}
               </td>
               <td className="px-4 py-3 text-secondary-foreground">{lead.company}</td>
               <td className="px-4 py-3 text-muted-foreground">{lead.role}</td>
-              <td className="px-4 py-3 text-muted-foreground">{lead.location}</td>
+              {showVerification ? (
+                <td className="px-4 py-3">
+                  <span
+                    className={cn(
+                      "inline-flex items-center gap-1.5 text-[12.5px]",
+                      lead.emailStatus === "Verified"
+                        ? "text-primary"
+                        : "text-muted-foreground",
+                    )}
+                  >
+                    <ShieldCheck className="size-3.5" strokeWidth={2} />
+                    {lead.emailStatus}
+                  </span>
+                </td>
+              ) : (
+                <td className="px-4 py-3 text-muted-foreground">{lead.location}</td>
+              )}
               <td className="px-4 py-3">
-                <MatchBadge value={lead.match} />
+                <MatchBadge value={lead.match} animate={animateScores} />
               </td>
               <td className="px-4 py-3">
                 <StatusPill status={lead.status} />
@@ -249,6 +278,65 @@ export function LeadTable({
           ))}
         </tbody>
       </table>
+    </div>
+  );
+}
+
+/** Real upload surface: website URL, PDF attachments and a processing state. */
+export function UploadPanel() {
+  return (
+    <div className="divide-y divide-border">
+      <div className="px-4 py-4">
+        <p className="text-[11px] tracking-wide text-muted-foreground uppercase">
+          Website URL
+        </p>
+        <div className="mt-2 flex h-9 items-center gap-2 rounded-md border border-border bg-paper px-2.5">
+          <Globe className="size-3.5 text-muted-foreground" />
+          <span className="text-[13px] text-secondary-foreground">
+            {exampleProfile.website}
+          </span>
+        </div>
+      </div>
+
+      <div className="px-4 py-4">
+        <div className="flex flex-col items-center justify-center gap-1.5 rounded-md border border-dashed border-border-strong bg-cream/50 px-4 py-6 text-center">
+          <Upload className="size-4 text-muted-foreground" strokeWidth={1.8} />
+          <p className="text-[13px] font-medium text-foreground">
+            Drop a PDF, or browse
+          </p>
+          <p className="text-[12px] text-muted-foreground">
+            Decks, catalogues and one-pagers all work.
+          </p>
+        </div>
+      </div>
+
+      <ul className="divide-y divide-border">
+        {exampleDocuments.map((doc, i) => (
+          <li key={doc.id} className="flex items-center gap-3 px-4 py-3">
+            <FileText className="size-4 shrink-0 text-muted-foreground" strokeWidth={1.8} />
+            <span className="min-w-0 flex-1">
+              <span className="block truncate text-[13px] font-medium text-foreground">
+                {doc.name}
+              </span>
+              <span className="block text-[11.5px] text-muted-foreground">
+                {doc.size} · added {doc.added}
+              </span>
+            </span>
+            {i === 0 ? (
+              <span className="inline-flex items-center gap-1.5 text-[11.5px] font-medium text-primary">
+                <Check className="size-3.5" strokeWidth={2.6} /> Processed
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-2 text-[11.5px] text-muted-foreground">
+                <span className="relative h-1 w-12 overflow-hidden rounded-full bg-muted">
+                  <span className="absolute inset-y-0 left-0 w-5 animate-sweep rounded-full bg-primary/70" />
+                </span>
+                Reading
+              </span>
+            )}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
