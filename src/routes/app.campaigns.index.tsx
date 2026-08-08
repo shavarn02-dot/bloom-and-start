@@ -5,7 +5,7 @@ import { PageHeader, Panel, PrimaryAction } from "@/components/dashboard/primiti
 import { CampaignProgressPanel } from "@/components/leadgen/product";
 import { exampleCampaigns } from "@/data/example";
 
-export const Route = createFileRoute("/app/campaigns")({
+export const Route = createFileRoute("/app/campaigns/")({
   head: () => ({
     meta: [
       { title: "Campaigns — LeadGen AI" },

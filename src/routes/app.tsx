@@ -11,11 +11,11 @@ import { Wordmark } from "@/components/leadgen/wordmark";
 
 const nav = [
   { to: "/app", label: "Overview", icon: LayoutDashboard, exact: true },
-  { to: "/app/campaigns", label: "Campaigns", icon: Target },
-  { to: "/app/leads", label: "Leads", icon: Users },
-  { to: "/app/profiles", label: "Business Profiles", icon: Building2 },
-  { to: "/app/documents", label: "Documents", icon: FileText },
-  { to: "/app/settings", label: "Settings", icon: Settings },
+  { to: "/app/campaigns", label: "Campaigns", icon: Target, exact: false },
+  { to: "/app/leads", label: "Leads", icon: Users, exact: false },
+  { to: "/app/profiles", label: "Business Profiles", icon: Building2, exact: false },
+  { to: "/app/documents", label: "Documents", icon: FileText, exact: false },
+  { to: "/app/settings", label: "Settings", icon: Settings, exact: false },
 ] as const;
 
 export const Route = createFileRoute("/app")({
@@ -55,7 +55,7 @@ function AppLayout() {
             <Link
               key={item.to}
               to={item.to}
-              activeOptions={{ exact: item.exact ?? false }}
+              activeOptions={{ exact: item.exact }}
               activeProps={{
                 className:
                   "bg-sidebar-accent text-sidebar-accent-foreground font-medium",
