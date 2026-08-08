@@ -167,28 +167,3 @@ export function Hero() {
   );
 }
 
-function StrategyPanel() {
-  const items = [
-    "Manufacturers, 50–500 staff",
-    "Operations & procurement roles",
-    "India, UK, EU",
-    "Sourcing sustainable fabric",
-  ];
-  return (
-    <div className="px-4 py-4">
-      <p className="text-[13px] font-semibold text-foreground">Search strategy</p>
-      <ul className="mt-3 space-y-2">
-        {items.map((item, i) => (
-          <li
-            key={item}
-            className="flex animate-row-in items-start gap-2 text-[13px] text-secondary-foreground"
-            style={{ animationDelay: `${i * 90}ms` }}
-          >
-            <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-primary" />
-            {item}
-          </li>
-        ))}
-      </ul>
-    </div>
-  );
-}
