@@ -1,8 +1,10 @@
-import { Check, Circle, Download, Filter, Search } from "lucide-react";
+import { Check, Circle, Download, FileText, Filter, Globe, Search, ShieldCheck, Upload } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useCountUp } from "@/hooks/use-reveal";
 import { ExampleDataBadge } from "@/components/leadgen/marks";
 import {
   campaignSteps,
+  exampleDocuments,
   exampleLeads,
   exampleProfile,
   type ExampleLead,
