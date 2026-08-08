@@ -9,8 +9,6 @@ import { Annotation, HandUnderline } from "@/components/leadgen/marks";
  */
 
 export function Hero() {
-  const reduced = usePrefersReducedMotion();
-
   return (
     <section className="relative overflow-hidden pt-28 pb-16 sm:pt-32 lg:pt-40 lg:pb-24">
       {/* Editorial polygon environment — flat warm shapes, no gradients or glows. */}
