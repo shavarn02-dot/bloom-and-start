@@ -180,7 +180,7 @@ export function HeroPortraits() {
       </div>
 
       {/* Visitor's thought — handwritten, upper right, clear of the face. */}
-      <div className="pointer-events-none absolute top-2 right-0 z-20 hidden w-[240px] lg:block">
+      <div className="pointer-events-none absolute -top-8 right-0 z-20 hidden w-[210px] text-right lg:block">
         {started && (
           <Annotation
             key={index}
