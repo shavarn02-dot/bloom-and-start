@@ -12,7 +12,10 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AppRouteImport } from './routes/app'
 import { Route as AppIndexRouteImport } from './routes/app.index'
+import { Route as AppDocumentsRouteImport } from './routes/app.documents'
 import { Route as AppLeadsRouteImport } from './routes/app.leads'
+import { Route as AppProfilesRouteImport } from './routes/app.profiles'
+import { Route as AppSettingsRouteImport } from './routes/app.settings'
 import { Route as AppCampaignsIndexRouteImport } from './routes/app.campaigns.index'
 import { Route as AppCampaignsNewRouteImport } from './routes/app.campaigns.new'
 
@@ -31,9 +34,24 @@ const AppIndexRoute = AppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AppRoute,
 } as any)
+const AppDocumentsRoute = AppDocumentsRouteImport.update({
+  id: '/documents',
+  path: '/documents',
+  getParentRoute: () => AppRoute,
+} as any)
 const AppLeadsRoute = AppLeadsRouteImport.update({
   id: '/leads',
   path: '/leads',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppProfilesRoute = AppProfilesRouteImport.update({
+  id: '/profiles',
+  path: '/profiles',
+  getParentRoute: () => AppRoute,
+} as any)
+const AppSettingsRoute = AppSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
 const AppCampaignsIndexRoute = AppCampaignsIndexRouteImport.update({
@@ -50,14 +68,20 @@ const AppCampaignsNewRoute = AppCampaignsNewRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
+  '/app/documents': typeof AppDocumentsRoute
   '/app/leads': typeof AppLeadsRoute
+  '/app/profiles': typeof AppProfilesRoute
+  '/app/settings': typeof AppSettingsRoute
   '/app/': typeof AppIndexRoute
   '/app/campaigns/new': typeof AppCampaignsNewRoute
   '/app/campaigns/': typeof AppCampaignsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/app/documents': typeof AppDocumentsRoute
   '/app/leads': typeof AppLeadsRoute
+  '/app/profiles': typeof AppProfilesRoute
+  '/app/settings': typeof AppSettingsRoute
   '/app': typeof AppIndexRoute
   '/app/campaigns/new': typeof AppCampaignsNewRoute
   '/app/campaigns': typeof AppCampaignsIndexRoute
@@ -66,7 +90,10 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/app': typeof AppRouteWithChildren
+  '/app/documents': typeof AppDocumentsRoute
   '/app/leads': typeof AppLeadsRoute
+  '/app/profiles': typeof AppProfilesRoute
+  '/app/settings': typeof AppSettingsRoute
   '/app/': typeof AppIndexRoute
   '/app/campaigns/new': typeof AppCampaignsNewRoute
   '/app/campaigns/': typeof AppCampaignsIndexRoute
@@ -76,17 +103,31 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/app'
+    | '/app/documents'
     | '/app/leads'
+    | '/app/profiles'
+    | '/app/settings'
     | '/app/'
     | '/app/campaigns/new'
     | '/app/campaigns/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/app/leads' | '/app' | '/app/campaigns/new' | '/app/campaigns'
+  to:
+    | '/'
+    | '/app/documents'
+    | '/app/leads'
+    | '/app/profiles'
+    | '/app/settings'
+    | '/app'
+    | '/app/campaigns/new'
+    | '/app/campaigns'
   id:
     | '__root__'
     | '/'
     | '/app'
+    | '/app/documents'
     | '/app/leads'
+    | '/app/profiles'
+    | '/app/settings'
     | '/app/'
     | '/app/campaigns/new'
     | '/app/campaigns/'
@@ -120,11 +161,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppIndexRouteImport
       parentRoute: typeof AppRoute
     }
+    '/app/documents': {
+      id: '/app/documents'
+      path: '/documents'
+      fullPath: '/app/documents'
+      preLoaderRoute: typeof AppDocumentsRouteImport
+      parentRoute: typeof AppRoute
+    }
     '/app/leads': {
       id: '/app/leads'
       path: '/leads'
       fullPath: '/app/leads'
       preLoaderRoute: typeof AppLeadsRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/profiles': {
+      id: '/app/profiles'
+      path: '/profiles'
+      fullPath: '/app/profiles'
+      preLoaderRoute: typeof AppProfilesRouteImport
+      parentRoute: typeof AppRoute
+    }
+    '/app/settings': {
+      id: '/app/settings'
+      path: '/settings'
+      fullPath: '/app/settings'
+      preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
     }
     '/app/campaigns/': {
@@ -145,14 +207,20 @@ declare module '@tanstack/react-router' {
 }
 
 interface AppRouteChildren {
+  AppDocumentsRoute: typeof AppDocumentsRoute
   AppLeadsRoute: typeof AppLeadsRoute
+  AppProfilesRoute: typeof AppProfilesRoute
+  AppSettingsRoute: typeof AppSettingsRoute
   AppIndexRoute: typeof AppIndexRoute
   AppCampaignsNewRoute: typeof AppCampaignsNewRoute
   AppCampaignsIndexRoute: typeof AppCampaignsIndexRoute
 }
 
 const AppRouteChildren: AppRouteChildren = {
+  AppDocumentsRoute: AppDocumentsRoute,
   AppLeadsRoute: AppLeadsRoute,
+  AppProfilesRoute: AppProfilesRoute,
+  AppSettingsRoute: AppSettingsRoute,
   AppIndexRoute: AppIndexRoute,
   AppCampaignsNewRoute: AppCampaignsNewRoute,
   AppCampaignsIndexRoute: AppCampaignsIndexRoute,
@@ -167,3 +235,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
