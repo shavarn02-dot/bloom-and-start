@@ -41,7 +41,14 @@ export function ProductFrame({
   );
 }
 
-export function BusinessProfilePanel({ compact = false }: { compact?: boolean }) {
+export function BusinessProfilePanel({
+  compact = false,
+  revealCount,
+}: {
+  compact?: boolean;
+  /** Show only the first N rows, revealed one after another. */
+  revealCount?: number;
+}) {
   const rows: [string, string][] = [
     ["What your business does", exampleProfile.offering],
     ["Target role", exampleProfile.targetRole],
@@ -56,10 +63,18 @@ export function BusinessProfilePanel({ compact = false }: { compact?: boolean })
         ] as [string, string][])),
   ];
 
+  const shown = revealCount === undefined ? rows : rows.slice(0, revealCount);
+
   return (
     <div className="divide-y divide-border">
-      {rows.map(([label, value]) => (
-        <div key={label} className="px-4 py-3">
+      {shown.map(([label, value], i) => (
+        <div
+          key={label}
+          className={cn("px-4 py-3", revealCount !== undefined && "animate-row-in")}
+          style={
+            revealCount !== undefined ? { animationDelay: `${i * 70}ms` } : undefined
+          }
+        >
           <p className="text-[11px] tracking-wide text-muted-foreground uppercase">
             {label}
           </p>
