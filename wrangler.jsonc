@@ -1,8 +1,8 @@
 {
   "name": "shavarn02-dot-bloom-and-start",
   "compatibility_date": "2026-08-08",
-  "main": "dist/_worker.js/index.js",
+  "main": ".output/server/index.mjs",
   "assets": {
-    "directory": "./dist"
+    "directory": ".output/public"
   }
 }
