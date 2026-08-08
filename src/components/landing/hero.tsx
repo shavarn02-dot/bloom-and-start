@@ -1,42 +1,14 @@
 import { Link } from "@tanstack/react-router";
-import { useEffect, useState } from "react";
 import founder from "@/assets/founder-cutout.png";
-import { Annotation, HandArrow, HandUnderline } from "@/components/leadgen/marks";
-import {
-  CampaignProgressPanel,
-  LeadTable,
-  ProductFrame,
-} from "@/components/leadgen/product";
-import { exampleLeads } from "@/data/example";
-import { usePrefersReducedMotion } from "@/hooks/use-reveal";
-import { cn } from "@/lib/utils";
+import { Annotation, HandUnderline } from "@/components/leadgen/marks";
 
 /**
- * Hero product loop, roughly 7 seconds end to end.
- * Discovery → rows arriving → scores → verification,
- * then it resets. Only the product UI moves; the photograph never does.
+ * Editorial hero: copy + cutout portrait over an irregular polygon field.
+ * No floating product UI — just the photograph, the background, and the
+ * handwritten annotation.
  */
-const STAGES = [
-  { key: "discovery", caption: "Discovering companies", ms: 1900 },
-  { key: "rows", caption: "Leads arriving", ms: 1800 },
-  { key: "scores", caption: "Scoring leads", ms: 1800 },
-  { key: "verified", caption: "Verifying contacts", ms: 2000 },
-] as const;
 
 export function Hero() {
-  const [stage, setStage] = useState(0);
-  const reduced = usePrefersReducedMotion();
-  const current = STAGES[stage] ?? STAGES[0];
-
-  useEffect(() => {
-    if (reduced) return;
-    const id = window.setTimeout(
-      () => setStage((s) => (s + 1) % STAGES.length),
-      current.ms,
-    );
-    return () => window.clearTimeout(id);
-  }, [stage, current.ms, reduced]);
-
   return (
     <section className="relative overflow-hidden pt-28 pb-16 sm:pt-32 lg:pt-40 lg:pb-24">
       {/* Editorial polygon environment — flat warm shapes, no gradients or glows. */}
@@ -93,9 +65,9 @@ export function Hero() {
           </p>
         </div>
 
-        {/* Composition: cutout + live product layer */}
-        <div className="relative">
-          <div className="relative mx-auto max-w-md lg:max-w-none">
+        {/* Portrait + handwritten annotation */}
+        <div className="relative flex items-center justify-center lg:items-start lg:justify-end">
+          <div className="relative mx-auto w-full max-w-md lg:mx-0 lg:max-w-none">
             {/* Angular plate behind the subject */}
             <div
               aria-hidden="true"
@@ -107,7 +79,7 @@ export function Hero() {
               alt="A small-business founder using LeadGen AI"
               width={912}
               height={1200}
-              className="relative z-10 mx-auto w-[78%] max-w-[340px] object-contain drop-shadow-[var(--shadow-contact)] lg:w-[86%] lg:max-w-[400px]"
+              className="relative z-10 mx-auto w-[86%] max-w-[380px] object-contain drop-shadow-[var(--shadow-contact)] lg:mx-0 lg:w-[92%] lg:max-w-[460px]"
               style={{
                 clipPath: "polygon(6% 0, 100% 3%, 94% 97%, 0 100%)",
               }}
@@ -116,52 +88,8 @@ export function Hero() {
             <Annotation className="absolute top-4 right-0 z-20 hidden lg:block">
               Let's find them →
             </Annotation>
-
-          </div>
-
-          {/* Product layer overlaps the subject */}
-          <div className="group relative z-20 -mt-10 lg:absolute lg:right-0 lg:-bottom-6 lg:mt-0 lg:w-[74%]">
-            <ProductFrame
-              title={current.caption}
-              className="shadow-lift transition-transform duration-300 group-hover:-translate-y-1"
-            >
-              <div key={stage} className="animate-fade-up">
-                {stage === 0 && <CampaignProgressPanel progress={44} />}
-                {stage === 1 && (
-                  <LeadTable leads={exampleLeads.slice(0, 3)} dense animateRows />
-                )}
-                {stage === 2 && (
-                  <LeadTable leads={exampleLeads.slice(0, 3)} dense animateScores />
-                )}
-                {stage === 3 && (
-                  <LeadTable
-                    leads={exampleLeads.slice(0, 3)}
-                    dense
-                    animateRows
-                    showVerification
-                  />
-                )}
-              </div>
-            </ProductFrame>
-
-            <div className="mt-3 flex items-center gap-1.5">
-              {STAGES.map((s, i) => (
-                <span
-                  key={s.key}
-                  className={cn(
-                    "h-1 rounded-full transition-all duration-300",
-                    i === stage ? "w-6 bg-primary" : "w-2.5 bg-border-strong",
-                  )}
-                />
-              ))}
-            </div>
           </div>
         </div>
-      </div>
-
-      <div className="relative mx-auto mt-14 hidden max-w-6xl items-center gap-2 px-8 lg:flex">
-        <HandArrow className="rotate-6" animated={!reduced} />
-        <Annotation>Real product screens, not illustrations.</Annotation>
       </div>
     </section>
   );
