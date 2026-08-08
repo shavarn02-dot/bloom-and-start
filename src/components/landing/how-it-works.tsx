@@ -49,7 +49,7 @@ const steps = [
 export function HowItWorks() {
   return (
     <section id="how-it-works" className="bg-paper">
-      <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8 lg:py-28">
+      <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 lg:py-24">
         <Reveal>
           <SectionLabel>How it works</SectionLabel>
           <h2 className="mt-4 max-w-2xl text-[2rem] leading-tight font-semibold sm:text-[2.5rem]">
@@ -57,7 +57,7 @@ export function HowItWorks() {
           </h2>
         </Reveal>
 
-        <div className="mt-14 space-y-16 lg:space-y-24">
+        <div className="mt-12 space-y-14 lg:space-y-20">
           {steps.map((step, i) => (
             <div
               key={step.number}
