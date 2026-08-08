@@ -126,15 +126,14 @@ export function Hero() {
               className="shadow-lift transition-transform duration-300 group-hover:-translate-y-1"
             >
               <div key={stage} className="animate-fade-up">
-                {stage === 0 && <StrategyPanel />}
-                {stage === 1 && <CampaignProgressPanel progress={44} />}
-                {stage === 2 && (
+                {stage === 0 && <CampaignProgressPanel progress={44} />}
+                {stage === 1 && (
                   <LeadTable leads={exampleLeads.slice(0, 3)} dense animateRows />
                 )}
-                {stage === 3 && (
+                {stage === 2 && (
                   <LeadTable leads={exampleLeads.slice(0, 3)} dense animateScores />
                 )}
-                {stage === 4 && (
+                {stage === 3 && (
                   <LeadTable
                     leads={exampleLeads.slice(0, 3)}
                     dense
