@@ -13,11 +13,13 @@ import { SketchArrow, SketchGlyph } from "@/components/leadgen/sketches";
 
 const loop = [
   { kind: "window", label: "Search again" },
-  { kind: "window", label: "Open the website" },
-  { kind: "doc", label: "Read, guess, note it down" },
-  { kind: "sheet", label: "Paste into the sheet" },
-  { kind: "mail", label: "Hunt for an address" },
+  { kind: "window", label: "Open website" },
+  { kind: "doc", label: "Find contact" },
+  { kind: "mail", label: "Check email" },
+  { kind: "sheet", label: "Copy into sheet" },
+  { kind: "window", label: "Repeat" },
 ] as const;
+
 
 export function ManualResearch() {
   return (
