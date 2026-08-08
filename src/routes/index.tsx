@@ -43,11 +43,13 @@ function Index() {
         <Hero />
         <TrustStrip />
         <Problem />
-        <HowItWorks />
+        <ProductMovie />
         <ProductDemo />
         <LeadQuality />
         <BusinessContext />
+        <Documents />
         <AiWorkflow />
+
         <Security />
         <Pricing />
         <TrustSection />
