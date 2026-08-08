@@ -334,6 +334,21 @@
   transform: translateX(3px);
 }
 
+/* Hand-drawn illustrations draw themselves in once, then hold. */
+.lg-sketch path,
+.lg-sketch rect,
+.lg-sketch circle {
+  stroke-dasharray: 1200;
+  stroke-dashoffset: 1200;
+  transition: stroke-dashoffset 1.5s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+.lg-sketch-on path,
+.lg-sketch-on rect,
+.lg-sketch-on circle {
+  stroke-dashoffset: 0;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .lg-reveal,
   .lg-draw {
@@ -342,6 +357,15 @@
     transform: none !important;
     clip-path: none !important;
   }
+
+  .lg-sketch path,
+  .lg-sketch rect,
+  .lg-sketch circle {
+    stroke-dasharray: none !important;
+    stroke-dashoffset: 0 !important;
+    transition: none !important;
+  }
+
 
   .animate-float,
   .animate-nudge,
