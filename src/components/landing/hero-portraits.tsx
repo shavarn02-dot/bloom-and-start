@@ -124,7 +124,7 @@ export function HeroPortraits() {
     setIndex((i) => (i + 1) % PORTRAITS.length);
   };
 
-  const current = PORTRAITS[index];
+  const current = PORTRAITS[index] ?? PORTRAITS[0]!;
 
   return (
     <div
