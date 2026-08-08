@@ -20,8 +20,8 @@ export function usePrefersReducedMotion() {
  * CSS handles the actual transition so animation stays on the compositor.
  */
 export function useInView<T extends Element = HTMLDivElement>({
-  threshold = 0.2,
-  rootMargin = "0px 0px -10% 0px",
+  threshold = 0,
+  rootMargin = "100px 0px 100px 0px",
   once = true,
 }: { threshold?: number; rootMargin?: string; once?: boolean } = {}) {
   const ref = useRef<T | null>(null);

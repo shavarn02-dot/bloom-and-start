@@ -1,0 +1,15 @@
+# LeadFlowX Modal Engine Dependencies
+# Lightweight: no Playwright/Crawl4AI by default (installed only when needed)
+
+# HTTP & Scraping (Tier 1)
+httpx>=0.27.0
+beautifulsoup4>=4.12.0
+
+# DNS / Email verification
+dnspython>=2.6.0
+
+# Database
+supabase>=2.0.0
+
+# Modal deployment
+modal>=0.64.0

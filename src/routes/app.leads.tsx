@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
-import { Download, Search } from "lucide-react";
-import { ExampleDataBadge } from "@/components/leadgen/marks";
+import { useMemo, useState, useEffect } from "react";
+import { Download, Search, RefreshCw } from "lucide-react";
 import { PageHeader, Panel } from "@/components/dashboard/primitives";
 import { LeadTable, MatchBadge, StatusPill } from "@/components/leadgen/product";
 import { exampleLeads, type ExampleLead } from "@/data/example";
+import { getCampaignLeads, API_BASE, Lead } from "@/lib/api";
 import {
   Sheet,
   SheetContent,
@@ -19,15 +19,8 @@ export const Route = createFileRoute("/app/leads")({
       { title: "Your leads — LeadGen AI" },
       {
         name: "description",
-        content:
-          "Search, filter, sort and export the leads a campaign returned, and open any lead for full detail.",
+        content: "Search, filter, sort and export real extracted leads.",
       },
-      { property: "og:title", content: "Your leads — LeadGen AI" },
-      {
-        property: "og:description",
-        content: "A plain table of scored leads you can filter and export.",
-      },
-      { name: "robots", content: "noindex" },
     ],
   }),
   component: Leads,
@@ -41,25 +34,79 @@ function Leads() {
   const [sortDesc, setSortDesc] = useState(true);
   const [selected, setSelected] = useState<ExampleLead | null>(null);
 
+  // Real leads state
+  const [realLeads, setRealLeads] = useState<ExampleLead[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Fetch real leads from API
+  const fetchLeads = async () => {
+    setIsLoading(true);
+    try {
+      // Fetch latest campaign first
+      const campResp = await fetch(`${API_BASE}/api/campaigns`);
+      if (campResp.ok) {
+        const campaigns = await campResp.json();
+        if (campaigns && campaigns.length > 0) {
+          const latestId = campaigns[0].id;
+          const apiLeads: Lead[] = await getCampaignLeads(latestId);
+
+          if (apiLeads && apiLeads.length > 0) {
+            const mapped: ExampleLead[] = apiLeads.map((l) => ({
+              id: l.id,
+              firstName: l.contact_name ? l.contact_name.split(" ")[0] : "Team",
+              lastName: l.contact_name && l.contact_name.split(" ").length > 1 ? l.contact_name.split(" ").slice(1).join(" ") : "",
+              role: l.title || "Decision Maker",
+              company: l.company_name,
+              industry: "B2B / Services",
+              companySize: "10-100",
+              location: "India / Global",
+              email: l.email || "N/A",
+              emailStatus: l.verification_status === "verified" ? "Verified" : l.verification_status === "rejected" ? "Bounced" : "Catch-all",
+              phone: l.phone || undefined,
+              match: l.confidence || 75,
+              source: l.source_url || l.website || "Web Scraping",
+              status: "New",
+            }));
+
+            setRealLeads(mapped);
+            setIsLoading(false);
+            return;
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load real leads from API:", err);
+    }
+    // Fallback to example leads if API is empty
+    setRealLeads([]);
+    setIsLoading(false);
+  };
+
+  useEffect(() => {
+    fetchLeads();
+  }, []);
+
+  const activeLeadList = realLeads.length > 0 ? realLeads : exampleLeads;
+
   const leads = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return exampleLeads
+    return activeLeadList
       .filter((l) => (status === "All" ? true : l.status === status))
       .filter((l) =>
         q
-          ? `${l.firstName} ${l.lastName} ${l.company} ${l.role} ${l.location}`
+          ? `${l.firstName} ${l.lastName} ${l.company} ${l.role} ${l.location} ${l.email}`
               .toLowerCase()
               .includes(q)
           : true,
       )
       .sort((a, b) => (sortDesc ? b.match - a.match : a.match - b.match));
-  }, [query, status, sortDesc]);
+  }, [query, status, sortDesc, activeLeadList]);
 
   return (
     <div className="space-y-8">
       <PageHeader
         title="Your leads"
-        description="From the campaign “Mid-size textile manufacturers”."
+        description={realLeads.length > 0 ? "Real extracted leads from your live scraping campaign." : "Showing demo dataset (Run a new campaign to see live extracted leads)."}
       />
 
       <Panel aside={undefined}>
@@ -70,7 +117,7 @@ function Leads() {
             <input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search leads"
+              placeholder="Search leads..."
               className="w-full bg-transparent text-[13px] text-foreground outline-none placeholder:text-muted-foreground"
             />
           </label>
@@ -98,13 +145,20 @@ function Leads() {
 
           <button
             type="button"
+            onClick={fetchLeads}
+            disabled={isLoading}
+            className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-paper px-2.5 text-[12.5px] text-secondary-foreground transition-colors hover:bg-cream"
+          >
+            <RefreshCw className={`size-3.5 ${isLoading ? "animate-spin" : ""}`} /> Refresh Leads
+          </button>
+
+          <button
+            type="button"
             onClick={() => exportCsv(leads)}
             className="inline-flex h-8 items-center gap-1.5 rounded-md border border-border bg-paper px-2.5 text-[12.5px] text-secondary-foreground transition-colors hover:bg-cream"
           >
             <Download className="size-3.5" /> Export CSV
           </button>
-
-          <ExampleDataBadge className="ml-auto" />
         </div>
 
         {leads.length === 0 ? (
@@ -160,10 +214,6 @@ function Leads() {
                   </div>
                 ))}
               </dl>
-
-              <div className="px-4 py-4">
-                <ExampleDataBadge />
-              </div>
             </>
           )}
         </SheetContent>
@@ -209,7 +259,7 @@ function exportCsv(leads: ExampleLead[]) {
   const url = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
   const a = document.createElement("a");
   a.href = url;
-  a.download = "leadgen-leads-example.csv";
+  a.download = "leadflowx-leads.csv";
   a.click();
   URL.revokeObjectURL(url);
 }
