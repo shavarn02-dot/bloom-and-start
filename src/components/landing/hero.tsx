@@ -12,8 +12,8 @@ import { usePrefersReducedMotion } from "@/hooks/use-reveal";
 import { cn } from "@/lib/utils";
 
 /**
- * Hero product loop, roughly 9 seconds end to end.
- * Strategy → discovery → rows arriving → scores → verification,
+ * Hero product loop, roughly 7 seconds end to end.
+ * Discovery → rows arriving → scores → verification,
  * then it resets. Only the product UI moves; the photograph never does.
  */
 const STAGES = [
