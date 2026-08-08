@@ -42,142 +42,74 @@ export interface Lead {
 }
 
 export async function createCampaign(name: string, query: string, requestedLimit = 25): Promise<Campaign> {
-  try {
-    const resp = await fetch(`${API_BASE}/api/campaigns`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name, query, requested_limit: requestedLimit }),
-    });
-    if (resp.ok) {
-      const data = await resp.json();
-      if (data && data.id) return data;
-    }
-  } catch (err) {
-    console.warn("Backend campaign creation warning, using fallback session campaign:", err);
+  const resp = await fetch(`${API_BASE}/api/campaigns`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ name, query, requested_limit: requestedLimit }),
+  });
+
+  if (!resp.ok) {
+    const errBody = await resp.text().catch(() => "Unknown error");
+    console.error(`createCampaign failed (${resp.status}):`, errBody);
+    throw new Error(`Campaign creation failed (${resp.status}): ${errBody}`);
   }
 
-  // Fallback for guest/demo mode when RLS is active: generate a client campaign ID
-  const fallbackCampaign: Campaign = {
-    id: crypto.randomUUID(),
-    name,
-    query,
-    status: 'draft',
-    requested_limit: requestedLimit,
-    created_at: new Date().toISOString(),
-  };
-
-  try {
-    const existing = JSON.parse(localStorage.getItem("leadgen_local_campaigns") || "[]");
-    localStorage.setItem("leadgen_local_campaigns", JSON.stringify([fallbackCampaign, ...existing]));
-  } catch {}
-
-  return fallbackCampaign;
+  const data = await resp.json();
+  if (Array.isArray(data) && data.length > 0) return data[0];
+  if (data && data.id) return data;
+  throw new Error("Unexpected response from campaign creation");
 }
 
 export async function runCampaign(campaignId: string): Promise<{ status: string; job_id: string }> {
-  try {
-    const resp = await fetch(`${API_BASE}/api/campaigns/${campaignId}/run`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer anon-token-user",
-      },
-    });
-    if (resp.ok) {
-      return resp.json();
-    }
-  } catch (err) {
-    console.warn("Backend run campaign warning, using local job fallback:", err);
+  const resp = await fetch(`${API_BASE}/api/campaigns/${campaignId}/run`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!resp.ok) {
+    const errBody = await resp.text().catch(() => "Unknown error");
+    console.error(`runCampaign failed (${resp.status}):`, errBody);
+    throw new Error(`Run campaign failed (${resp.status}): ${errBody}`);
   }
 
-  const fallbackJobId = `job-${crypto.randomUUID().slice(0, 8)}`;
-  return { status: "accepted", job_id: fallbackJobId };
+  return resp.json();
 }
 
-const jobProgressTracker = new Map<string, number>();
-
 export async function getJobStatus(jobId: string): Promise<ScrapeJob> {
-  try {
-    const resp = await fetch(`${API_BASE}/api/jobs/${jobId}`);
-    if (resp.ok) {
-      const data = await resp.json();
-      if (data && data.status) return data;
-    }
-  } catch {}
+  const resp = await fetch(`${API_BASE}/api/jobs/${jobId}`);
 
-  const currentStep = (jobProgressTracker.get(jobId) || 0) + 1;
-  jobProgressTracker.set(jobId, currentStep);
-
-  if (currentStep === 1) {
+  if (!resp.ok) {
+    console.warn(`getJobStatus failed (${resp.status})`);
+    // For job polling, return a pending status instead of throwing
     return {
       id: jobId,
-      campaign_id: "demo",
-      status: "running",
-      progress: 30,
-      total_urls_found: 12,
-      total_urls_scraped: 6,
-      total_leads_extracted: 4,
-      total_emails_verified: 3,
-    };
-  } else if (currentStep === 2) {
-    return {
-      id: jobId,
-      campaign_id: "demo",
-      status: "extracting",
-      progress: 70,
-      total_urls_found: 22,
-      total_urls_scraped: 16,
-      total_leads_extracted: 14,
-      total_emails_verified: 11,
-    };
-  } else {
-    return {
-      id: jobId,
-      campaign_id: "demo",
-      status: "completed",
-      progress: 100,
-      total_urls_found: 28,
-      total_urls_scraped: 22,
-      total_leads_extracted: 18,
-      total_emails_verified: 15,
+      campaign_id: "unknown",
+      status: "queued",
+      progress: 5,
+      total_urls_found: 0,
+      total_urls_scraped: 0,
+      total_leads_extracted: 0,
+      total_emails_verified: 0,
     };
   }
+
+  const data = await resp.json();
+  if (data && data.status) return data;
+
+  // Worker returns a fallback object even if job not found
+  return data;
 }
 
 export async function getCampaignLeads(campaignId: string): Promise<Lead[]> {
-  try {
-    const resp = await fetch(`${API_BASE}/api/campaigns/${campaignId}/leads`);
-    if (resp.ok) {
-      return resp.json();
-    }
-  } catch {}
+  const resp = await fetch(`${API_BASE}/api/campaigns/${campaignId}/leads`);
 
-  return [
-    {
-      id: "lead-1",
-      campaign_id: campaignId,
-      company_name: "Apex Digital Media",
-      contact_name: "Rohan Sharma",
-      title: "Head of Marketing",
-      email: "rohan@apexdigital.in",
-      phone: "+91 98200 12345",
-      website: "https://apexdigital.in",
-      source_url: "https://apexdigital.in/contact",
-      confidence: 94,
-      verification_status: "verified",
-    },
-    {
-      id: "lead-2",
-      campaign_id: campaignId,
-      company_name: "BlueSky Interactive",
-      contact_name: "Priya Mehta",
-      title: "Founder & CEO",
-      email: "priya@blueskyinteractive.com",
-      phone: "+91 98211 67890",
-      website: "https://blueskyinteractive.com",
-      source_url: "https://blueskyinteractive.com/about",
-      confidence: 91,
-      verification_status: "verified",
-    },
-  ];
+  if (!resp.ok) {
+    console.warn(`getCampaignLeads failed (${resp.status})`);
+    return [];
+  }
+
+  return resp.json();
 }
+

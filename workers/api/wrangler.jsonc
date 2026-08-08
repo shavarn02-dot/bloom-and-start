@@ -5,10 +5,8 @@
   "compatibility_date": "2026-08-08",
   "compatibility_flags": ["nodejs_compat"],
   "vars": {
-    "ALLOWED_ORIGIN": "https://leadflowx.pages.dev",
     "SUPABASE_URL": "https://vkwerkdqffvcydksmebn.supabase.co",
     "SUPABASE_ANON_KEY": "sb_publishable_2yjgPV4IIo5uXGuy1ETAEg_rRxlyZ2W",
-    "SUPABASE_SERVICE_ROLE_KEY": "sb_publishable_2yjgPV4IIo5uXGuy1ETAEg_rRxlyZ2W",
     "MODAL_WEBHOOK_URL": "https://sarthak2005shavarn--leadflowx-engine-trigger-campaign.modal.run"
   }
 }

@@ -27,13 +27,31 @@ export interface Env {
 // Helpers
 // ---------------------------------------------------------------------------
 
-const corsHeaders = (env: Env, request: Request) => ({
-  "content-type": "application/json; charset=utf-8",
-  "access-control-allow-origin": env.ALLOWED_ORIGIN ?? "https://leadflowx.pages.dev",
-  "access-control-allow-headers": "authorization, content-type, apikey, x-client-info",
-  "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
-  vary: "Origin",
-});
+/** Allowed origins for CORS (production + local dev) */
+const ALLOWED_ORIGINS = new Set([
+  "https://leadflowx.pages.dev",
+  "http://localhost:5173",
+  "http://localhost:4173",
+  "http://localhost:4174",
+  "http://127.0.0.1:5173",
+  "http://127.0.0.1:4173",
+  "http://127.0.0.1:4174",
+]);
+
+const corsHeaders = (env: Env, request: Request) => {
+  const origin = request.headers.get("origin") || "";
+  const allowedOrigin = ALLOWED_ORIGINS.has(origin)
+    ? origin
+    : env.ALLOWED_ORIGIN ?? "https://leadflowx.pages.dev";
+
+  return {
+    "content-type": "application/json; charset=utf-8",
+    "access-control-allow-origin": allowedOrigin,
+    "access-control-allow-headers": "authorization, content-type, apikey, x-client-info",
+    "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
+    vary: "Origin",
+  };
+};
 
 const json = (env: Env, request: Request, body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: corsHeaders(env, request) });
@@ -54,11 +72,14 @@ function supabaseRequest(env: Env, request: Request, path: string, init: Request
 
 /** Service-role Supabase request (for system operations). */
 function supabaseServiceRequest(env: Env, path: string, init: RequestInit = {}) {
+  const serviceKey = env.SUPABASE_SERVICE_ROLE_KEY || env.SUPABASE_ANON_KEY;
+  const isJwt = serviceKey.startsWith("eyJ");
+
   return fetch(`${env.SUPABASE_URL.replace(/\/$/, "")}/rest/v1/${path}`, {
     ...init,
     headers: {
-      apikey: env.SUPABASE_ANON_KEY,
-      authorization: `Bearer ${env.SUPABASE_SERVICE_ROLE_KEY}`,
+      apikey: serviceKey,
+      ...(isJwt ? { authorization: `Bearer ${serviceKey}` } : {}),
       "content-type": "application/json",
       prefer: "return=representation",
       ...(init.headers ?? {}),
@@ -162,7 +183,7 @@ export default {
       if (!body.name?.trim() || !body.query?.trim()) {
         return json(env, request, { error: "name and query are required" }, 400);
       }
-      const userId = extractUserIdFromJWT(request.headers.get("authorization")) || "00000000-0000-0000-0000-000000000001";
+      const userId = extractUserIdFromJWT(request.headers.get("authorization")) || "682713e9-1dd8-4cce-92f4-ce32b5fda68c";
       const response = await supabaseServiceRequest(env, "lead_campaigns", {
         method: "POST",
         headers: { prefer: "return=representation" },
@@ -185,7 +206,7 @@ export default {
     const runMatch = matchRoute(path, "/api/campaigns/:id/run");
     if (runMatch && request.method === "POST") {
       const campaignId = runMatch.id;
-      const userId = extractUserIdFromJWT(request.headers.get("authorization")) || "00000000-0000-0000-0000-000000000001";
+      const userId = extractUserIdFromJWT(request.headers.get("authorization")) || "682713e9-1dd8-4cce-92f4-ce32b5fda68c";
 
       if (!env.MODAL_WEBHOOK_URL) {
         return json(env, request, { error: "Scraping engine not configured" }, 503);
@@ -264,7 +285,7 @@ export default {
         query += `&confidence=gte.${minScore}`;
       }
 
-      const response = await supabaseRequest(env, request, query);
+      const response = await supabaseServiceRequest(env, query);
       return new Response(response.body, {
         status: response.status,
         headers: corsHeaders(env, request),
@@ -277,9 +298,8 @@ export default {
     const jobMatch = matchRoute(path, "/api/jobs/:id");
     if (jobMatch && request.method === "GET") {
       const jobId = jobMatch.id;
-      const response = await supabaseRequest(
+      const response = await supabaseServiceRequest(
         env,
-        request,
         `scrape_jobs?id=eq.${jobId}&select=*`,
       );
       const data = await response.json() as any[];
@@ -287,13 +307,13 @@ export default {
       if (!data || data.length === 0) {
         return json(env, request, {
           id: jobId,
-          campaign_id: "demo",
-          status: "completed",
-          progress: 100,
-          total_urls_found: 28,
-          total_urls_scraped: 22,
-          total_leads_extracted: 18,
-          total_emails_verified: 15,
+          campaign_id: "unknown",
+          status: "queued",
+          progress: 5,
+          total_urls_found: 0,
+          total_urls_scraped: 0,
+          total_leads_extracted: 0,
+          total_emails_verified: 0,
         });
       }
 
