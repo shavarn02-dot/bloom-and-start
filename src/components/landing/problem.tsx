@@ -1,7 +1,7 @@
 import { Annotation, SectionLabel } from "@/components/leadgen/marks";
 import { Reveal } from "@/components/leadgen/reveal";
 import { SketchCheck, SketchConnector, SketchGlyph } from "@/components/leadgen/sketches";
-import { useScrollProgress } from "@/hooks/use-reveal";
+import { useInView } from "@/hooks/use-reveal";
 import { cn } from "@/lib/utils";
 
 /**
