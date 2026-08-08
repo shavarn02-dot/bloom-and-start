@@ -94,24 +94,54 @@ export async function runCampaign(campaignId: string): Promise<{ status: string;
   return { status: "accepted", job_id: fallbackJobId };
 }
 
+const jobProgressTracker = new Map<string, number>();
+
 export async function getJobStatus(jobId: string): Promise<ScrapeJob> {
   try {
     const resp = await fetch(`${API_BASE}/api/jobs/${jobId}`);
     if (resp.ok) {
-      return resp.json();
+      const data = await resp.json();
+      if (data && data.status) return data;
     }
   } catch {}
 
-  return {
-    id: jobId,
-    campaign_id: "demo",
-    status: "completed",
-    progress: 100,
-    total_urls_found: 18,
-    total_urls_scraped: 15,
-    total_leads_extracted: 12,
-    total_emails_verified: 10,
-  };
+  const currentStep = (jobProgressTracker.get(jobId) || 0) + 1;
+  jobProgressTracker.set(jobId, currentStep);
+
+  if (currentStep === 1) {
+    return {
+      id: jobId,
+      campaign_id: "demo",
+      status: "running",
+      progress: 30,
+      total_urls_found: 12,
+      total_urls_scraped: 6,
+      total_leads_extracted: 4,
+      total_emails_verified: 3,
+    };
+  } else if (currentStep === 2) {
+    return {
+      id: jobId,
+      campaign_id: "demo",
+      status: "extracting",
+      progress: 70,
+      total_urls_found: 22,
+      total_urls_scraped: 16,
+      total_leads_extracted: 14,
+      total_emails_verified: 11,
+    };
+  } else {
+    return {
+      id: jobId,
+      campaign_id: "demo",
+      status: "completed",
+      progress: 100,
+      total_urls_found: 28,
+      total_urls_scraped: 22,
+      total_leads_extracted: 18,
+      total_emails_verified: 15,
+    };
+  }
 }
 
 export async function getCampaignLeads(campaignId: string): Promise<Lead[]> {
