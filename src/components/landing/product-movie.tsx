@@ -1,5 +1,6 @@
 import { Annotation, SectionLabel } from "@/components/leadgen/marks";
 import {
+  BusinessProfilePanel,
   CampaignProgressPanel,
   LeadTable,
   LeadToolbar,
@@ -10,6 +11,11 @@ import { useScrollProgress } from "@/hooks/use-reveal";
 import { cn } from "@/lib/utils";
 
 const stages = [
+  {
+    key: "profile",
+    label: "Business profile",
+    caption: "You describe the business once.",
+  },
   {
     key: "strategy",
     label: "Search strategy",
@@ -99,14 +105,15 @@ export function ProductMovie() {
             <div>
               <ProductFrame title={active.label} className="shadow-lift">
               <div key={active.key} className="animate-fade-up">
-                  {index === 0 && <StrategyList />}
-                  {index === 1 && (
+                  {index === 0 && <BusinessProfilePanel revealCount={7} />}
+                  {index === 1 && <StrategyList />}
+                  {index === 2 && (
                     <CampaignProgressPanel
                       progress={campaignProgress}
                       activeIndex={2}
                     />
                   )}
-                  {index === 2 && (
+                  {index === 3 && (
                     <LeadTable
                       leads={exampleLeads.slice(0, 4)}
                       dense
@@ -114,10 +121,10 @@ export function ProductMovie() {
                       showVerification
                     />
                   )}
-                  {index === 3 && (
+                  {index === 4 && (
                     <LeadTable leads={exampleLeads.slice(0, 4)} dense animateScores />
                   )}
-                  {index === 4 && (
+                  {index === 5 && (
                     <>
                       <LeadToolbar />
                       <LeadTable leads={exampleLeads.slice(0, 5)} dense animateRows />
