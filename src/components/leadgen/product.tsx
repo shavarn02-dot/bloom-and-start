@@ -25,7 +25,7 @@ export function ProductFrame({
   return (
     <div
       className={cn(
-        "overflow-hidden rounded-lg border border-border bg-paper shadow-paper",
+        "min-w-0 max-w-full overflow-hidden rounded-lg border border-border bg-paper shadow-paper",
         className,
       )}
     >
