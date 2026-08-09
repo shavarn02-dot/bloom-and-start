@@ -10,12 +10,11 @@ for (const target of targets) {
   if (fs.existsSync(target)) {
     try {
       const config = JSON.parse(fs.readFileSync(target, "utf-8"));
-      // Cloudflare Pages project configs MUST NOT contain 'main', 'assets', or 'site'
+      // Cloudflare Pages projects forbid 'main' and 'assets' keys in Pages config
       delete config.main;
       delete config.assets;
-      delete config.site;
       fs.writeFileSync(target, JSON.stringify(config, null, 2));
-      console.log(`[postbuild] Successfully sanitized ${target} for Cloudflare Pages (removed main & assets)`);
+      console.log(`[postbuild] Successfully sanitized ${target} for Cloudflare Pages!`);
     } catch (err) {
       console.error(`[postbuild] Error processing ${target}:`, err);
     }
