@@ -1,4 +1,5 @@
 import { Link, Outlet, createFileRoute, useNavigate, useRouterState } from "@tanstack/react-router";
+// LeadGen AI App Layout — v2.5 Clean Build
 import { useEffect, useRef, useState } from "react";
 import {
   LayoutDashboard,
