@@ -47,10 +47,10 @@ export function AuthShell({ children }: { children: ReactNode }) {
               >
                 <img
                   src={authFounder}
-                  alt="A founder researching potential customers on a laptop"
+                  alt="A founder working on a laptop while sitting on a sunny beach"
                   width={1024}
                   height={1536}
-                  className="h-[220px] w-full object-cover object-[60%_30%] sm:h-[300px] lg:h-[440px]"
+                  className="h-[220px] w-full object-cover object-[50%_35%] sm:h-[300px] lg:h-[440px]"
                 />
               </div>
             </Reveal>
