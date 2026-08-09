@@ -10,15 +10,11 @@ for (const target of targets) {
   if (fs.existsSync(target)) {
     try {
       const config = JSON.parse(fs.readFileSync(target, "utf-8"));
-      // Cloudflare Pages forbids binding name 'ASSETS'
-      if (config.assets && config.assets.binding) {
-        delete config.assets.binding;
-      }
-      if (!config.assets) {
-        config.assets = { directory: "../public" };
-      }
+      // Cloudflare Pages forbids 'assets' and 'main' keys in Pages configuration file
+      delete config.assets;
+      delete config.main;
       fs.writeFileSync(target, JSON.stringify(config, null, 2));
-      console.log(`[postbuild] Successfully sanitized ${target} for Cloudflare deployment!`);
+      console.log(`[postbuild] Successfully sanitized ${target} for Cloudflare Pages!`);
     } catch (err) {
       console.error(`[postbuild] Error processing ${target}:`, err);
     }
