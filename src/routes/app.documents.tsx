@@ -8,7 +8,7 @@ import { API_BASE, authFetch } from "@/lib/api";
 export const Route = createFileRoute("/app/documents")({
   head: () => ({
     meta: [
-      { title: "Documents — LeadGen AI" },
+      { title: "Documents — LeadFlowX" },
       {
         name: "description",
         content:

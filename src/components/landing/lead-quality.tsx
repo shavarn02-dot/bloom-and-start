@@ -16,7 +16,7 @@ export function LeadQuality() {
               Not every contact is a lead.
             </h2>
             <p className="mt-5 max-w-md text-[16px] leading-relaxed text-muted-foreground">
-              LeadGen AI evaluates prospects against the business context you provide
+              LeadFlowX evaluates prospects against the business context you provide
               instead of presenting an undifferentiated list of contacts.
             </p>
             <Annotation className="mt-5 block">"This is what matters."</Annotation>

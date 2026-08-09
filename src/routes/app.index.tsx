@@ -11,7 +11,7 @@ import type { BusinessProfile } from "@/routes/app.profiles";
 export const Route = createFileRoute("/app/")({
   head: () => ({
     meta: [
-      { title: "Overview — LeadGen AI" },
+      { title: "Overview — LeadFlowX" },
       {
         name: "description",
         content: "Your campaigns at a glance and a single place to start the next one.",

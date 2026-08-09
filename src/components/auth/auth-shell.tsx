@@ -97,7 +97,7 @@ export function AuthShell({ children }: { children: ReactNode }) {
       {/* RIGHT — form panel */}
       <main className="flex flex-col justify-center px-6 py-12 sm:px-10 lg:px-16">
         <div className="mx-auto w-full max-w-[500px]">
-          <Link to="/" className="mb-8 block w-fit lg:hidden" aria-label="LeadGen AI home">
+          <Link to="/" className="mb-8 block w-fit lg:hidden" aria-label="LeadFlowX home">
             <Wordmark />
           </Link>
           {children}

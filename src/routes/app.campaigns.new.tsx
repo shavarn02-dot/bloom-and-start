@@ -10,7 +10,7 @@ import type { BusinessProfile } from "@/routes/app.profiles";
 export const Route = createFileRoute("/app/campaigns/new")({
   head: () => ({
     meta: [
-      { title: "New campaign — LeadGen AI" },
+      { title: "New Campaign — LeadFlowX" },
       {
         name: "description",
         content: "Create a live scraping campaign to find real business leads.",

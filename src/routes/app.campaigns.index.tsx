@@ -8,7 +8,7 @@ import { API_BASE, authFetch, type Campaign } from "@/lib/api";
 export const Route = createFileRoute("/app/campaigns/")({
   head: () => ({
     meta: [
-      { title: "Campaigns — LeadGen AI" },
+      { title: "Campaigns — LeadFlowX" },
       {
         name: "description",
         content: "Every campaign you've run, with live progress for the one in flight.",

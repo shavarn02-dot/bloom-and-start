@@ -17,7 +17,7 @@ import {
 export const Route = createFileRoute("/app/leads")({
   head: () => ({
     meta: [
-      { title: "Your leads — LeadGen AI" },
+      { title: "Leads — LeadFlowX" },
       {
         name: "description",
         content: "Search, filter, sort and export real extracted leads.",

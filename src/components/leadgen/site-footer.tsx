@@ -44,7 +44,7 @@ export function SiteFooter() {
       </div>
       <div className="border-t border-border">
         <div className="mx-auto flex max-w-6xl flex-col gap-2 px-5 py-5 text-xs text-muted-foreground sm:flex-row sm:items-center sm:justify-between sm:px-8">
-          <p>© {new Date().getFullYear()} LeadGen AI</p>
+          <p>© {new Date().getFullYear()} LeadFlowX. All rights reserved.</p>
           <p>Built for people who actually sell.</p>
         </div>
       </div>

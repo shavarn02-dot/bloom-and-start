@@ -13,6 +13,7 @@ import {
   Search,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { LeadFlowXLogo } from "@/components/leadgen/logo";
 
 const navItems = [
   { to: "/app", label: "Overview", icon: LayoutDashboard, symbol: "▦", exact: true },
@@ -88,11 +89,8 @@ function AppLayout() {
         
         {/* Brand Header */}
         <div className="flex items-center gap-2.5 px-5 py-5 border-b border-sidebar-border/60">
-          <div className="flex size-7 items-center justify-center rounded-lg bg-primary text-primary-foreground font-bold text-sm">
-            <Search className="size-4" strokeWidth={2.5} />
-          </div>
-          <Link to="/app" className="text-base font-bold tracking-tight text-foreground hover:opacity-90">
-            LeadGen AI
+          <Link to="/app" className="hover:opacity-90 transition-opacity">
+            <LeadFlowXLogo size="md" />
           </Link>
         </div>
 

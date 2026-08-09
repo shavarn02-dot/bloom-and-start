@@ -13,9 +13,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { HandUnderline } from "@/components/leadgen/marks";
 
-const title = "Create your LeadGen AI account";
+const title = "Create your LeadFlowX account";
 const description =
-  "Create a LeadGen AI account and start finding the people your business should be talking to.";
+  "Create a LeadFlowX account and start finding the people your business should be talking to.";
 
 export const Route = createFileRoute("/register")({
   head: () => ({

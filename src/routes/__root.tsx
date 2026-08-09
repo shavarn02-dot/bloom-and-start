@@ -80,14 +80,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { name: "color-scheme", content: "light" },
       { name: "theme-color", content: "#fdfcf8" },
-      { title: "LeadGen AI — Auto Lead Finder" },
+      { title: "LeadFlowX — AI B2B Prospecting Platform" },
       {
         name: "description",
         content:
-          "Tell LeadGen AI what your business does and who you want to reach, and turn that context into a focused list of prospects. Free to start.",
+          "Tell LeadFlowX what your business does and who you want to reach, and turn that context into a focused list of qualified prospects. Free to start.",
       },
-      { name: "author", content: "LeadGen AI" },
-      { property: "og:title", content: "LeadGen AI — Auto Lead Finder" },
+      { name: "author", content: "LeadFlowX" },
+      { property: "og:title", content: "LeadFlowX — AI B2B Prospecting Platform" },
       {
         property: "og:description",
         content:

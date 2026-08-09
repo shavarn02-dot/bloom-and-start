@@ -12,9 +12,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { HandUnderline } from "@/components/leadgen/marks";
 
-const title = "Log in to LeadGen AI";
+const title = "Log in to LeadFlowX";
 const description =
-  "Log in to LeadGen AI to pick up your lead research where you left off.";
+  "Log in to LeadFlowX to pick up your lead research where you left off.";
 
 export const Route = createFileRoute("/login")({
   head: () => ({
@@ -115,7 +115,7 @@ function LoginPage() {
         </p>
 
         <p className="mt-8 text-xs leading-relaxed text-muted-foreground">
-          By continuing you agree to the LeadGen AI Terms and Privacy Policy.
+          By continuing you agree to the LeadFlowX Terms and Privacy Policy.
         </p>
       </div>
     </AuthShell>

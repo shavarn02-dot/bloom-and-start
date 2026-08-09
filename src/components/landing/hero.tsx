@@ -40,7 +40,7 @@ export function Hero() {
           </h1>
 
           <p className="animate-hero-subcopy mt-6 max-w-lg text-[16.5px] leading-relaxed text-muted-foreground">
-            Tell us what your business does and who you're trying to reach. LeadGen AI
+            Tell us what your business does and who you're trying to reach. LeadFlowX
             helps turn that context into a focused list of prospects worth exploring.
           </p>
 

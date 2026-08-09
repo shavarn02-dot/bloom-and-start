@@ -7,12 +7,12 @@ import { PageHeader, Panel } from "@/components/dashboard/primitives";
 export const Route = createFileRoute("/app/settings")({
   head: () => ({
     meta: [
-      { title: "Settings — LeadGen AI" },
+      { title: "Settings — LeadFlowX" },
       {
         name: "description",
         content: "Account details, plan limits and campaign preferences.",
       },
-      { property: "og:title", content: "Settings — LeadGen AI" },
+      { property: "og:title", content: "Settings — LeadFlowX" },
       {
         property: "og:description",
         content: "Account details and current plan limits.",
@@ -26,7 +26,7 @@ export const Route = createFileRoute("/app/settings")({
 function Settings() {
   const [name, setName] = useState("Sarthak Shavarn");
   const [email, setEmail] = useState("sarthak@example.com");
-  const [company, setCompany] = useState("LeadGen AI");
+  const [company, setCompany] = useState("LeadFlowX");
   const [isSaved, setIsSaved] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 

@@ -9,7 +9,7 @@ import {
 
 const faqs = [
   {
-    q: "Is LeadGen AI really free?",
+    q: "Is LeadFlowX really free?",
     a: "Yes. The current plan is free and includes up to 3 business profiles, up to 50 leads per campaign and up to 10 campaigns per month. There is no paid tier at the moment.",
   },
   {
@@ -30,7 +30,7 @@ const faqs = [
   },
   {
     q: "Can I upload my company's documents?",
-    a: "Yes. You can attach PDFs — a deck, a catalogue, a one-pager — and LeadGen reads them as extra business context when building your search strategy.",
+    a: "Yes. You can attach PDFs — a deck, a catalogue, a one-pager — and LeadFlowX reads them as extra business context when building your search strategy.",
   },
   {
     q: "What happens when an AI provider reaches its limit?",

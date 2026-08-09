@@ -43,7 +43,7 @@ export function SiteHeader() {
           scrolled ? "h-14" : "h-16",
         )}
       >
-        <Link to="/" aria-label="LeadGen AI home">
+        <Link to="/" aria-label="LeadFlowX home">
           <Wordmark />
         </Link>
 
