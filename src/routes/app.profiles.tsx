@@ -235,7 +235,7 @@ function Profiles() {
                   <button
                     type="button"
                     onClick={() => handleDelete(p.id)}
-                    className="inline-flex items-center gap-1 text-[12px] font-medium text-red-600 hover:text-red-700 transition-colors"
+                    className="inline-flex items-center gap-1 text-[12px] font-medium text-red-600 transition-all duration-200 hover:text-red-700 hover:scale-105"
                   >
                     <Trash2 className="size-3.5" /> Delete
                   </button>
