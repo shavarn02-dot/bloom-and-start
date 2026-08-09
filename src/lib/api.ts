@@ -41,11 +41,11 @@ export interface Lead {
   metadata?: any;
 }
 
-export async function createCampaign(name: string, query: string, requestedLimit = 25): Promise<Campaign> {
+export async function createCampaign(name: string, query: string, requestedLimit = 25, profileId?: string): Promise<Campaign> {
   const resp = await fetch(`${API_BASE}/api/campaigns`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ name, query, requested_limit: requestedLimit }),
+    body: JSON.stringify({ name, query, requested_limit: requestedLimit, business_profile_id: profileId || null }),
   });
 
   if (!resp.ok) {

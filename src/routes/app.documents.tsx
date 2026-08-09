@@ -63,6 +63,7 @@ function Documents() {
     if (!files || files.length === 0) return;
 
     const file = files[0];
+    if (!file) return;
     setIsUploading(true);
 
     try {
