@@ -1,0 +1,22 @@
+name: Deploy leadflowx-api Worker
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - "workers/api/**"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    name: Deploy Worker to Cloudflare
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy Worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          workingDirectory: workers/api
+          wranglerVersion: "3"
