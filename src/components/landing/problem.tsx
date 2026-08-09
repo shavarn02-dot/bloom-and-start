@@ -66,81 +66,98 @@ export function Problem() {
           </Reveal>
         </div>
 
-        <div ref={ref} className="mt-12 grid gap-12 lg:grid-cols-2 lg:gap-16">
+        {/* Whiteboard — both columns written out by hand in marker. */}
+        <div
+          ref={ref}
+          className="relative mt-14 rotate-[-0.5deg] rounded-[6px] border border-border-strong bg-card p-6 shadow-lift sm:p-10"
+        >
+          {/* marker tray */}
+          <div
+            aria-hidden="true"
+            className="absolute inset-x-8 -bottom-2 h-2 rounded-b-[4px] bg-border-strong/70"
+          />
 
-          {/* OLD WAY — gets messier the further you read. */}
-          <div>
-            <p className="font-mono text-[12px] tracking-[0.18em] text-muted-foreground uppercase">
-              The old way
-            </p>
-            <ol className="relative mt-6 space-y-3">
-              {oldSteps.map((step, i) => (
-                <li
-                  key={step.label}
-                  className={cn(
-                    "flex items-center gap-3 transition-all duration-500",
-                    inView ? "translate-x-0 opacity-100" : i % 2 === 0 ? "-translate-x-3 opacity-0" : "translate-x-3 opacity-0",
-                  )}
-                  style={{
-                    marginLeft: `${Math.min(i, 4) * 14}px`,
-                    transitionDelay: `${i * 140}ms`,
-                  }}
-                >
-                  <SketchGlyph kind={step.kind} className="shrink-0" />
-                  <span className="text-[15.5px] text-secondary-foreground">
-                    {step.label}
-                  </span>
-                </li>
-              ))}
-            </ol>
-
-            {/* Spreadsheet rows multiplying underneath the loop. */}
-            <div className="mt-7 max-w-sm space-y-1.5" aria-hidden="true">
-              {Array.from({ length: 7 }).map((_, i) => (
-                <div
-                  key={i}
-                  className={cn(
-                    "h-px bg-border-strong transition-opacity duration-500",
-                    inView ? "opacity-70" : "opacity-0",
-                  )}
-                  style={{
-                    width: `${45 + ((i * 37) % 55)}%`,
-                    transitionDelay: `${700 + i * 110}ms`,
-                  }}
-                />
-              ))}
-            </div>
-
-            <Annotation className="mt-6 block -rotate-1 text-[19px]">
-              Twelve tabs open, still nobody worth emailing.
-            </Annotation>
-          </div>
-
-          {/* NEW WAY — one line, no clutter. */}
-          <Reveal delay={120} className="lg:pt-10">
-            <p className="font-mono text-[12px] tracking-[0.18em] text-primary uppercase">
-              With LeadGen
-            </p>
-            <div className="mt-6 flex flex-col items-start">
-              {newSteps.map((step, i) => (
-                <div key={step} className="w-full">
-                  <div className="flex items-baseline gap-3">
-                    <span className="font-mono text-[12px] text-primary">
-                      {String(i + 1).padStart(2, "0")}
+          <div className="grid gap-12 lg:grid-cols-2 lg:gap-16">
+            {/* OLD WAY — gets messier the further you read. */}
+            <div>
+              <p className="font-hand text-[24px] leading-none text-secondary-foreground -rotate-1">
+                The old way
+              </p>
+              <div className="mt-2 h-px w-40 bg-border-strong" />
+              <ol className="relative mt-6 space-y-3">
+                {oldSteps.map((step, i) => (
+                  <li
+                    key={step.label}
+                    className={cn(
+                      "flex items-center gap-3 transition-all duration-500",
+                      inView ? "translate-x-0 opacity-100" : i % 2 === 0 ? "-translate-x-3 opacity-0" : "translate-x-3 opacity-0",
+                    )}
+                    style={{
+                      marginLeft: `${Math.min(i, 4) * 14}px`,
+                      transform: inView ? `rotate(${i % 2 === 0 ? -0.7 : 0.6}deg)` : undefined,
+                      transitionDelay: `${i * 140}ms`,
+                    }}
+                  >
+                    <SketchGlyph kind={step.kind} className="shrink-0" />
+                    <span className="font-hand text-[22px] leading-snug text-secondary-foreground">
+                      {step.label}
                     </span>
-                    <span className="text-[16.5px] text-foreground">{step}</span>
-                    {i === newSteps.length - 1 && <SketchCheck className="ml-1" />}
-                  </div>
-                  {i < newSteps.length - 1 && (
-                    <div className="ml-1 py-1">
-                      <SketchConnector />
-                    </div>
-                  )}
-                </div>
-              ))}
+                  </li>
+                ))}
+              </ol>
+
+              {/* Spreadsheet rows multiplying underneath the loop. */}
+              <div className="mt-7 max-w-sm space-y-1.5" aria-hidden="true">
+                {Array.from({ length: 7 }).map((_, i) => (
+                  <div
+                    key={i}
+                    className={cn(
+                      "h-px bg-border-strong transition-opacity duration-500",
+                      inView ? "opacity-70" : "opacity-0",
+                    )}
+                    style={{
+                      width: `${45 + ((i * 37) % 55)}%`,
+                      transitionDelay: `${700 + i * 110}ms`,
+                    }}
+                  />
+                ))}
+              </div>
+
+              <Annotation className="mt-6 block -rotate-1 text-[19px]">
+                Twelve tabs open, still nobody worth emailing.
+              </Annotation>
             </div>
-          </Reveal>
+
+            {/* NEW WAY — one line, no clutter. */}
+            <Reveal delay={120} className="lg:pt-10">
+              <p className="font-hand text-[24px] leading-none text-primary rotate-1">
+                With LeadGen
+              </p>
+              <div className="mt-2 h-px w-40 bg-primary-soft" />
+              <div className="mt-6 flex flex-col items-start">
+                {newSteps.map((step, i) => (
+                  <div key={step} className="w-full">
+                    <div className="flex items-baseline gap-3">
+                      <span className="font-hand text-[18px] text-primary">
+                        {String(i + 1).padStart(2, "0")}
+                      </span>
+                      <span className="font-hand text-[23px] leading-snug text-foreground">
+                        {step}
+                      </span>
+                      {i === newSteps.length - 1 && <SketchCheck className="ml-1" />}
+                    </div>
+                    {i < newSteps.length - 1 && (
+                      <div className="ml-1 py-1">
+                        <SketchConnector />
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </Reveal>
+          </div>
         </div>
+
       </div>
     </section>
   );
