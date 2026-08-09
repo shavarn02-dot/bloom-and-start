@@ -47,13 +47,30 @@ function AppLayout() {
   );
 
   useEffect(() => {
-    const storedUser = localStorage.getItem("leadgen_user_name");
-    if (storedUser) {
-      setUserName(storedUser);
-    }
-  }, []);
+    // Check Supabase session first for real Google user details
+    import("@/lib/supabase").then(({ supabase }) => {
+      supabase.auth.getSession().then(({ data: { session } }) => {
+        if (session?.user) {
+          const name = session.user.user_metadata?.["full_name"] || session.user.email || "User";
+          setUserName(name);
+          localStorage.setItem("leadgen_user_name", name);
+          localStorage.setItem("leadgen_user_email", session.user.email || "");
+          return;
+        }
+        const storedUser = localStorage.getItem("leadgen_user_name");
+        if (storedUser) {
+          setUserName(storedUser);
+        } else {
+          // No user session found — redirect to login
+          navigate({ to: "/login" });
+        }
+      });
+    });
+  }, [navigate]);
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    const { supabase } = await import("@/lib/supabase");
+    await supabase.auth.signOut();
     localStorage.removeItem("leadgen_user_name");
     localStorage.removeItem("leadgen_user_email");
     navigate({ to: "/login" });
