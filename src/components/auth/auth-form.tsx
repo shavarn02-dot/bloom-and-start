@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { supabase, OAUTH_REDIRECT } from "@/lib/supabase";
 
 /** Official Google "G" mark. */
 export function GoogleMark({ className }: { className?: string }) {
@@ -31,24 +32,39 @@ export function GoogleMark({ className }: { className?: string }) {
 
 export function GoogleButton({ label }: { label?: string }) {
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  async function handleGoogleLogin() {
+    setLoading(true);
+    setError(null);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: {
+        redirectTo: OAUTH_REDIRECT,
+        queryParams: { access_type: "offline", prompt: "consent" },
+      },
+    });
+    if (error) {
+      setError(error.message);
+      setLoading(false);
+    }
+    // On success, browser redirects to Google — no further action needed
+  }
+
   return (
-    <Button
-      type="button"
-      variant="outline"
-      className="h-12 w-full gap-3 border-border-strong bg-paper text-base font-medium hover:bg-cream"
-      disabled={loading}
-      onClick={() => {
-        setLoading(true);
-        localStorage.setItem("leadgen_user_name", "Google User");
-        localStorage.setItem("leadgen_user_email", "google.user@leadgen.ai");
-        setTimeout(() => {
-          window.location.href = "/app";
-        }, 500);
-      }}
-    >
-      {loading ? <Loader2 className="size-4 animate-spin" /> : <GoogleMark />}
-      {label ?? "Continue with Google"}
-    </Button>
+    <div className="space-y-2">
+      <Button
+        type="button"
+        variant="outline"
+        className="h-12 w-full gap-3 border-border-strong bg-paper text-base font-medium hover:bg-cream"
+        disabled={loading}
+        onClick={handleGoogleLogin}
+      >
+        {loading ? <Loader2 className="size-4 animate-spin" /> : <GoogleMark />}
+        {label ?? "Continue with Google"}
+      </Button>
+      {error && <p className="text-sm text-destructive text-center">{error}</p>}
+    </div>
   );
 }
 
