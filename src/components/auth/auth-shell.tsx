@@ -26,29 +26,11 @@ export function AuthShell({ children }: { children: ReactNode }) {
             <Wordmark />
           </Link>
 
-          <div className="relative pt-10">
-            <Reveal variant="fade">
-              <div
-                className="relative overflow-hidden shadow-lift"
-                style={{
-                  clipPath:
-                    "polygon(4% 2%, 100% 0, 96% 94%, 0 100%)",
-                }}
-              >
-                <img
-                  src={authFounder}
-                  alt="A founder researching potential customers on a laptop"
-                  width={1024}
-                  height={1536}
-                  className="h-[220px] w-full object-cover object-[60%_30%] sm:h-[300px] lg:h-[460px]"
-                />
-              </div>
-            </Reveal>
-
+          <div className="relative">
             <Reveal
               variant="fade"
               delay={320}
-              className="pointer-events-none absolute top-0 right-2 hidden items-end gap-1 lg:flex"
+              className="mb-2 hidden items-end justify-end gap-1 pr-6 lg:flex"
             >
               <Annotation className="text-xl text-foreground/70">
                 Find the right people.
@@ -56,8 +38,26 @@ export function AuthShell({ children }: { children: ReactNode }) {
               <HandArrow animated className="h-6 w-14 -rotate-6" />
             </Reveal>
 
-            <SketchSearch className="absolute -left-3 bottom-6 hidden h-12 w-12 text-primary/50 lg:block" />
+            <Reveal variant="fade">
+              <div
+                className="relative overflow-hidden shadow-lift"
+                style={{
+                  clipPath: "polygon(4% 2%, 100% 0, 96% 94%, 0 100%)",
+                }}
+              >
+                <img
+                  src={authFounder}
+                  alt="A founder researching potential customers on a laptop"
+                  width={1024}
+                  height={1536}
+                  className="h-[220px] w-full object-cover object-[60%_30%] sm:h-[300px] lg:h-[440px]"
+                />
+              </div>
+            </Reveal>
+
+            <SketchSearch className="absolute -left-3 bottom-8 hidden h-12 w-12 text-primary/50 lg:block" />
           </div>
+
 
           <div className="max-w-sm">
             <p className="font-hand text-2xl text-primary">More conversations.</p>
