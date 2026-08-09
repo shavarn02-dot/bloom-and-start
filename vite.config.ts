@@ -34,6 +34,11 @@ export default defineConfig({
     server: { entry: "server" },
     nitro: {
       preset: "cloudflare-pages",
+      rollupConfig: {
+        output: {
+          inlineDynamicImports: true,
+        },
+      },
     },
   },
 });
