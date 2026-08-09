@@ -55,13 +55,13 @@ export function SiteHeader() {
 
         <div className="hidden items-center gap-4 md:flex">
           <Link
-            to="/app"
+            to="/login"
             className="text-[13.5px] text-muted-foreground transition-colors hover:text-foreground"
           >
             Log in
           </Link>
           <Link
-            to="/app"
+            to="/register"
             className="inline-flex h-9 items-center rounded-md bg-primary px-3.5 text-[13.5px] font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary/90"
           >
             Start finding leads&nbsp;→
@@ -93,11 +93,11 @@ export function SiteHeader() {
             ))}
           </nav>
           <div className="mt-4 flex items-center gap-3">
-            <Link to="/app" className="text-sm text-muted-foreground">
+            <Link to="/login" className="text-sm text-muted-foreground">
               Log in
             </Link>
             <Link
-              to="/app"
+              to="/register"
               className="inline-flex h-9 flex-1 items-center justify-center rounded-md bg-primary px-3.5 text-sm font-medium text-primary-foreground"
             >
               Start finding leads&nbsp;→
