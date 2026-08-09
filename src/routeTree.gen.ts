@@ -19,6 +19,7 @@ import { Route as AppDocumentsRouteImport } from './routes/app.documents'
 import { Route as AppLeadsRouteImport } from './routes/app.leads'
 import { Route as AppProfilesRouteImport } from './routes/app.profiles'
 import { Route as AppSettingsRouteImport } from './routes/app.settings'
+import { Route as AuthCallbackRouteImport } from './routes/auth.callback'
 import { Route as AppCampaignsIndexRouteImport } from './routes/app.campaigns.index'
 import { Route as AppCampaignsNewRouteImport } from './routes/app.campaigns.new'
 
@@ -72,6 +73,11 @@ const AppSettingsRoute = AppSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => AppRoute,
 } as any)
+const AuthCallbackRoute = AuthCallbackRouteImport.update({
+  id: '/auth/callback',
+  path: '/auth/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AppCampaignsIndexRoute = AppCampaignsIndexRouteImport.update({
   id: '/campaigns/',
   path: '/campaigns/',
@@ -93,6 +99,7 @@ export interface FileRoutesByFullPath {
   '/app/leads': typeof AppLeadsRoute
   '/app/profiles': typeof AppProfilesRoute
   '/app/settings': typeof AppSettingsRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/app/': typeof AppIndexRoute
   '/app/campaigns/new': typeof AppCampaignsNewRoute
   '/app/campaigns/': typeof AppCampaignsIndexRoute
@@ -106,6 +113,7 @@ export interface FileRoutesByTo {
   '/app/leads': typeof AppLeadsRoute
   '/app/profiles': typeof AppProfilesRoute
   '/app/settings': typeof AppSettingsRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/app': typeof AppIndexRoute
   '/app/campaigns/new': typeof AppCampaignsNewRoute
   '/app/campaigns': typeof AppCampaignsIndexRoute
@@ -121,6 +129,7 @@ export interface FileRoutesById {
   '/app/leads': typeof AppLeadsRoute
   '/app/profiles': typeof AppProfilesRoute
   '/app/settings': typeof AppSettingsRoute
+  '/auth/callback': typeof AuthCallbackRoute
   '/app/': typeof AppIndexRoute
   '/app/campaigns/new': typeof AppCampaignsNewRoute
   '/app/campaigns/': typeof AppCampaignsIndexRoute
@@ -137,6 +146,7 @@ export interface FileRouteTypes {
     | '/app/leads'
     | '/app/profiles'
     | '/app/settings'
+    | '/auth/callback'
     | '/app/'
     | '/app/campaigns/new'
     | '/app/campaigns/'
@@ -150,6 +160,7 @@ export interface FileRouteTypes {
     | '/app/leads'
     | '/app/profiles'
     | '/app/settings'
+    | '/auth/callback'
     | '/app'
     | '/app/campaigns/new'
     | '/app/campaigns'
@@ -164,6 +175,7 @@ export interface FileRouteTypes {
     | '/app/leads'
     | '/app/profiles'
     | '/app/settings'
+    | '/auth/callback'
     | '/app/'
     | '/app/campaigns/new'
     | '/app/campaigns/'
@@ -175,6 +187,7 @@ export interface RootRouteChildren {
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
+  AuthCallbackRoute: typeof AuthCallbackRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -249,6 +262,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AppSettingsRouteImport
       parentRoute: typeof AppRoute
     }
+    '/auth/callback': {
+      id: '/auth/callback'
+      path: '/auth/callback'
+      fullPath: '/auth/callback'
+      preLoaderRoute: typeof AuthCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/app/campaigns/': {
       id: '/app/campaigns/'
       path: '/campaigns'
@@ -294,6 +314,7 @@ const rootRouteChildren: RootRouteChildren = {
   ForgotPasswordRoute: ForgotPasswordRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
+  AuthCallbackRoute: AuthCallbackRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
