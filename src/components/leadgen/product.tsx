@@ -15,7 +15,7 @@ export function ProductFrame({
   title,
   children,
   className,
-  labelled = true,
+  labelled = false,
 }: {
   title: string;
   children: React.ReactNode;

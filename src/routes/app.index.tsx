@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Plus } from "lucide-react";
-import { Annotation, ExampleDataBadge } from "@/components/leadgen/marks";
+import { useState, useEffect } from "react";
+import { ArrowRight, Plus, Loader2, Target } from "lucide-react";
+import { Annotation } from "@/components/leadgen/marks";
 import { PageHeader, Panel, PrimaryAction } from "@/components/dashboard/primitives";
-import { exampleCampaigns } from "@/data/example";
 import { StatusPill } from "@/components/leadgen/product";
+import { API_BASE, type Campaign } from "@/lib/api";
 
 export const Route = createFileRoute("/app/")({
   head: () => ({
@@ -25,6 +26,28 @@ export const Route = createFileRoute("/app/")({
 });
 
 function Overview() {
+  const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function loadCampaigns() {
+      try {
+        const resp = await fetch(`${API_BASE}/api/campaigns`);
+        if (resp.ok) {
+          const data = await resp.json();
+          if (Array.isArray(data)) {
+            setCampaigns(data);
+          }
+        }
+      } catch (err) {
+        console.warn("Failed to fetch campaigns for overview:", err);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    loadCampaigns();
+  }, []);
+
   return (
     <div className="space-y-8">
       <PageHeader
@@ -37,46 +60,68 @@ function Overview() {
         }
       />
 
-      <Panel
-        title="Recent campaigns"
-        aside={<ExampleDataBadge />}
-      >
-        <ul className="divide-y divide-border">
-          {exampleCampaigns.map((c) => (
-            <li key={c.id}>
+      <Panel title="Recent campaigns">
+        {isLoading ? (
+          <div className="flex items-center justify-center p-8 text-muted-foreground text-[13.5px]">
+            <Loader2 className="size-4 animate-spin mr-2" /> Loading campaigns...
+          </div>
+        ) : campaigns.length === 0 ? (
+          <div className="p-8 text-center space-y-3">
+            <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
+              <Target className="size-6" />
+            </div>
+            <p className="text-[14px] font-semibold text-foreground">No campaigns created yet</p>
+            <p className="text-[13px] text-muted-foreground max-w-sm mx-auto">
+              Start your first campaign to search the web, extract verified contact info, and generate targeted B2B leads.
+            </p>
+            <div className="pt-2">
               <Link
-                to="/app/campaigns"
-                className="flex flex-wrap items-center justify-between gap-3 px-4 py-3.5 transition-colors hover:bg-cream/60"
+                to="/app/campaigns/new"
+                className="inline-flex h-9 items-center gap-1.5 rounded-md bg-primary px-3.5 text-[13px] font-medium text-primary-foreground transition-colors hover:bg-primary/90"
               >
-                <div className="min-w-0">
-                  <p className="truncate text-[14px] font-medium text-foreground">
-                    {c.name}
-                  </p>
-                  <p className="mt-0.5 text-[12.5px] text-muted-foreground">
-                    {c.profile} · {c.createdAt}
-                  </p>
-                </div>
-                <div className="flex items-center gap-4">
-                  <span className="text-[12.5px] tabular-nums text-muted-foreground">
-                    {c.leads} leads
-                  </span>
-                  <StatusPill status={c.status === "Completed" ? "Contacted" : "New"} />
-                  <ArrowRight className="size-4 text-border-strong" />
-                </div>
+                <Plus className="size-4" /> Create First Campaign
               </Link>
-            </li>
-          ))}
-        </ul>
+            </div>
+          </div>
+        ) : (
+          <ul className="divide-y divide-border">
+            {campaigns.map((c) => (
+              <li key={c.id}>
+                <Link
+                  to="/app/leads"
+                  search={{ campaign: c.id }}
+                  className="flex flex-wrap items-center justify-between gap-3 px-4 py-3.5 transition-colors hover:bg-cream/60"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-[14px] font-medium text-foreground">
+                      {c.name}
+                    </p>
+                    <p className="mt-0.5 text-[12.5px] text-muted-foreground font-mono">
+                      {c.query} · {new Date(c.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <span className="text-[12.5px] tabular-nums text-muted-foreground">
+                      Cap: {c.requested_limit} leads
+                    </span>
+                    <StatusPill status={c.status === "completed" ? "Contacted" : c.status === "running" ? "Reviewing" : "New"} />
+                    <ArrowRight className="size-4 text-border-strong" />
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
       </Panel>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <UsageCard label="Business profiles" used={1} limit={3} />
-        <UsageCard label="Campaigns this month" used={3} limit={10} />
-        <UsageCard label="Leads per campaign" used={48} limit={50} />
+        <UsageCard label="Business profiles" used={0} limit={3} />
+        <UsageCard label="Campaigns this month" used={campaigns.length} limit={10} />
+        <UsageCard label="Leads per campaign" used={0} limit={50} />
       </div>
 
       <Annotation className="block">
-        Free plan limits — they're the same ones listed on the pricing page.
+        Free plan limits — 10 campaigns / month, up to 50 leads per campaign.
       </Annotation>
     </div>
   );

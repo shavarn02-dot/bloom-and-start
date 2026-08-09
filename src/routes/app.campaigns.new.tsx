@@ -172,9 +172,9 @@ function NewCampaign() {
               ["Campaign Name", name],
               ["Search Query", query],
               ["Target Cap", `${limit} leads`],
-              ["Scraping Engine", "Modal Cloud (3-Tier Engine)"],
-              ["Email Verification", "DNS MX Record Check"],
-              ["AI Scoring Router", "Cerebras + Groq + Mistral"],
+              ["Lead Discovery", "Live AI Web Search"],
+              ["Contact Verification", "Real-Time Email Check"],
+              ["Matching Engine", "ICP Quality Scoring"],
             ].map(([k, v]) => (
               <div key={k} className="flex flex-wrap justify-between gap-2 px-4 py-3">
                 <dt className="text-[13px] text-muted-foreground">{k}</dt>
@@ -209,7 +209,7 @@ function NewCampaign() {
                 <p className="text-[13px] text-muted-foreground">
                   {jobStatus?.status === "completed"
                     ? `Found ${jobStatus.total_leads_extracted || 0} leads across ${jobStatus.total_urls_scraped || 0} websites.`
-                    : "Modal.com container is searching web, scraping company pages, verifying emails & scoring leads."}
+                    : "Searching the web, discovering companies, verifying emails & scoring prospects."}
                 </p>
               </div>
             </div>
@@ -283,11 +283,11 @@ function NewCampaign() {
           >
             {isSubmitting ? (
               <>
-                <Loader2 className="size-4 animate-spin" /> Launching Modal Container...
+                <Loader2 className="size-4 animate-spin" /> Launching Campaign Engine...
               </>
             ) : (
               <>
-                <Sparkles className="size-4" /> Run Live Scraper Engine →
+                <Sparkles className="size-4" /> Start Finding Leads →
               </>
             )}
           </button>

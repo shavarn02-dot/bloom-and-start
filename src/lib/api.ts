@@ -3,7 +3,7 @@
  * Connects React UI to Cloudflare Worker API & Supabase
  */
 
-export const API_BASE = "https://leadgen-api.sarthak2005shavarn.workers.dev";
+export const API_BASE = "https://leadflowx-api.sarthak2005shavarn.workers.dev";
 
 export interface Campaign {
   id: string;

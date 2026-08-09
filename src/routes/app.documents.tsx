@@ -1,9 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { FileText, Upload } from "lucide-react";
-import { ExampleDataBadge } from "@/components/leadgen/marks";
+import { FileText, Upload, Plus } from "lucide-react";
 import { EmptyState, PageHeader, Panel } from "@/components/dashboard/primitives";
-import { exampleDocuments } from "@/data/example";
 
 export const Route = createFileRoute("/app/documents")({
   head: () => ({
@@ -25,40 +23,52 @@ export const Route = createFileRoute("/app/documents")({
   component: Documents,
 });
 
+interface UploadedDoc {
+  id: string;
+  name: string;
+  size: string;
+  added: string;
+}
+
 function Documents() {
-  const [hasDocs, setHasDocs] = useState(true);
+  const [userDocs, setUserDocs] = useState<UploadedDoc[]>([]);
+
+  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    const file = files[0];
+    const newDoc: UploadedDoc = {
+      id: "doc_" + Date.now(),
+      name: file.name,
+      size: (file.size / (1024 * 1024)).toFixed(1) + " MB",
+      added: new Date().toLocaleDateString(),
+    };
+    setUserDocs((prev) => [newDoc, ...prev]);
+  };
 
   return (
     <div className="space-y-8">
       <PageHeader
         title="Documents"
-        description="PDFs are read as extra business context. Nothing is shared with other accounts."
-        action={
-          <button
-            type="button"
-            onClick={() => setHasDocs((v) => !v)}
-            className="inline-flex h-9 items-center rounded-md border border-border bg-paper px-3.5 text-[13.5px] font-medium text-foreground transition-colors hover:bg-cream"
-          >
-            {hasDocs ? "Preview empty state" : "Show example documents"}
-          </button>
-        }
+        description="PDFs are used as extra business context for AI lead targeting."
       />
 
       <label className="flex cursor-pointer flex-col items-center rounded-lg border border-dashed border-border-strong bg-cream/50 px-6 py-10 text-center transition-colors hover:bg-cream">
         <Upload className="size-5 text-muted-foreground" strokeWidth={1.8} />
         <span className="mt-3 text-[14px] font-medium text-foreground">
-          Add a PDF
+          Upload a PDF
         </span>
         <span className="mt-1 text-[13px] text-muted-foreground">
-          A deck, a catalogue, a one-pager — whatever describes your business best.
+          A deck, catalogue, or company overview to enrich your lead criteria.
         </span>
-        <input type="file" accept="application/pdf" className="sr-only" />
+        <input type="file" accept="application/pdf" className="sr-only" onChange={handleFileUpload} />
       </label>
 
-      {hasDocs ? (
-        <Panel title="Uploaded" aside={<ExampleDataBadge />}>
+      {userDocs.length > 0 ? (
+        <Panel title="Uploaded documents">
           <ul className="divide-y divide-border">
-            {exampleDocuments.map((doc) => (
+            {userDocs.map((doc) => (
               <li
                 key={doc.id}
                 className="flex items-center justify-between gap-4 px-4 py-3.5"
@@ -80,9 +90,9 @@ function Documents() {
         <Panel>
           <EmptyState
             sketch="doc"
-            title="No documents uploaded."
-            copy="Add a PDF to give LeadGen more context about your business."
-            note="Anything you'd hand a new salesperson works here."
+            title="No documents uploaded yet."
+            copy="Add a PDF to give LeadGen AI richer context for prospect search and scoring."
+            note="Supported formats: PDF (up to 10MB)"
           />
         </Panel>
       )}

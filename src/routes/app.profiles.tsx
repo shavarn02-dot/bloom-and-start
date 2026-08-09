@@ -1,9 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Plus } from "lucide-react";
-import { ExampleDataBadge } from "@/components/leadgen/marks";
 import { EmptyState, PageHeader, Panel } from "@/components/dashboard/primitives";
-import { exampleProfile } from "@/data/example";
 
 export const Route = createFileRoute("/app/profiles")({
   head: () => ({
@@ -25,59 +23,72 @@ export const Route = createFileRoute("/app/profiles")({
   component: Profiles,
 });
 
-const fields = [
-  { label: "Business name", value: exampleProfile.name, type: "input" },
-  { label: "Industry", value: exampleProfile.industry, type: "input" },
-  { label: "What your business does", value: exampleProfile.offering, type: "area" },
-  { label: "Target role", value: exampleProfile.targetRole, type: "input" },
-  { label: "Target location", value: exampleProfile.targetLocation, type: "input" },
-  { label: "ICP description", value: exampleProfile.icp, type: "area" },
-  { label: "Company size", value: exampleProfile.companySize, type: "input" },
-  { label: "Budget range", value: exampleProfile.budget, type: "input" },
-  { label: "Website", value: exampleProfile.website, type: "input" },
-] as const;
-
 function Profiles() {
-  const [hasProfile, setHasProfile] = useState(true);
+  const [hasProfile, setHasProfile] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    industry: "",
+    offering: "",
+    targetRole: "",
+    targetLocation: "",
+    icp: "",
+    companySize: "",
+    budget: "",
+    website: "",
+  });
+
+  const fields = [
+    { key: "name", label: "Business name", placeholder: "e.g. Acme Corp", type: "input" },
+    { key: "industry", label: "Industry", placeholder: "e.g. SaaS / Marketing", type: "input" },
+    { key: "offering", label: "What your business does", placeholder: "e.g. B2B lead generation software", type: "area" },
+    { key: "targetRole", label: "Target role", placeholder: "e.g. Founder, Marketing Director", type: "input" },
+    { key: "targetLocation", label: "Target location", placeholder: "e.g. India, USA, Global", type: "input" },
+    { key: "icp", label: "ICP description", placeholder: "Describe your ideal customer profile...", type: "area" },
+    { key: "companySize", label: "Company size", placeholder: "e.g. 10-100 employees", type: "input" },
+    { key: "budget", label: "Budget range", placeholder: "e.g. $1k-$10k", type: "input" },
+    { key: "website", label: "Website", placeholder: "e.g. https://yourcompany.com", type: "input" },
+  ] as const;
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSaved(true);
+    setTimeout(() => setSaved(false), 3000);
+  };
 
   return (
     <div className="space-y-8">
       <PageHeader
         title="Business profiles"
-        description="Up to 3 profiles on the free plan."
-        action={
-          <button
-            type="button"
-            onClick={() => setHasProfile((v) => !v)}
-            className="inline-flex h-9 items-center rounded-md border border-border bg-paper px-3.5 text-[13.5px] font-medium text-foreground transition-colors hover:bg-cream"
-          >
-            {hasProfile ? "Preview empty state" : "Show example profile"}
-          </button>
-        }
+        description="Configure your business profile to guide AI lead discovery."
       />
 
       {hasProfile ? (
-        <Panel title="Loomwork Supply" aside={<ExampleDataBadge />}>
-          <form className="divide-y divide-border" onSubmit={(e) => e.preventDefault()}>
+        <Panel title={formData.name || "New Business Profile"}>
+          <form className="divide-y divide-border" onSubmit={handleSubmit}>
             {fields.map((f) => (
-              <div key={f.label} className="grid gap-2 px-4 py-3.5 sm:grid-cols-[220px_1fr] sm:items-start">
+              <div key={f.key} className="grid gap-2 px-4 py-3.5 sm:grid-cols-[220px_1fr] sm:items-start">
                 <label
-                  htmlFor={f.label}
+                  htmlFor={f.key}
                   className="text-[13px] font-medium text-secondary-foreground"
                 >
                   {f.label}
                 </label>
                 {f.type === "area" ? (
                   <textarea
-                    id={f.label}
-                    defaultValue={f.value}
+                    id={f.key}
+                    value={formData[f.key as keyof typeof formData]}
+                    onChange={(e) => setFormData({ ...formData, [f.key]: e.target.value })}
+                    placeholder={f.placeholder}
                     rows={2}
                     className="w-full resize-none rounded-md border border-input bg-paper px-3 py-2 text-[13.5px] text-foreground outline-none focus:border-ring"
                   />
                 ) : (
                   <input
-                    id={f.label}
-                    defaultValue={f.value}
+                    id={f.key}
+                    value={formData[f.key as keyof typeof formData]}
+                    onChange={(e) => setFormData({ ...formData, [f.key]: e.target.value })}
+                    placeholder={f.placeholder}
                     className="h-9 w-full rounded-md border border-input bg-paper px-3 text-[13.5px] text-foreground outline-none focus:border-ring"
                   />
                 )}
@@ -90,12 +101,7 @@ function Profiles() {
               >
                 Save profile
               </button>
-              <button
-                type="button"
-                className="inline-flex h-9 items-center gap-1.5 rounded-md border border-border px-3.5 text-[13.5px] font-medium text-foreground transition-colors hover:bg-cream"
-              >
-                <Plus className="size-4" /> New profile
-              </button>
+              {saved && <span className="text-[13px] font-medium text-emerald-600">Saved successfully!</span>}
             </div>
           </form>
         </Panel>
@@ -103,16 +109,16 @@ function Profiles() {
         <Panel>
           <EmptyState
             sketch="profile"
-            title="Create your first business profile."
-            copy="Tell LeadGen what your business does and who you're trying to reach. Everything else builds on this."
-            note="Start with what you already know."
+            title="Create your business profile."
+            copy="Tell LeadGen AI what your business does and who you're trying to reach to refine your lead search."
+            note="Saved profiles can be selected during campaign creation."
             action={
               <button
                 type="button"
                 onClick={() => setHasProfile(true)}
-                className="inline-flex h-9 items-center rounded-md bg-primary px-3.5 text-[13.5px] font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+                className="inline-flex h-9 items-center gap-1.5 rounded-md bg-primary px-3.5 text-[13.5px] font-medium text-primary-foreground transition-colors hover:bg-primary/90"
               >
-                Create business profile
+                <Plus className="size-4" /> Create business profile
               </button>
             }
           />

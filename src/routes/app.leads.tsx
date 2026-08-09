@@ -86,7 +86,7 @@ function Leads() {
     fetchLeads();
   }, []);
 
-  const activeLeadList = realLeads.length > 0 ? realLeads : exampleLeads;
+  const activeLeadList = realLeads;
 
   const leads = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -106,7 +106,7 @@ function Leads() {
     <div className="space-y-8">
       <PageHeader
         title="Your leads"
-        description={realLeads.length > 0 ? "Real extracted leads from your live scraping campaign." : "Showing demo dataset (Run a new campaign to see live extracted leads)."}
+        description="Search, filter, and export real extracted leads from your live scraping campaigns."
       />
 
       <Panel aside={undefined}>
@@ -162,9 +162,12 @@ function Leads() {
         </div>
 
         {leads.length === 0 ? (
-          <p className="px-4 py-12 text-center text-[14px] text-muted-foreground">
-            No leads match those filters.
-          </p>
+          <div className="p-8 text-center space-y-2">
+            <p className="text-[14px] font-semibold text-foreground">No extracted leads yet</p>
+            <p className="text-[13px] text-muted-foreground max-w-sm mx-auto">
+              {query ? "No leads match your search query." : "Launch a campaign to search company websites and extract verified B2B contacts."}
+            </p>
+          </div>
         ) : (
           <LeadTable leads={leads} onSelect={setSelected} />
         )}
