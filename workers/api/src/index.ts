@@ -87,6 +87,8 @@ function supabaseServiceRequest(env: Env, path: string, init: RequestInit = {}) 
   });
 }
 
+const DEFAULT_GUEST_UUID = "682713e9-1dd8-4cce-92f4-ce32b5fda68c";
+
 /** Extract user ID from Supabase JWT (simple decode, no crypto verification on edge). */
 function extractUserIdFromJWT(authHeader: string | null): string | null {
   if (!authHeader || typeof authHeader !== "string") return null;
@@ -102,26 +104,22 @@ function extractUserIdFromJWT(authHeader: string | null): string | null {
         .join("")
     );
     const payload = JSON.parse(jsonPayload);
-    return payload.sub || payload.user_id || null;
+    const candidate = payload.sub || payload.user_id;
+    if (candidate && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(candidate)) {
+      return candidate;
+    }
+    return null;
   } catch {
     return null;
   }
 }
 
-/** Determine deterministic user ID from JWT or X-User-Email header */
+/** Determine deterministic valid UUID user ID from JWT or fallback UUID */
 function resolveUserId(request: Request): string {
   const authHeader = request.headers.get("authorization");
   const jwtUserId = extractUserIdFromJWT(authHeader);
   if (jwtUserId) return jwtUserId;
-
-  const emailHeader = request.headers.get("x-user-email");
-  if (emailHeader && emailHeader.trim()) {
-    const cleanEmail = emailHeader.trim().toLowerCase();
-    // Deterministic pseudo-UUID for email-authenticated user
-    return `email_${cleanEmail.replace(/[^a-z0-9]/g, "_")}`;
-  }
-
-  return "682713e9-1dd8-4cce-92f4-ce32b5fda68c";
+  return DEFAULT_GUEST_UUID;
 }
 
 
