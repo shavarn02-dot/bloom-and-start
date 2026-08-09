@@ -148,7 +148,7 @@ function Profiles() {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g. Acme Corp"
-                className="h-9 w-full rounded-md border border-input bg-paper px-3 text-[13.5px] text-foreground outline-none focus:border-ring"
+                className="h-9 w-full rounded-md border border-input bg-paper px-3 text-[13.5px] text-foreground outline-none focus-ring-animate transition-colors duration-200 hover:border-border-strong"
               />
             </div>
 
@@ -161,7 +161,7 @@ function Profiles() {
                 value={formData.website}
                 onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                 placeholder="e.g. https://yourcompany.com"
-                className="h-9 w-full rounded-md border border-input bg-paper px-3 text-[13.5px] text-foreground outline-none focus:border-ring"
+                className="h-9 w-full rounded-md border border-input bg-paper px-3 text-[13.5px] text-foreground outline-none focus-ring-animate transition-colors duration-200 hover:border-border-strong"
               />
             </div>
 
@@ -175,7 +175,7 @@ function Profiles() {
                 onChange={(e) => setFormData({ ...formData, offering: e.target.value })}
                 placeholder="Describe your product, service, or offering..."
                 rows={2}
-                className="w-full resize-none rounded-md border border-input bg-paper px-3 py-2 text-[13.5px] text-foreground outline-none focus:border-ring"
+                className="w-full resize-none rounded-md border border-input bg-paper px-3 py-2 text-[13.5px] text-foreground outline-none focus-ring-animate transition-colors duration-200 hover:border-border-strong"
               />
             </div>
 
@@ -188,7 +188,7 @@ function Profiles() {
                 value={formData.targetRole}
                 onChange={(e) => setFormData({ ...formData, targetRole: e.target.value })}
                 placeholder="e.g. Marketing Directors, Founders"
-                className="h-9 w-full rounded-md border border-input bg-paper px-3 text-[13.5px] text-foreground outline-none focus:border-ring"
+                className="h-9 w-full rounded-md border border-input bg-paper px-3 text-[13.5px] text-foreground outline-none focus-ring-animate transition-colors duration-200 hover:border-border-strong"
               />
             </div>
 
