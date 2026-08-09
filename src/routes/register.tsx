@@ -29,7 +29,7 @@ export const Route = createFileRoute("/register")({
       { name: "robots", content: "noindex" },
     ],
   }),
-  component: RegisterPage;
+  component: RegisterPage,
 });
 
 function RegisterPage() {
