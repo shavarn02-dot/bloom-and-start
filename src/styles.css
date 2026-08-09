@@ -501,11 +501,11 @@ html {
   transition:
     transform 220ms cubic-bezier(0.22, 0.61, 0.36, 1),
     box-shadow 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
-}
 
-@utility hover-lift:hover {
-  transform: translateY(-2px);
-  box-shadow: var(--shadow-lift);
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-lift);
+  }
 }
 
 /* Route/page transition. */
