@@ -53,7 +53,7 @@ function Leads() {
           if (apiLeads && apiLeads.length > 0) {
             const mapped: ExampleLead[] = apiLeads.map((l) => ({
               id: l.id,
-              firstName: l.contact_name ? l.contact_name.split(" ")[0] : "Team",
+              firstName: (l.contact_name ? l.contact_name.split(" ")[0] : "Team") ?? "Team",
               lastName: l.contact_name && l.contact_name.split(" ").length > 1 ? l.contact_name.split(" ").slice(1).join(" ") : "",
               role: l.title || "Decision Maker",
               company: l.company_name,
@@ -61,8 +61,8 @@ function Leads() {
               companySize: "10-100",
               location: "India / Global",
               email: l.email || "N/A",
-              emailStatus: l.verification_status === "verified" ? "Verified" : l.verification_status === "rejected" ? "Bounced" : "Catch-all",
-              phone: l.phone || undefined,
+              emailStatus: l.verification_status === "verified" ? "Verified" : "Unverified",
+              phone: l.phone || "",
               match: l.confidence || 75,
               source: l.source_url || l.website || "Web Scraping",
               status: "New",
