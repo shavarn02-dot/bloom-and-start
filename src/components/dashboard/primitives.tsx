@@ -38,7 +38,7 @@ export function PrimaryAction({
     <Link
       to={to}
       className={cn(
-        "inline-flex h-9 items-center rounded-md bg-primary px-3.5 text-[13.5px] font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary/90",
+        "inline-flex h-9 items-center rounded-md bg-primary px-3.5 text-[13.5px] font-medium text-primary-foreground transition-all duration-200 hover:bg-primary/90 hover-lift",
         className,
       )}
     >
@@ -61,7 +61,7 @@ export function Panel({
   return (
     <section
       className={cn(
-        "overflow-hidden rounded-lg border border-border bg-paper",
+        "overflow-hidden rounded-lg border border-border bg-paper hover-lift",
         className,
       )}
     >

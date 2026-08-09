@@ -1,4 +1,5 @@
 import { SectionLabel } from "@/components/leadgen/marks";
+import { Reveal } from "@/components/leadgen/reveal";
 import {
   Accordion,
   AccordionContent,
@@ -41,21 +42,25 @@ export function Faq() {
   return (
     <section id="faq" className="bg-paper">
       <div className="mx-auto max-w-3xl px-5 py-20 sm:px-8 lg:py-28">
-        <SectionLabel>Questions</SectionLabel>
-        <h2 className="mt-4 text-[2rem] leading-tight font-semibold sm:text-[2.4rem]">
-          The things people ask first.
-        </h2>
+        <Reveal className="max-w-2xl">
+          <SectionLabel>Questions</SectionLabel>
+          <h2 className="mt-4 text-[2rem] leading-tight font-semibold sm:text-[2.4rem]">
+            The things people ask first.
+          </h2>
+        </Reveal>
 
         <Accordion type="single" collapsible className="mt-8">
-          {faqs.map((faq) => (
-            <AccordionItem key={faq.q} value={faq.q}>
-              <AccordionTrigger className="text-left text-[15.5px] font-medium">
-                {faq.q}
-              </AccordionTrigger>
-              <AccordionContent className="text-[14.5px] leading-relaxed text-muted-foreground">
-                {faq.a}
-              </AccordionContent>
-            </AccordionItem>
+          {faqs.map((faq, i) => (
+            <Reveal key={faq.q} delay={i * 60}>
+              <AccordionItem value={faq.q}>
+                <AccordionTrigger className="text-left text-[15.5px] font-medium transition-colors hover:text-foreground [&[data-state=open]>svg]:rotate-180">
+                  {faq.q}
+                </AccordionTrigger>
+                <AccordionContent className="lg-accordion-content text-[14.5px] leading-relaxed text-muted-foreground">
+                  {faq.a}
+                </AccordionContent>
+              </AccordionItem>
+            </Reveal>
           ))}
         </Accordion>
       </div>

@@ -388,18 +388,21 @@ html {
   transform: translate3d(0, 14px, 0) scale(0.985);
   transition:
     opacity 760ms cubic-bezier(0.33, 1, 0.68, 1),
-    transform 760ms cubic-bezier(0.33, 1, 0.68, 1);
+    transform 760ms cubic-bezier(0.33, 1, 0.68, 1),
+    filter 760ms cubic-bezier(0.33, 1, 0.68, 1);
   will-change: opacity, transform;
 }
 
 .lg-portrait[data-state="active"] {
   opacity: 1;
   transform: translate3d(0, 0, 0) scale(1);
+  filter: blur(0);
 }
 
 .lg-portrait[data-state="exit"] {
   opacity: 0;
   transform: translate3d(0, -16px, 0) scale(0.975);
+  filter: blur(1.5px);
 }
 
 @keyframes lg-thought-in {
@@ -417,17 +420,160 @@ html {
   animation: lg-thought-in 640ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
 }
 
+/* Hero copy stagger entrance. */
+@keyframes lg-hero-eyebrow {
+  from { opacity: 0; transform: translate3d(0, 10px, 0); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes lg-hero-headline {
+  from { opacity: 0; transform: translate3d(0, 14px, 0); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes lg-hero-subcopy {
+  from { opacity: 0; transform: translate3d(0, 10px, 0); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes lg-hero-cta {
+  from { opacity: 0; transform: translate3d(0, 8px, 0); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes lg-hero-trust {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@utility animate-hero-eyebrow {
+  animation: lg-hero-eyebrow 520ms cubic-bezier(0.22, 0.61, 0.36, 1) 80ms both;
+}
+@utility animate-hero-headline {
+  animation: lg-hero-headline 620ms cubic-bezier(0.22, 0.61, 0.36, 1) 160ms both;
+}
+@utility animate-hero-subcopy {
+  animation: lg-hero-subcopy 560ms cubic-bezier(0.22, 0.61, 0.36, 1) 340ms both;
+}
+@utility animate-hero-cta {
+  animation: lg-hero-cta 520ms cubic-bezier(0.22, 0.61, 0.36, 1) 480ms both;
+}
+@utility animate-hero-trust {
+  animation: lg-hero-trust 420ms cubic-bezier(0.22, 0.61, 0.36, 1) 640ms both;
+}
+
+/* Scroll progress line under the header. */
+@utility scroll-progress {
+  transform-origin: left;
+  transform: scaleX(var(--scroll-progress, 0));
+  transition: transform 80ms linear;
+}
+
+/* Skeleton shimmer for dashboard loading states. */
+@keyframes lg-skeleton {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+@utility skeleton-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+@utility skeleton-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  transform: translateX(-100%);
+  background: linear-gradient(90deg, transparent, oklch(1 0 0 / 0.35), transparent);
+  animation: lg-skeleton 1.6s ease-in-out infinite;
+}
+
+/* Focus ring that draws itself in. */
+@utility focus-ring-animate {
+  outline: none;
+  box-shadow: 0 0 0 0px var(--ring);
+  transition: box-shadow 160ms ease-out;
+}
+
+@utility focus-ring-animate:focus-visible {
+  box-shadow: 0 0 0 2px var(--ring), 0 0 0 4px var(--background);
+}
+
+/* Hover lift utility for cards and buttons. */
+@utility hover-lift {
+  transition:
+    transform 220ms cubic-bezier(0.22, 0.61, 0.36, 1),
+    box-shadow 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+@utility hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-lift);
+}
+
+/* Route/page transition. */
+@keyframes lg-page-in {
+  from { opacity: 0; transform: translate3d(0, 8px, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+@utility animate-page-in {
+  animation: lg-page-in 360ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+/* Tab sliding indicator. */
+@utility tab-pill {
+  transition: transform 260ms cubic-bezier(0.22, 0.61, 0.36, 1), width 260ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* Smooth accordion height/opacity curve override. */
+.lg-accordion-content {
+  overflow: hidden;
+  transition:
+    height 350ms cubic-bezier(0.33, 1, 0.68, 1),
+    opacity 280ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
+/* Sidebar active indicator slide. */
+@utility sidebar-indicator {
+  transition: top 220ms cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+
 @media (prefers-reduced-motion: reduce) {
   .lg-portrait {
     transform: none !important;
     transition: opacity 320ms linear !important;
+    filter: none !important;
   }
 
   .lg-portrait[data-state="exit"] {
     transform: none !important;
+    filter: none !important;
   }
 
-  .animate-thought-in {
+  .animate-thought-in,
+  .animate-hero-eyebrow,
+  .animate-hero-headline,
+  .animate-hero-subcopy,
+  .animate-hero-cta,
+  .animate-hero-trust,
+  .animate-page-in {
     animation: none !important;
+    opacity: 1 !important;
+    transform: none !important;
+  }
+
+  .skeleton-shimmer::after {
+    animation: none !important;
+  }
+
+  .scroll-progress {
+    transition: none !important;
+  }
+
+  .tab-pill,
+  .sidebar-indicator {
+    transition: none !important;
+  }
+
+  .hover-lift:hover {
+    transform: none !important;
   }
 }

@@ -13,13 +13,13 @@ import { cn } from "@/lib/utils";
  */
 
 const oldSteps = [
-  { kind: "window", label: "Google" },
-  { kind: "window", label: "Open the website" },
-  { kind: "doc", label: "Research, guess, note it down" },
-  { kind: "mail", label: "Hunt for an email" },
-  { kind: "sheet", label: "Paste into the spreadsheet" },
-  { kind: "window", label: "Repeat" },
-] as const;
+  { kind: "window" as const, label: "Google" },
+  { kind: "window" as const, label: "Open the website" },
+  { kind: "doc" as const, label: "Research, guess, note it down" },
+  { kind: "mail" as const, label: "Hunt for an email" },
+  { kind: "sheet" as const, label: "Paste into the spreadsheet" },
+  { kind: "window" as const, label: "Repeat" },
+];
 
 const newSteps = [
   "Describe the business once",
@@ -57,7 +57,7 @@ export function Problem() {
                   key={step.label}
                   className={cn(
                     "flex items-center gap-3 transition-all duration-500",
-                    inView ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0",
+                    inView ? "translate-x-0 opacity-100" : i % 2 === 0 ? "-translate-x-3 opacity-0" : "translate-x-3 opacity-0",
                   )}
                   style={{
                     marginLeft: `${Math.min(i, 4) * 14}px`,
@@ -88,7 +88,6 @@ export function Problem() {
                 />
               ))}
             </div>
-
 
             <Annotation className="mt-6 block -rotate-1 text-[19px]">
               Twelve tabs open, still nobody worth emailing.

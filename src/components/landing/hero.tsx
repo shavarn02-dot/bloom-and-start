@@ -31,36 +31,36 @@ export function Hero() {
       <div className="relative mx-auto grid max-w-6xl gap-12 px-5 sm:px-8 lg:grid-cols-[minmax(0,53%)_minmax(0,47%)] lg:gap-8">
         {/* Copy */}
         <div className="lg:pt-6">
-          <p className="font-hand text-[22px] text-primary">
+          <p className="animate-hero-eyebrow font-hand text-[22px] text-primary">
             Built for people who actually sell.
           </p>
-          <h1 className="mt-3 text-[2.6rem] leading-[1.06] font-semibold sm:text-[3.4rem] lg:text-[3.75rem]">
+          <h1 className="animate-hero-headline mt-3 text-[2.6rem] leading-[1.06] font-semibold sm:text-[3.4rem] lg:text-[3.75rem]">
             Find the people your{" "}
             <HandUnderline>business should be talking to.</HandUnderline>
           </h1>
 
-          <p className="mt-6 max-w-lg text-[16.5px] leading-relaxed text-muted-foreground">
+          <p className="animate-hero-subcopy mt-6 max-w-lg text-[16.5px] leading-relaxed text-muted-foreground">
             Tell us what your business does and who you're trying to reach. LeadGen AI
             helps turn that context into a focused list of prospects worth exploring.
           </p>
 
-          <div className="mt-8 flex flex-wrap items-center gap-3">
+          <div className="animate-hero-cta mt-8 flex flex-wrap items-center gap-3">
             <Link
               to="/app"
-              className="lg-cta group inline-flex h-11 items-center rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground transition-all duration-200 hover:bg-primary/90 hover:shadow-[var(--shadow-lift)]"
+              className="lg-cta group inline-flex h-11 items-center rounded-md bg-primary px-5 text-sm font-medium text-primary-foreground transition-all duration-200 hover:bg-primary/90 hover:shadow-[var(--shadow-lift)] hover:-translate-y-0.5"
             >
               Start finding leads
               <span className="lg-cta-arrow ml-2">→</span>
             </Link>
             <a
               href="#how-it-works"
-              className="inline-flex h-11 items-center rounded-md border border-border-strong bg-paper px-5 text-sm font-medium text-foreground transition-colors duration-200 hover:bg-cream"
+              className="inline-flex h-11 items-center rounded-md border border-border-strong bg-paper px-5 text-sm font-medium text-foreground transition-all duration-200 hover:bg-cream hover:-translate-y-0.5"
             >
               See how it works
             </a>
           </div>
 
-          <p className="mt-5 text-[13px] text-muted-foreground">
+          <p className="animate-hero-trust mt-5 text-[13px] text-muted-foreground">
             No credit card required · Free to start
           </p>
         </div>

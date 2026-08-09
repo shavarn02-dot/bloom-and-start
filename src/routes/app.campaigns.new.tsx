@@ -1,7 +1,8 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { Check, Loader2, Building2, Plus, Sparkles } from "lucide-react";
+import { Check, Building2, Plus, Sparkles } from "lucide-react";
 import { PageHeader, Panel } from "@/components/dashboard/primitives";
+import { FormSkeleton } from "@/components/dashboard/skeletons";
 import { createCampaign, runCampaign, getJobStatus, ScrapeJob, API_BASE } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import type { BusinessProfile } from "@/routes/app.profiles";
@@ -166,9 +167,7 @@ function NewCampaign() {
                 Business Profile Context
               </label>
               {isLoadingProfiles ? (
-                <div className="flex items-center text-[13px] text-muted-foreground">
-                  <Loader2 className="size-3.5 animate-spin mr-2" /> Loading saved profiles...
-                </div>
+                <FormSkeleton rows={3} />
               ) : profiles.length > 0 ? (
                 <div className="space-y-2">
                   <select
@@ -209,7 +208,7 @@ function NewCampaign() {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="e.g. Mumbai Marketing Agencies"
-                className="mt-1.5 w-full rounded-md border border-border bg-paper px-3 py-2 text-[13.5px] outline-none focus:border-primary"
+                className="mt-1.5 w-full rounded-md border border-border bg-paper px-3 py-2 text-[13.5px] outline-none focus-ring-animate transition-colors duration-200 hover:border-border-strong"
               />
             </div>
 
@@ -221,7 +220,7 @@ function NewCampaign() {
                 max={50}
                 value={limit}
                 onChange={(e) => setLimit(Number(e.target.value))}
-                className="mt-1.5 w-32 rounded-md border border-border bg-paper px-3 py-2 text-[13.5px] outline-none focus:border-primary"
+                className="mt-1.5 w-32 rounded-md border border-border bg-paper px-3 py-2 text-[13.5px] outline-none focus-ring-animate transition-colors duration-200 hover:border-border-strong"
               />
             </div>
           </div>
@@ -241,7 +240,7 @@ function NewCampaign() {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder="e.g. B2B SaaS companies Bangalore email contact"
-                className="w-full rounded-md border border-border bg-paper px-3 py-2.5 text-[13.5px] outline-none focus:border-primary font-mono"
+                className="w-full rounded-md border border-border bg-paper px-3 py-2.5 text-[13.5px] outline-none focus-ring-animate transition-colors duration-200 hover:border-border-strong font-mono"
               />
             </div>
           </div>
@@ -279,7 +278,7 @@ function NewCampaign() {
                 </div>
               ) : (
                 <div className="flex size-10 items-center justify-center rounded-full bg-primary/10 text-primary">
-                  <Loader2 className="size-5 animate-spin" />
+                  <span className="inline-block size-5 animate-spin rounded-full border-2 border-current border-t-transparent" />
                 </div>
               )}
               <div>
@@ -333,7 +332,7 @@ function NewCampaign() {
             type="button"
             disabled={step === 0}
             onClick={() => setStep((s) => Math.max(0, s - 1))}
-            className="rounded-md border border-border px-4 py-2 text-[13.5px] font-medium text-foreground hover:bg-cream disabled:opacity-40"
+            className="rounded-md border border-border px-4 py-2 text-[13.5px] font-medium text-foreground transition-all duration-200 hover:bg-cream hover:-translate-y-0.5 disabled:opacity-40"
           >
             Back
           </button>
@@ -343,7 +342,7 @@ function NewCampaign() {
               type="button"
               disabled={step === 0 && !name.trim()}
               onClick={() => setStep((s) => Math.min(2, s + 1))}
-              className="rounded-md bg-primary px-4 py-2 text-[13.5px] font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-40"
+              className="rounded-md bg-primary px-4 py-2 text-[13.5px] font-medium text-primary-foreground transition-all duration-200 hover:bg-primary/90 hover:-translate-y-0.5 disabled:opacity-40"
             >
               Continue
             </button>
@@ -352,9 +351,11 @@ function NewCampaign() {
               type="button"
               disabled={isSubmitting}
               onClick={handleLaunch}
-              className="inline-flex items-center gap-2 rounded-md bg-primary px-5 py-2 text-[13.5px] font-medium text-primary-foreground hover:bg-primary/90 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-md bg-primary px-5 py-2 text-[13.5px] font-medium text-primary-foreground transition-all duration-200 hover:bg-primary/90 hover:-translate-y-0.5 disabled:opacity-50"
             >
-              {isSubmitting && <Loader2 className="size-4 animate-spin" />}
+              {isSubmitting && (
+                <span className="inline-block size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+              )}
               Start Finding Leads →
             </button>
           )}

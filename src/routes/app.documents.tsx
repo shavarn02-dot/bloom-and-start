@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { FileText, Upload, Trash2, Loader2 } from "lucide-react";
+import { FileText, Upload, Trash2 } from "lucide-react";
 import { EmptyState, PageHeader, Panel } from "@/components/dashboard/primitives";
+import { CampaignListSkeleton } from "@/components/dashboard/skeletons";
 import { API_BASE } from "@/lib/api";
 
 export const Route = createFileRoute("/app/documents")({
@@ -104,11 +105,11 @@ function Documents() {
         description="PDFs are used as extra business context for AI lead targeting."
       />
 
-      <label className="flex cursor-pointer flex-col items-center rounded-lg border border-dashed border-border-strong bg-cream/50 px-6 py-10 text-center transition-colors hover:bg-cream">
+      <label className="group flex cursor-pointer flex-col items-center rounded-lg border border-dashed border-border-strong bg-cream/50 px-6 py-10 text-center transition-all duration-200 hover:bg-cream hover:-translate-y-0.5">
         {isUploading ? (
-          <Loader2 className="size-5 text-primary animate-spin" />
+          <span className="inline-block size-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
         ) : (
-          <Upload className="size-5 text-muted-foreground" strokeWidth={1.8} />
+          <Upload className="size-5 text-muted-foreground transition-transform duration-200 group-hover:-translate-y-0.5" strokeWidth={1.8} />
         )}
         <span className="mt-3 text-[14px] font-medium text-foreground">
           {isUploading ? "Saving document..." : "Upload a PDF"}
@@ -126,9 +127,7 @@ function Documents() {
       </label>
 
       {isLoading ? (
-        <div className="flex items-center justify-center p-12 text-muted-foreground text-[13.5px]">
-          <Loader2 className="size-4 animate-spin mr-2" /> Loading documents...
-        </div>
+        <CampaignListSkeleton rows={4} />
       ) : userDocs.length > 0 ? (
         <Panel title="Uploaded documents">
           <ul className="divide-y divide-border">

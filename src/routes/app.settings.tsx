@@ -71,7 +71,7 @@ function Settings() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Your name"
-              className="h-9 w-full rounded-md border border-input bg-paper px-3 text-[13.5px] text-foreground outline-none focus:border-ring"
+              className="h-9 w-full rounded-md border border-input bg-paper px-3 text-[13.5px] text-foreground outline-none focus-ring-animate transition-colors duration-200 hover:border-border-strong"
             />
           </div>
 
@@ -85,7 +85,7 @@ function Settings() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="you@company.com"
-              className="h-9 w-full rounded-md border border-input bg-paper px-3 text-[13.5px] text-foreground outline-none focus:border-ring"
+              className="h-9 w-full rounded-md border border-input bg-paper px-3 text-[13.5px] text-foreground outline-none focus-ring-animate transition-colors duration-200 hover:border-border-strong"
             />
           </div>
 
@@ -99,7 +99,7 @@ function Settings() {
               value={company}
               onChange={(e) => setCompany(e.target.value)}
               placeholder="Company name"
-              className="h-9 w-full rounded-md border border-input bg-paper px-3 text-[13.5px] text-foreground outline-none focus:border-ring"
+              className="h-9 w-full rounded-md border border-input bg-paper px-3 text-[13.5px] text-foreground outline-none focus-ring-animate transition-colors duration-200 hover:border-border-strong"
             />
           </div>
 

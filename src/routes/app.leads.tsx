@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState, useEffect } from "react";
-import { Download, Search, RefreshCw } from "lucide-react";
+import { Download, Search, RefreshCw, Loader2 } from "lucide-react";
 import { PageHeader, Panel } from "@/components/dashboard/primitives";
+import { TableSkeleton, MobileCardSkeleton } from "@/components/dashboard/skeletons";
 import { LeadTable, MatchBadge, StatusPill } from "@/components/leadgen/product";
 import { exampleLeads, type ExampleLead } from "@/data/example";
 import { getCampaignLeads, API_BASE, Lead } from "@/lib/api";
@@ -161,7 +162,12 @@ function Leads() {
           </button>
         </div>
 
-        {leads.length === 0 ? (
+        {isLoading ? (
+          <>
+            <TableSkeleton rows={5} />
+            <MobileCardSkeleton cards={4} />
+          </>
+        ) : leads.length === 0 ? (
           <div className="p-8 text-center space-y-2">
             <p className="text-[14px] font-semibold text-foreground">No extracted leads yet</p>
             <p className="text-[13px] text-muted-foreground max-w-sm mx-auto">

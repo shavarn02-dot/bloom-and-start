@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { ArrowRight, Plus, Loader2, Target, Building2, Sparkles } from "lucide-react";
+import { ArrowRight, Plus, Target, Building2, Sparkles } from "lucide-react";
 import { Annotation } from "@/components/leadgen/marks";
 import { PageHeader, Panel, PrimaryAction } from "@/components/dashboard/primitives";
+import { CampaignListSkeleton, UsageCardsSkeleton } from "@/components/dashboard/skeletons";
 import { StatusPill } from "@/components/leadgen/product";
 import { API_BASE, type Campaign } from "@/lib/api";
 import type { BusinessProfile } from "@/routes/app.profiles";
@@ -96,9 +97,7 @@ function Overview() {
 
       <Panel title="Recent campaigns">
         {isLoading ? (
-          <div className="flex items-center justify-center p-8 text-muted-foreground text-[13.5px]">
-            <Loader2 className="size-4 animate-spin mr-2" /> Loading campaigns...
-          </div>
+          <CampaignListSkeleton rows={4} />
         ) : campaigns.length === 0 ? (
           <div className="p-8 text-center space-y-3">
             <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -119,14 +118,14 @@ function Overview() {
           </div>
         ) : (
           <ul className="divide-y divide-border">
-            {campaigns.map((c) => (
-              <li key={c.id}>
+            {campaigns.map((c, i) => (
+              <li key={c.id} style={{ animationDelay: `${i * 60}ms` }} className="animate-row-in">
                 <Link
                   to="/app/leads"
                   search={{ campaign: c.id }}
-                  className="flex flex-wrap items-center justify-between gap-3 px-4 py-3.5 transition-colors hover:bg-cream/60"
+                  className="group flex flex-wrap items-center justify-between gap-3 px-4 py-3.5 transition-colors hover:bg-cream/60"
                 >
-                  <div className="min-w-0">
+                  <div className="min-w-0 flex-1">
                     <p className="truncate text-[14px] font-medium text-foreground">
                       {c.name}
                     </p>
@@ -139,7 +138,7 @@ function Overview() {
                       Cap: {c.requested_limit} leads
                     </span>
                     <StatusPill status={c.status === "completed" ? "Contacted" : c.status === "running" ? "Reviewing" : "New"} />
-                    <ArrowRight className="size-4 text-border-strong" />
+                    <ArrowRight className="size-4 text-border-strong transition-transform duration-200 group-hover:translate-x-1" />
                   </div>
                 </Link>
               </li>
@@ -148,11 +147,15 @@ function Overview() {
         )}
       </Panel>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <UsageCard label="Business profiles" used={profiles.length} limit={3} />
-        <UsageCard label="Campaigns this month" used={campaigns.length} limit={10} />
-        <UsageCard label="Leads per campaign" used={0} limit={50} />
-      </div>
+      {isLoading ? (
+        <UsageCardsSkeleton />
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-3">
+          <UsageCard label="Business profiles" used={profiles.length} limit={3} />
+          <UsageCard label="Campaigns this month" used={campaigns.length} limit={10} />
+          <UsageCard label="Leads per campaign" used={0} limit={50} />
+        </div>
+      )}
 
       <Annotation className="block">
         Free plan limits — 10 campaigns / month, up to 50 leads per campaign.
@@ -171,7 +174,7 @@ function UsageCard({
   limit: number;
 }) {
   return (
-    <div className="rounded-lg border border-border bg-paper p-4">
+    <div className="rounded-lg border border-border bg-paper p-4 hover-lift">
       <p className="text-[12.5px] text-muted-foreground">{label}</p>
       <p className="mt-2 text-[1.4rem] font-semibold tabular-nums">
         {used}
@@ -179,7 +182,7 @@ function UsageCard({
       </p>
       <div className="mt-3 h-1 overflow-hidden rounded-full bg-muted">
         <div
-          className="h-full rounded-full bg-primary"
+          className="h-full rounded-full bg-primary transition-all duration-500"
           style={{ width: `${Math.min(100, (used / limit) * 100)}%` }}
         />
       </div>

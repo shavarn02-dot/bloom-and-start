@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Loader2, Building2 } from "lucide-react";
+import { Plus, Trash2, Building2 } from "lucide-react";
 import { EmptyState, PageHeader, Panel } from "@/components/dashboard/primitives";
+import { FormSkeleton } from "@/components/dashboard/skeletons";
 import { API_BASE } from "@/lib/api";
 
 export const Route = createFileRoute("/app/profiles")({
@@ -195,9 +196,11 @@ function Profiles() {
               <button
                 type="submit"
                 disabled={isSubmitting || !formData.name.trim()}
-                className="inline-flex h-9 items-center gap-2 rounded-md bg-primary px-3.5 text-[13.5px] font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+                className="inline-flex h-9 items-center gap-2 rounded-md bg-primary px-3.5 text-[13.5px] font-medium text-primary-foreground transition-all duration-200 hover:bg-primary/90 hover:-translate-y-0.5 disabled:opacity-50"
               >
-                {isSubmitting && <Loader2 className="size-4 animate-spin" />}
+                {isSubmitting && (
+                  <span className="inline-block size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                )}
                 Save Business Profile
               </button>
               <button
@@ -213,9 +216,7 @@ function Profiles() {
       )}
 
       {isLoading ? (
-        <div className="flex items-center justify-center p-12 text-muted-foreground text-[13.5px]">
-          <Loader2 className="size-4 animate-spin mr-2" /> Loading business profiles...
-        </div>
+        <FormSkeleton rows={6} />
       ) : profiles.length > 0 ? (
         <div className="space-y-4">
           {profiles.map((p) => (
