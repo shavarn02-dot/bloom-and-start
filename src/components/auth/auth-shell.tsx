@@ -1,78 +1,102 @@
-import type { ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import authFounder from "@/assets/auth-founder.jpg";
+import islandOne from "@/assets/island-scene-01.jpg";
+import islandTwo from "@/assets/island-scene-02.jpg";
 import { Wordmark } from "@/components/leadgen/wordmark";
 import { Annotation, HandArrow } from "@/components/leadgen/marks";
-import { SketchSearch, SketchConnector } from "@/components/leadgen/sketches";
-import { Reveal } from "@/components/leadgen/reveal";
+
+const SCENES = [
+  {
+    src: islandOne,
+    alt: "A founder working on a laptop at a wooden deck overlooking a tropical island bay",
+  },
+  {
+    src: islandTwo,
+    alt: "A second founder joining the same island deck while the first keeps working on his laptop",
+  },
+];
 
 /**
- * Split authentication shell: editorial photography on the left,
+ * Cinematic open-world island scene: one continuous environment that fills the
+ * whole left panel. The camera stays put — only the people change as the
+ * second founder enters the same world.
+ */
+function IslandWorld() {
+  const [index, setIndex] = useState(0);
+
+  useEffect(() => {
+    if (
+      typeof window !== "undefined" &&
+      window.matchMedia("(prefers-reduced-motion: reduce)").matches
+    ) {
+      return;
+    }
+    const id = window.setInterval(() => setIndex((i) => (i + 1) % SCENES.length), 4200);
+    return () => window.clearInterval(id);
+  }, []);
+
+  return (
+    <div className="absolute inset-0 -z-10 overflow-hidden" aria-hidden={false}>
+      {SCENES.map((scene, i) => {
+        const active = i === index;
+        return (
+          <img
+            key={scene.src}
+            src={scene.src}
+            alt={i === 0 ? scene.alt : ""}
+            width={1024}
+            height={1536}
+            {...(i === 0 ? {} : { "aria-hidden": true })}
+            className="absolute inset-0 size-full object-cover object-[58%_50%] transition-[opacity,transform] duration-[900ms] ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none"
+            style={{
+              opacity: active ? 1 : 0,
+              transform: active ? "scale(1.02) translateY(0)" : "scale(1.06) translateY(-1.2%)",
+            }}
+          />
+        );
+      })}
+
+      {/* environment blends into the warm paper background — no card, no frame */}
+      <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-foreground/10 to-foreground/25" />
+      <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-background to-transparent lg:w-32" />
+      <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background/70 to-transparent lg:hidden" />
+    </div>
+  );
+}
+
+/**
+ * Split authentication shell: an immersive island world on the left,
  * a calm conversion-focused form on the right.
  */
 export function AuthShell({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen bg-background lg:grid lg:grid-cols-[46fr_54fr]">
-      {/* LEFT — brand / visual panel */}
-      <aside className="relative isolate overflow-hidden bg-cream">
-        <div
-          className="absolute inset-0 -z-10 bg-primary-soft/40"
-          style={{ clipPath: "polygon(0 0, 100% 0, 100% 82%, 0 96%)" }}
-          aria-hidden="true"
-        />
+      {/* LEFT — the world */}
+      <aside className="relative isolate min-h-[42vh] overflow-hidden lg:min-h-screen">
+        <IslandWorld />
 
-        <div className="flex h-full flex-col justify-between gap-8 px-6 py-8 sm:px-10 lg:px-14 lg:py-12">
+        <div className="relative flex h-full min-h-[42vh] flex-col justify-between gap-10 px-6 py-8 sm:px-10 lg:px-14 lg:py-12">
           <Link to="/" className="hidden w-fit lg:block" aria-label="LeadGen AI home">
-            <Wordmark />
+            <Wordmark className="text-paper [&_span]:text-paper/70" />
           </Link>
 
-          <div className="relative">
-            <Reveal
-              variant="fade"
-              delay={320}
-              className="mb-2 hidden items-end justify-end gap-1 pr-6 lg:flex"
-            >
-              <Annotation className="text-xl text-foreground/70">
-                Find the right people.
-              </Annotation>
-              <HandArrow animated className="h-6 w-14 -rotate-6" />
-            </Reveal>
-
-            <Reveal variant="fade">
-              <div
-                className="relative overflow-hidden shadow-lift"
-                style={{
-                  clipPath: "polygon(4% 2%, 100% 0, 96% 94%, 0 100%)",
-                }}
-              >
-                <img
-                  src={authFounder}
-                  alt="A founder working on a laptop while sitting on a sunny beach"
-                  width={1024}
-                  height={1536}
-                  className="h-[220px] w-full object-cover object-[50%_35%] sm:h-[300px] lg:h-[440px]"
-                />
-              </div>
-            </Reveal>
-
-            <SketchSearch className="absolute -left-3 bottom-8 hidden h-12 w-12 text-primary/50 lg:block" />
-          </div>
-
-
-          <div className="max-w-sm">
-            <p className="font-hand text-2xl text-primary">More conversations.</p>
-            <p className="mt-1 text-lg leading-snug text-foreground">
-              Less searching. Describe your business once — LeadGen AI keeps the
-              research going for you.
+          <div className="max-w-xs">
+            <p className="text-2xl font-semibold tracking-tight text-paper drop-shadow-sm sm:text-[28px]">
+              Work from anywhere.
             </p>
-            <SketchConnector className="mt-5 hidden h-8 w-40 text-border-strong lg:block" />
+            <span className="mt-2 flex items-end gap-2">
+              <Annotation className="text-xl text-paper/85">
+                Find the right people everywhere.
+              </Annotation>
+              <HandArrow animated className="h-5 w-11 text-paper/70" />
+            </span>
           </div>
         </div>
       </aside>
 
       {/* RIGHT — form panel */}
       <main className="flex flex-col justify-center px-6 py-12 sm:px-10 lg:px-16">
-        <div className="mx-auto w-full max-w-[420px]">
+        <div className="mx-auto w-full max-w-[500px]">
           <Link to="/" className="mb-8 block w-fit lg:hidden" aria-label="LeadGen AI home">
             <Wordmark />
           </Link>
