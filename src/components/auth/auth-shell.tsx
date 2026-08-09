@@ -26,8 +26,8 @@ export function AuthShell({ children }: { children: ReactNode }) {
             <Wordmark />
           </Link>
 
-          <div className="relative">
-            <Reveal variant="polygon">
+          <div className="relative pt-10">
+            <Reveal variant="fade">
               <div
                 className="relative overflow-hidden shadow-lift"
                 style={{
@@ -48,7 +48,7 @@ export function AuthShell({ children }: { children: ReactNode }) {
             <Reveal
               variant="fade"
               delay={320}
-              className="pointer-events-none absolute -top-3 right-2 hidden items-end gap-1 lg:flex"
+              className="pointer-events-none absolute top-0 right-2 hidden items-end gap-1 lg:flex"
             >
               <Annotation className="text-xl text-foreground/70">
                 Find the right people.
