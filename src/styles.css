@@ -474,15 +474,15 @@ html {
 @utility skeleton-shimmer {
   position: relative;
   overflow: hidden;
-}
 
-@utility skeleton-shimmer::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  transform: translateX(-100%);
-  background: linear-gradient(90deg, transparent, oklch(1 0 0 / 0.35), transparent);
-  animation: lg-skeleton 1.6s ease-in-out infinite;
+  &::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    transform: translateX(-100%);
+    background: linear-gradient(90deg, transparent, oklch(1 0 0 / 0.35), transparent);
+    animation: lg-skeleton 1.6s ease-in-out infinite;
+  }
 }
 
 /* Focus ring that draws itself in. */
