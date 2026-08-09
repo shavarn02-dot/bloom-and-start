@@ -89,36 +89,53 @@ function supabaseServiceRequest(env: Env, path: string, init: RequestInit = {}) 
 
 const DEFAULT_GUEST_UUID = "682713e9-1dd8-4cce-92f4-ce32b5fda68c";
 
-/** Extract user ID from Supabase JWT (simple decode, no crypto verification on edge). */
+/** Extract user ID from Supabase JWT (robust Base64URL decode with padding). */
 function extractUserIdFromJWT(authHeader: string | null): string | null {
   if (!authHeader || typeof authHeader !== "string") return null;
-  const parts = authHeader.replace(/^Bearer\s+/i, "").split(".");
+  const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+  const parts = token.split(".");
   if (parts.length !== 3) return null;
   try {
-    const base64Url = parts[1];
-    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
-    const jsonPayload = decodeURIComponent(
-      atob(base64)
-        .split("")
-        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
-        .join("")
-    );
+    let base64Url = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    while (base64Url.length % 4 !== 0) {
+      base64Url += "=";
+    }
+    const jsonPayload = atob(base64Url);
     const payload = JSON.parse(jsonPayload);
     const candidate = payload.sub || payload.user_id;
-    if (candidate && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(candidate)) {
+    if (candidate && typeof candidate === "string" && candidate.length >= 20) {
       return candidate;
     }
     return null;
-  } catch {
+  } catch (e) {
+    console.error("JWT parse error:", e);
     return null;
   }
 }
 
-/** Determine deterministic valid UUID user ID from JWT or fallback UUID */
-function resolveUserId(request: Request): string {
+/** Determine deterministic user ID from JWT token or Supabase Auth API */
+async function resolveUserId(request: Request, env: Env): Promise<string> {
   const authHeader = request.headers.get("authorization");
   const jwtUserId = extractUserIdFromJWT(authHeader);
   if (jwtUserId) return jwtUserId;
+
+  if (authHeader && env.SUPABASE_URL && env.SUPABASE_ANON_KEY) {
+    try {
+      const userResp = await fetch(`${env.SUPABASE_URL.replace(/\/$/, "")}/auth/v1/user`, {
+        headers: {
+          apikey: env.SUPABASE_ANON_KEY,
+          authorization: authHeader,
+        },
+      });
+      if (userResp.ok) {
+        const userData = (await userResp.json()) as any;
+        if (userData && userData.id) return userData.id;
+      }
+    } catch {
+      // ignore
+    }
+  }
+
   return DEFAULT_GUEST_UUID;
 }
 
@@ -177,7 +194,7 @@ export default {
 
     // GET /api/campaigns — List user's campaigns
     if (path === "/api/campaigns" && request.method === "GET") {
-      const userId = resolveUserId(request);
+      const userId = await resolveUserId(request, env);
       const response = await supabaseServiceRequest(
         env,
         `lead_campaigns?user_id=eq.${userId}&select=*&order=created_at.desc`,
@@ -199,7 +216,7 @@ export default {
       if (!body.name?.trim() || !body.query?.trim()) {
         return json(env, request, { error: "name and query are required" }, 400);
       }
-      const userId = resolveUserId(request);
+      const userId = await resolveUserId(request, env);
       const response = await supabaseServiceRequest(env, "lead_campaigns", {
         method: "POST",
         headers: { prefer: "return=representation" },
@@ -222,7 +239,7 @@ export default {
     const runMatch = matchRoute(path, "/api/campaigns/:id/run");
     if (runMatch && request.method === "POST") {
       const campaignId = runMatch.id;
-      const userId = extractUserIdFromJWT(request.headers.get("authorization")) || "682713e9-1dd8-4cce-92f4-ce32b5fda68c";
+      const userId = await resolveUserId(request, env);
 
       if (!env.MODAL_WEBHOOK_URL) {
         return json(env, request, { error: "Scraping engine not configured" }, 503);
@@ -297,7 +314,7 @@ export default {
     // DELETE /api/campaigns/:id — Delete campaign
     const deleteCampMatch = matchRoute(path, "/api/campaigns/:id");
     if (deleteCampMatch && request.method === "DELETE") {
-      const userId = resolveUserId(request);
+      const userId = await resolveUserId(request, env);
       const campaignId = deleteCampMatch.id;
       await supabaseServiceRequest(env, `leads?campaign_id=eq.${campaignId}`, { method: "DELETE" });
       await supabaseServiceRequest(env, `scrape_jobs?campaign_id=eq.${campaignId}`, { method: "DELETE" });
@@ -309,7 +326,7 @@ export default {
 
     // GET /api/profiles — List business profiles
     if (path === "/api/profiles" && request.method === "GET") {
-      const userId = resolveUserId(request);
+      const userId = await resolveUserId(request, env);
       const response = await supabaseServiceRequest(env, `business_profiles?user_id=eq.${userId}&select=*&order=created_at.desc`);
       return new Response(response.body, { status: response.status, headers: corsHeaders(env, request) });
     }
@@ -317,7 +334,7 @@ export default {
     // POST /api/profiles — Create business profile
     if (path === "/api/profiles" && request.method === "POST") {
       const body = (await request.json()) as any;
-      const userId = resolveUserId(request);
+      const userId = await resolveUserId(request, env);
       const response = await supabaseServiceRequest(env, "business_profiles", {
         method: "POST",
         headers: { prefer: "return=representation" },
@@ -335,7 +352,7 @@ export default {
     // DELETE /api/profiles/:id — Delete profile
     const profileMatch = matchRoute(path, "/api/profiles/:id");
     if (profileMatch && request.method === "DELETE") {
-      const userId = resolveUserId(request);
+      const userId = await resolveUserId(request, env);
       const response = await supabaseServiceRequest(env, `business_profiles?id=eq.${profileMatch.id}&user_id=eq.${userId}`, { method: "DELETE" });
       return new Response(response.body, { status: response.status, headers: corsHeaders(env, request) });
     }
@@ -344,7 +361,7 @@ export default {
 
     // GET /api/documents — List documents
     if (path === "/api/documents" && request.method === "GET") {
-      const userId = resolveUserId(request);
+      const userId = await resolveUserId(request, env);
       const response = await supabaseServiceRequest(env, `documents?user_id=eq.${userId}&select=*&order=created_at.desc`);
       return new Response(response.body, { status: response.status, headers: corsHeaders(env, request) });
     }
@@ -352,7 +369,7 @@ export default {
     // POST /api/documents — Save document record
     if (path === "/api/documents" && request.method === "POST") {
       const body = (await request.json()) as any;
-      const userId = resolveUserId(request);
+      const userId = await resolveUserId(request, env);
       const response = await supabaseServiceRequest(env, "documents", {
         method: "POST",
         headers: { prefer: "return=representation" },
@@ -370,7 +387,7 @@ export default {
     // DELETE /api/documents/:id — Delete document
     const docMatch = matchRoute(path, "/api/documents/:id");
     if (docMatch && request.method === "DELETE") {
-      const userId = resolveUserId(request);
+      const userId = await resolveUserId(request, env);
       const response = await supabaseServiceRequest(env, `documents?id=eq.${docMatch.id}&user_id=eq.${userId}`, { method: "DELETE" });
       return new Response(response.body, { status: response.status, headers: corsHeaders(env, request) });
     }
