@@ -490,10 +490,10 @@ html {
   outline: none;
   box-shadow: 0 0 0 0px var(--ring);
   transition: box-shadow 160ms ease-out;
-}
 
-@utility focus-ring-animate:focus-visible {
-  box-shadow: 0 0 0 2px var(--ring), 0 0 0 4px var(--background);
+  &:focus-visible {
+    box-shadow: 0 0 0 2px var(--ring), 0 0 0 4px var(--background);
+  }
 }
 
 /* Hover lift utility for cards and buttons. */
