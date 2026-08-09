@@ -10,15 +10,12 @@ for (const target of targets) {
   if (fs.existsSync(target)) {
     try {
       const config = JSON.parse(fs.readFileSync(target, "utf-8"));
-      // Remove forbidden ASSETS binding name for Pages compatibility
-      if (config.assets && config.assets.binding) {
-        delete config.assets.binding;
-      }
-      if (!config.main) {
-        config.main = "index.mjs";
-      }
+      // Cloudflare Pages project configs MUST NOT contain 'main', 'assets', or 'site'
+      delete config.main;
+      delete config.assets;
+      delete config.site;
       fs.writeFileSync(target, JSON.stringify(config, null, 2));
-      console.log(`[postbuild] Sanitized ${target}`);
+      console.log(`[postbuild] Successfully sanitized ${target} for Cloudflare Pages (removed main & assets)`);
     } catch (err) {
       console.error(`[postbuild] Error processing ${target}:`, err);
     }
