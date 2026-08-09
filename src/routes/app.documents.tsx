@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { FileText, Upload, Trash2 } from "lucide-react";
 import { EmptyState, PageHeader, Panel } from "@/components/dashboard/primitives";
 import { CampaignListSkeleton } from "@/components/dashboard/skeletons";
-import { API_BASE } from "@/lib/api";
+import { API_BASE, authFetch } from "@/lib/api";
 
 export const Route = createFileRoute("/app/documents")({
   head: () => ({
@@ -41,7 +41,7 @@ function Documents() {
   const loadDocuments = async () => {
     setIsLoading(true);
     try {
-      const resp = await fetch(`${API_BASE}/api/documents`);
+      const resp = await authFetch(`${API_BASE}/api/documents`);
       if (resp.ok) {
         const data = await resp.json();
         if (Array.isArray(data)) {
@@ -68,9 +68,8 @@ function Documents() {
     setIsUploading(true);
 
     try {
-      const resp = await fetch(`${API_BASE}/api/documents`, {
+      const resp = await authFetch(`${API_BASE}/api/documents`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: file.name,
           mime_type: file.type || "application/pdf",
@@ -89,7 +88,7 @@ function Documents() {
 
   const handleDelete = async (id: string) => {
     try {
-      const resp = await fetch(`${API_BASE}/api/documents/${id}`, { method: "DELETE" });
+      const resp = await authFetch(`${API_BASE}/api/documents/${id}`, { method: "DELETE" });
       if (resp.ok) {
         setUserDocs((prev) => prev.filter((d) => d.id !== id));
       }

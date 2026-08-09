@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Plus, Trash2, Building2 } from "lucide-react";
 import { EmptyState, PageHeader, Panel } from "@/components/dashboard/primitives";
 import { FormSkeleton } from "@/components/dashboard/skeletons";
-import { API_BASE } from "@/lib/api";
+import { API_BASE, authFetch } from "@/lib/api";
 
 export const Route = createFileRoute("/app/profiles")({
   head: () => ({
@@ -52,7 +52,7 @@ function Profiles() {
   const loadProfiles = async () => {
     setIsLoading(true);
     try {
-      const resp = await fetch(`${API_BASE}/api/profiles`);
+      const resp = await authFetch(`${API_BASE}/api/profiles`);
       if (resp.ok) {
         const data = await resp.json();
         if (Array.isArray(data)) {
@@ -76,9 +76,8 @@ function Profiles() {
 
     setIsSubmitting(true);
     try {
-      const resp = await fetch(`${API_BASE}/api/profiles`, {
+      const resp = await authFetch(`${API_BASE}/api/profiles`, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           name: formData.name.trim(),
           website: formData.website.trim(),
@@ -108,7 +107,7 @@ function Profiles() {
 
   const handleDelete = async (id: string) => {
     try {
-      const resp = await fetch(`${API_BASE}/api/profiles/${id}`, { method: "DELETE" });
+      const resp = await authFetch(`${API_BASE}/api/profiles/${id}`, { method: "DELETE" });
       if (resp.ok) {
         setProfiles((prev) => prev.filter((p) => p.id !== id));
       }

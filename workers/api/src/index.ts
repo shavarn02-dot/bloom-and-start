@@ -102,11 +102,28 @@ function extractUserIdFromJWT(authHeader: string | null): string | null {
         .join("")
     );
     const payload = JSON.parse(jsonPayload);
-    return payload.sub || null;
+    return payload.sub || payload.user_id || null;
   } catch {
     return null;
   }
 }
+
+/** Determine deterministic user ID from JWT or X-User-Email header */
+function resolveUserId(request: Request): string {
+  const authHeader = request.headers.get("authorization");
+  const jwtUserId = extractUserIdFromJWT(authHeader);
+  if (jwtUserId) return jwtUserId;
+
+  const emailHeader = request.headers.get("x-user-email");
+  if (emailHeader && emailHeader.trim()) {
+    const cleanEmail = emailHeader.trim().toLowerCase();
+    // Deterministic pseudo-UUID for email-authenticated user
+    return `email_${cleanEmail.replace(/[^a-z0-9]/g, "_")}`;
+  }
+
+  return "682713e9-1dd8-4cce-92f4-ce32b5fda68c";
+}
+
 
 /** Simple URL path matcher. Returns params or null. */
 function matchRoute(
@@ -160,11 +177,12 @@ export default {
 
     // ========== CAMPAIGN ROUTES ==========
 
-    // GET /api/campaigns — List campaigns
+    // GET /api/campaigns — List user's campaigns
     if (path === "/api/campaigns" && request.method === "GET") {
+      const userId = resolveUserId(request);
       const response = await supabaseServiceRequest(
         env,
-        "lead_campaigns?select=*&order=created_at.desc",
+        `lead_campaigns?user_id=eq.${userId}&select=*&order=created_at.desc`,
       );
       return new Response(response.body, {
         status: response.status,
@@ -183,7 +201,7 @@ export default {
       if (!body.name?.trim() || !body.query?.trim()) {
         return json(env, request, { error: "name and query are required" }, 400);
       }
-      const userId = extractUserIdFromJWT(request.headers.get("authorization")) || "682713e9-1dd8-4cce-92f4-ce32b5fda68c";
+      const userId = resolveUserId(request);
       const response = await supabaseServiceRequest(env, "lead_campaigns", {
         method: "POST",
         headers: { prefer: "return=representation" },
@@ -281,10 +299,11 @@ export default {
     // DELETE /api/campaigns/:id — Delete campaign
     const deleteCampMatch = matchRoute(path, "/api/campaigns/:id");
     if (deleteCampMatch && request.method === "DELETE") {
+      const userId = resolveUserId(request);
       const campaignId = deleteCampMatch.id;
       await supabaseServiceRequest(env, `leads?campaign_id=eq.${campaignId}`, { method: "DELETE" });
       await supabaseServiceRequest(env, `scrape_jobs?campaign_id=eq.${campaignId}`, { method: "DELETE" });
-      const response = await supabaseServiceRequest(env, `lead_campaigns?id=eq.${campaignId}`, { method: "DELETE" });
+      const response = await supabaseServiceRequest(env, `lead_campaigns?id=eq.${campaignId}&user_id=eq.${userId}`, { method: "DELETE" });
       return new Response(response.body, { status: response.status, headers: corsHeaders(env, request) });
     }
 
@@ -292,14 +311,15 @@ export default {
 
     // GET /api/profiles — List business profiles
     if (path === "/api/profiles" && request.method === "GET") {
-      const response = await supabaseServiceRequest(env, "business_profiles?select=*&order=created_at.desc");
+      const userId = resolveUserId(request);
+      const response = await supabaseServiceRequest(env, `business_profiles?user_id=eq.${userId}&select=*&order=created_at.desc`);
       return new Response(response.body, { status: response.status, headers: corsHeaders(env, request) });
     }
 
     // POST /api/profiles — Create business profile
     if (path === "/api/profiles" && request.method === "POST") {
       const body = (await request.json()) as any;
-      const userId = extractUserIdFromJWT(request.headers.get("authorization")) || "682713e9-1dd8-4cce-92f4-ce32b5fda68c";
+      const userId = resolveUserId(request);
       const response = await supabaseServiceRequest(env, "business_profiles", {
         method: "POST",
         headers: { prefer: "return=representation" },
@@ -317,7 +337,8 @@ export default {
     // DELETE /api/profiles/:id — Delete profile
     const profileMatch = matchRoute(path, "/api/profiles/:id");
     if (profileMatch && request.method === "DELETE") {
-      const response = await supabaseServiceRequest(env, `business_profiles?id=eq.${profileMatch.id}`, { method: "DELETE" });
+      const userId = resolveUserId(request);
+      const response = await supabaseServiceRequest(env, `business_profiles?id=eq.${profileMatch.id}&user_id=eq.${userId}`, { method: "DELETE" });
       return new Response(response.body, { status: response.status, headers: corsHeaders(env, request) });
     }
 
@@ -325,14 +346,15 @@ export default {
 
     // GET /api/documents — List documents
     if (path === "/api/documents" && request.method === "GET") {
-      const response = await supabaseServiceRequest(env, "documents?select=*&order=created_at.desc");
+      const userId = resolveUserId(request);
+      const response = await supabaseServiceRequest(env, `documents?user_id=eq.${userId}&select=*&order=created_at.desc`);
       return new Response(response.body, { status: response.status, headers: corsHeaders(env, request) });
     }
 
     // POST /api/documents — Save document record
     if (path === "/api/documents" && request.method === "POST") {
       const body = (await request.json()) as any;
-      const userId = extractUserIdFromJWT(request.headers.get("authorization")) || "682713e9-1dd8-4cce-92f4-ce32b5fda68c";
+      const userId = resolveUserId(request);
       const response = await supabaseServiceRequest(env, "documents", {
         method: "POST",
         headers: { prefer: "return=representation" },
@@ -350,7 +372,8 @@ export default {
     // DELETE /api/documents/:id — Delete document
     const docMatch = matchRoute(path, "/api/documents/:id");
     if (docMatch && request.method === "DELETE") {
-      const response = await supabaseServiceRequest(env, `documents?id=eq.${docMatch.id}`, { method: "DELETE" });
+      const userId = resolveUserId(request);
+      const response = await supabaseServiceRequest(env, `documents?id=eq.${docMatch.id}&user_id=eq.${userId}`, { method: "DELETE" });
       return new Response(response.body, { status: response.status, headers: corsHeaders(env, request) });
     }
 

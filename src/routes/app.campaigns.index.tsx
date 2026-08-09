@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { Plus, Target, Trash2 } from "lucide-react";
 import { PageHeader, Panel, PrimaryAction } from "@/components/dashboard/primitives";
 import { CampaignListSkeleton } from "@/components/dashboard/skeletons";
-import { API_BASE, type Campaign } from "@/lib/api";
+import { API_BASE, authFetch, type Campaign } from "@/lib/api";
 
 export const Route = createFileRoute("/app/campaigns/")({
   head: () => ({
@@ -31,7 +31,7 @@ function Campaigns() {
   const loadCampaigns = async () => {
     setIsLoading(true);
     try {
-      const resp = await fetch(`${API_BASE}/api/campaigns`);
+      const resp = await authFetch(`${API_BASE}/api/campaigns`);
       if (resp.ok) {
         const data = await resp.json();
         if (Array.isArray(data)) {
@@ -51,7 +51,7 @@ function Campaigns() {
 
   const handleDeleteCampaign = async (id: string) => {
     try {
-      const resp = await fetch(`${API_BASE}/api/campaigns/${id}`, { method: "DELETE" });
+      const resp = await authFetch(`${API_BASE}/api/campaigns/${id}`, { method: "DELETE" });
       if (resp.ok) {
         setCampaigns((prev) => prev.filter((c) => c.id !== id));
       }

@@ -3,7 +3,41 @@
  * Connects React UI to Cloudflare Worker API & Supabase
  */
 
+import { supabase } from "@/lib/supabase";
+
 export const API_BASE = "https://leadflowx-api.sarthak2005shavarn.workers.dev";
+
+/** Helper to attach Supabase JWT & user email to API requests for data isolation */
+export async function getAuthHeaders(): Promise<Record<string, string>> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+  try {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.access_token) {
+      headers["Authorization"] = `Bearer ${session.access_token}`;
+    }
+    const userEmail = session?.user?.email || localStorage.getItem("leadgen_user_email");
+    if (userEmail) {
+      headers["X-User-Email"] = userEmail;
+    }
+  } catch {
+    // fallback if supabase client fails
+  }
+  return headers;
+}
+
+export async function authFetch(url: string, init: RequestInit = {}): Promise<Response> {
+  const authHeaders = await getAuthHeaders();
+  return fetch(url, {
+    ...init,
+    headers: {
+      ...authHeaders,
+      ...(init.headers || {}),
+    },
+  });
+}
+
 
 export interface Campaign {
   id: string;
@@ -42,9 +76,8 @@ export interface Lead {
 }
 
 export async function createCampaign(name: string, query: string, requestedLimit = 25, profileId?: string): Promise<Campaign> {
-  const resp = await fetch(`${API_BASE}/api/campaigns`, {
+  const resp = await authFetch(`${API_BASE}/api/campaigns`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ name, query, requested_limit: requestedLimit, business_profile_id: profileId || null }),
   });
 
@@ -61,11 +94,8 @@ export async function createCampaign(name: string, query: string, requestedLimit
 }
 
 export async function runCampaign(campaignId: string): Promise<{ status: string; job_id: string }> {
-  const resp = await fetch(`${API_BASE}/api/campaigns/${campaignId}/run`, {
+  const resp = await authFetch(`${API_BASE}/api/campaigns/${campaignId}/run`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
   });
 
   if (!resp.ok) {
@@ -78,11 +108,10 @@ export async function runCampaign(campaignId: string): Promise<{ status: string;
 }
 
 export async function getJobStatus(jobId: string): Promise<ScrapeJob> {
-  const resp = await fetch(`${API_BASE}/api/jobs/${jobId}`);
+  const resp = await authFetch(`${API_BASE}/api/jobs/${jobId}`);
 
   if (!resp.ok) {
     console.warn(`getJobStatus failed (${resp.status})`);
-    // For job polling, return a pending status instead of throwing
     return {
       id: jobId,
       campaign_id: "unknown",
@@ -97,13 +126,11 @@ export async function getJobStatus(jobId: string): Promise<ScrapeJob> {
 
   const data = await resp.json();
   if (data && data.status) return data;
-
-  // Worker returns a fallback object even if job not found
   return data;
 }
 
 export async function getCampaignLeads(campaignId: string): Promise<Lead[]> {
-  const resp = await fetch(`${API_BASE}/api/campaigns/${campaignId}/leads`);
+  const resp = await authFetch(`${API_BASE}/api/campaigns/${campaignId}/leads`);
 
   if (!resp.ok) {
     console.warn(`getCampaignLeads failed (${resp.status})`);

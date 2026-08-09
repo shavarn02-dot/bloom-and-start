@@ -5,7 +5,7 @@ import { Annotation } from "@/components/leadgen/marks";
 import { PageHeader, Panel, PrimaryAction } from "@/components/dashboard/primitives";
 import { CampaignListSkeleton, UsageCardsSkeleton } from "@/components/dashboard/skeletons";
 import { StatusPill } from "@/components/leadgen/product";
-import { API_BASE, type Campaign } from "@/lib/api";
+import { API_BASE, authFetch, type Campaign } from "@/lib/api";
 import type { BusinessProfile } from "@/routes/app.profiles";
 
 export const Route = createFileRoute("/app/")({
@@ -36,8 +36,8 @@ function Overview() {
     async function loadData() {
       try {
         const [campResp, profResp] = await Promise.all([
-          fetch(`${API_BASE}/api/campaigns`),
-          fetch(`${API_BASE}/api/profiles`),
+          authFetch(`${API_BASE}/api/campaigns`),
+          authFetch(`${API_BASE}/api/profiles`),
         ]);
 
         if (campResp.ok) {
