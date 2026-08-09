@@ -37,13 +37,13 @@ function RegisterPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<{ name?: string; email?: string; password?: string }>({});
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
 
   function onSubmit(event: React.FormEvent) {
     event.preventDefault();
-    const next: Record<string, string> = {};
+    const next: { name?: string; email?: string; password?: string } = {};
     if (!name.trim()) next.name = "This field is required.";
     if (!email.trim()) next.email = "This field is required.";
     else if (!emailPattern.test(email)) next.email = "Enter a valid email address.";
