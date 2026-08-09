@@ -1,4 +1,6 @@
+import researchBoard from "@/assets/research-board.jpg";
 import { Annotation, SectionLabel } from "@/components/leadgen/marks";
+
 import { Reveal } from "@/components/leadgen/reveal";
 import { SketchCheck, SketchConnector, SketchGlyph } from "@/components/leadgen/sketches";
 import { useInView } from "@/hooks/use-reveal";
@@ -33,19 +35,39 @@ export function Problem() {
 
   return (
     <section id="old-way" className="relative overflow-hidden">
-      <div className="mx-auto max-w-6xl px-5 py-20 sm:px-8 lg:py-28">
-        <Reveal className="max-w-2xl">
-          <SectionLabel>The problem</SectionLabel>
-          <h2 className="mt-4 text-[2rem] leading-tight font-semibold sm:text-[2.6rem]">
-            Finding leads shouldn't feel like a second job.
-          </h2>
-          <p className="mt-5 max-w-lg text-[16px] leading-relaxed text-muted-foreground">
-            Most teams already know who they want to sell to. What they don't have is a
-            calm way to go from that knowledge to a short, workable list of names.
-          </p>
-        </Reveal>
+      <div className="mx-auto max-w-6xl px-5 py-16 sm:px-8 lg:py-20">
+        <div className="grid items-center gap-10 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.85fr)] lg:gap-14">
+          <Reveal className="max-w-2xl">
+            <SectionLabel>The problem</SectionLabel>
+            <h2 className="mt-4 text-[2rem] leading-tight font-semibold sm:text-[2.6rem]">
+              Finding leads shouldn't feel like a second job.
+            </h2>
+            <p className="mt-5 max-w-lg text-[16px] leading-relaxed text-muted-foreground">
+              Most teams already know who they want to sell to. What they don't have is a
+              calm way to go from that knowledge to a short, workable list of names.
+            </p>
+          </Reveal>
 
-        <div ref={ref} className="mt-14 grid gap-12 lg:grid-cols-2 lg:gap-16">
+          {/* Tilted pinboard — the research mess, propped up like a board on a wall. */}
+          <Reveal variant="scale" delay={80} className="relative">
+            <img
+              src={researchBoard}
+              alt="A pinboard covered in handwritten notes and printed company lists"
+              width={1280}
+              height={960}
+              loading="lazy"
+              decoding="async"
+              className="w-full rotate-[-1.6deg] object-cover shadow-lift"
+              style={{ clipPath: "polygon(0 3%, 98% 0, 100% 96%, 2% 100%)" }}
+            />
+            <Annotation className="mt-4 block rotate-1 text-[18px]">
+              Somewhere in here is your next customer.
+            </Annotation>
+          </Reveal>
+        </div>
+
+        <div ref={ref} className="mt-12 grid gap-12 lg:grid-cols-2 lg:gap-16">
+
           {/* OLD WAY — gets messier the further you read. */}
           <div>
             <p className="font-mono text-[12px] tracking-[0.18em] text-muted-foreground uppercase">

@@ -33,7 +33,7 @@ export function ManualResearch() {
         </Reveal>
       </div>
 
-      <div className="relative mx-auto grid max-w-6xl items-center gap-6 px-5 sm:px-8 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,0.95fr)] lg:gap-2">
+      <div className="relative mx-auto grid max-w-6xl items-center gap-8 px-5 sm:px-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,0.8fr)] lg:gap-12">
         <Reveal variant="scale">
           <img
             src={manualResearch}
@@ -47,8 +47,9 @@ export function ManualResearch() {
           />
         </Reveal>
 
-        <div className="relative lg:-ml-10 lg:pb-6">
+        <div className="relative min-w-0 lg:pb-6">
           <SketchArrow className="hidden lg:mb-1 lg:block" />
+
           <ol className="space-y-3">
             {loop.map((item, i) => (
               <Reveal
