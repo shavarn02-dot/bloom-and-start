@@ -19,19 +19,26 @@ import { TrustSection } from "@/components/landing/trust";
 import { Faq } from "@/components/landing/faq";
 import { FinalCta } from "@/components/landing/final-cta";
 
-const title = "LeadGen AI — Find the people your business should be talking to";
+const title = "LeadGen AI (LeadFlowX) — AI-Powered B2B Lead Prospecting & Lead Generation";
 const description =
-  "Describe your business and your buyers, and LeadGen AI turns that context into a focused list of prospects. Free to start, no credit card required.";
+  "LeadFlowX / LeadGen AI turns your business profile into high-intent B2B prospect lists. AI scraper qualifies, verifies, and ranks leads automatically. Start for free today.";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title },
       { name: "description", content: description },
+      { name: "keywords", content: "LeadFlowX, LeadGen AI, B2B Lead Generation, AI Prospecting, Sales Intelligence, Cold Email Leads, Prospect Finder" },
       { property: "og:title", content: title },
       { property: "og:description", content: description },
       { property: "og:type", content: "website" },
+      { property: "og:url", content: "https://leadflowx.pages.dev" },
       { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: title },
+      { name: "twitter:description", content: description },
+    ],
+    links: [
+      { rel: "canonical", href: "https://leadflowx.pages.dev" },
     ],
   }),
   component: Index,
