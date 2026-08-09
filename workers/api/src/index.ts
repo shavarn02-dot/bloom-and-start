@@ -225,6 +225,7 @@ export default {
       // Create scrape job
       const jobResp = await supabaseServiceRequest(env, "scrape_jobs", {
         method: "POST",
+        headers: { prefer: "return=representation" },
         body: JSON.stringify({
           campaign_id: campaignId,
           user_id: userId,
@@ -237,8 +238,12 @@ export default {
         return json(env, request, { error: "Failed to create scrape job", detail: err }, 500);
       }
 
-      const jobs = await jobResp.json() as any[];
-      const job = jobs[0];
+      const jobs = (await jobResp.json()) as any[];
+      const job = Array.isArray(jobs) && jobs.length > 0 ? jobs[0] : null;
+
+      if (!job || !job.id) {
+        return json(env, request, { error: "Failed to obtain created job ID" }, 500);
+      }
 
       // Update campaign status to queued
       await supabaseServiceRequest(env, `lead_campaigns?id=eq.${campaignId}`, {
@@ -249,17 +254,21 @@ export default {
       // Increment user quota
       await incrementUserQuota(env, userId);
 
-      // Trigger Modal pipeline (fire-and-forget)
-      ctx.waitUntil(
-        fetch(env.MODAL_WEBHOOK_URL, {
+      // Trigger Modal pipeline
+      try {
+        const modalResp = await fetch(env.MODAL_WEBHOOK_URL, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             campaign_id: campaignId,
             job_id: job.id,
           }),
-        }).catch((err) => console.error("Modal trigger failed:", err)),
-      );
+        });
+        const modalResult = await modalResp.text();
+        console.log("Modal trigger response:", modalResp.status, modalResult);
+      } catch (err) {
+        console.error("Modal trigger failed:", err);
+      }
 
       return json(env, request, {
         status: "accepted",
