@@ -10,9 +10,10 @@ for (const target of targets) {
   if (fs.existsSync(target)) {
     try {
       const config = JSON.parse(fs.readFileSync(target, "utf-8"));
-      // Cloudflare Pages projects forbid 'main' and 'assets' keys in Pages config
+      // Cloudflare Pages projects forbid 'main', 'assets', and 'rules' keys
       delete config.main;
       delete config.assets;
+      delete config.rules;
       fs.writeFileSync(target, JSON.stringify(config, null, 2));
       console.log(`[postbuild] Successfully sanitized ${target} for Cloudflare Pages!`);
     } catch (err) {
