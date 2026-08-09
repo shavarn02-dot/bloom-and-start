@@ -315,8 +315,10 @@ export function LeadTable({
           ))}
         </tbody>
       </table>
-    </div>
+      </div>
+    </>
   );
+
 }
 
 /** Real upload surface: website URL, PDF attachments and a processing state. */
