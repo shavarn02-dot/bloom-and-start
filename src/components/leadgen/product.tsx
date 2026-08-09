@@ -218,8 +218,44 @@ export function LeadTable({
     : ["Lead", "Company", "Role", "Location", "Match", "Status"];
 
   return (
-    <div className="w-full min-w-0 max-w-full overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+    <>
+      {/* Mobile: stacked lead cards — no cramped horizontal table. */}
+      <ul className="divide-y divide-border sm:hidden">
+        {leads.map((lead, i) => (
+          <li
+            key={lead.id}
+            onClick={() => onSelect?.(lead)}
+            className={cn(
+              "px-4 py-3.5",
+              onSelect && "cursor-pointer",
+              animateRows && "animate-row-in",
+            )}
+            style={animateRows ? { animationDelay: `${i * 110}ms` } : undefined}
+          >
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="truncate text-[14px] font-medium text-foreground">
+                  {lead.firstName} {lead.lastName}
+                </p>
+                <p className="truncate text-[12.5px] text-secondary-foreground">
+                  {lead.role} · {lead.company}
+                </p>
+                <p className="mt-0.5 truncate text-[12px] text-muted-foreground">
+                  {showVerification ? lead.emailStatus : lead.location}
+                </p>
+              </div>
+              <div className="flex shrink-0 flex-col items-end gap-1.5">
+                <MatchBadge value={lead.match} animate={animateScores} />
+                <StatusPill status={lead.status} />
+              </div>
+            </div>
+          </li>
+        ))}
+      </ul>
+
+      <div className="hidden w-full min-w-0 max-w-full overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:block">
       <table className="w-full min-w-[560px] text-left">
+
 
         <thead>
           <tr className="border-b border-border bg-cream/40">
