@@ -278,27 +278,80 @@ export default {
       }, 202);
     }
 
-    // GET /api/campaigns/:id/leads — Get campaign leads
-    const leadsMatch = matchRoute(path, "/api/campaigns/:id/leads");
-    if (leadsMatch && request.method === "GET") {
-      const campaignId = leadsMatch.id;
+    // DELETE /api/campaigns/:id — Delete campaign
+    const deleteCampMatch = matchRoute(path, "/api/campaigns/:id");
+    if (deleteCampMatch && request.method === "DELETE") {
+      const campaignId = deleteCampMatch.id;
+      await supabaseServiceRequest(env, `leads?campaign_id=eq.${campaignId}`, { method: "DELETE" });
+      await supabaseServiceRequest(env, `scrape_jobs?campaign_id=eq.${campaignId}`, { method: "DELETE" });
+      const response = await supabaseServiceRequest(env, `lead_campaigns?id=eq.${campaignId}`, { method: "DELETE" });
+      return new Response(response.body, { status: response.status, headers: corsHeaders(env, request) });
+    }
 
-      // Query params for sorting/filtering
-      const sortBy = url.searchParams.get("sort") || "confidence.desc";
-      const limit = Math.min(parseInt(url.searchParams.get("limit") || "50"), 100);
-      const offset = parseInt(url.searchParams.get("offset") || "0");
-      const minScore = url.searchParams.get("min_score");
+    // ========== BUSINESS PROFILE ROUTES ==========
 
-      let query = `leads?campaign_id=eq.${campaignId}&order=${sortBy}&limit=${limit}&offset=${offset}`;
-      if (minScore) {
-        query += `&confidence=gte.${minScore}`;
-      }
+    // GET /api/profiles — List business profiles
+    if (path === "/api/profiles" && request.method === "GET") {
+      const response = await supabaseServiceRequest(env, "business_profiles?select=*&order=created_at.desc");
+      return new Response(response.body, { status: response.status, headers: corsHeaders(env, request) });
+    }
 
-      const response = await supabaseServiceRequest(env, query);
-      return new Response(response.body, {
-        status: response.status,
-        headers: corsHeaders(env, request),
+    // POST /api/profiles — Create business profile
+    if (path === "/api/profiles" && request.method === "POST") {
+      const body = (await request.json()) as any;
+      const userId = extractUserIdFromJWT(request.headers.get("authorization")) || "682713e9-1dd8-4cce-92f4-ce32b5fda68c";
+      const response = await supabaseServiceRequest(env, "business_profiles", {
+        method: "POST",
+        headers: { prefer: "return=representation" },
+        body: JSON.stringify({
+          user_id: userId,
+          name: body.name?.trim() || "My Business Profile",
+          website: body.website?.trim() || null,
+          description: body.description?.trim() || body.offering?.trim() || null,
+          target_customer: body.target_customer?.trim() || body.icp?.trim() || null,
+        }),
       });
+      return new Response(response.body, { status: response.status, headers: corsHeaders(env, request) });
+    }
+
+    // DELETE /api/profiles/:id — Delete profile
+    const profileMatch = matchRoute(path, "/api/profiles/:id");
+    if (profileMatch && request.method === "DELETE") {
+      const response = await supabaseServiceRequest(env, `business_profiles?id=eq.${profileMatch.id}`, { method: "DELETE" });
+      return new Response(response.body, { status: response.status, headers: corsHeaders(env, request) });
+    }
+
+    // ========== DOCUMENT ROUTES ==========
+
+    // GET /api/documents — List documents
+    if (path === "/api/documents" && request.method === "GET") {
+      const response = await supabaseServiceRequest(env, "documents?select=*&order=created_at.desc");
+      return new Response(response.body, { status: response.status, headers: corsHeaders(env, request) });
+    }
+
+    // POST /api/documents — Save document record
+    if (path === "/api/documents" && request.method === "POST") {
+      const body = (await request.json()) as any;
+      const userId = extractUserIdFromJWT(request.headers.get("authorization")) || "682713e9-1dd8-4cce-92f4-ce32b5fda68c";
+      const response = await supabaseServiceRequest(env, "documents", {
+        method: "POST",
+        headers: { prefer: "return=representation" },
+        body: JSON.stringify({
+          user_id: userId,
+          name: body.name || "Uploaded Document.pdf",
+          mime_type: body.mime_type || "application/pdf",
+          storage_path: body.storage_path || null,
+          status: "ready",
+        }),
+      });
+      return new Response(response.body, { status: response.status, headers: corsHeaders(env, request) });
+    }
+
+    // DELETE /api/documents/:id — Delete document
+    const docMatch = matchRoute(path, "/api/documents/:id");
+    if (docMatch && request.method === "DELETE") {
+      const response = await supabaseServiceRequest(env, `documents?id=eq.${docMatch.id}`, { method: "DELETE" });
+      return new Response(response.body, { status: response.status, headers: corsHeaders(env, request) });
     }
 
     // ========== JOB ROUTES ==========

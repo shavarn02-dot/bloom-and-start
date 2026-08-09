@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState } from "react";
-import { FileText, Upload, Plus } from "lucide-react";
+import { useState, useEffect } from "react";
+import { FileText, Upload, Trash2, Loader2 } from "lucide-react";
 import { EmptyState, PageHeader, Panel } from "@/components/dashboard/primitives";
+import { API_BASE } from "@/lib/api";
 
 export const Route = createFileRoute("/app/documents")({
   head: () => ({
@@ -23,28 +24,76 @@ export const Route = createFileRoute("/app/documents")({
   component: Documents,
 });
 
-interface UploadedDoc {
+interface AppDocument {
   id: string;
   name: string;
-  size: string;
-  added: string;
+  mime_type?: string;
+  status: string;
+  created_at: string;
 }
 
 function Documents() {
-  const [userDocs, setUserDocs] = useState<UploadedDoc[]>([]);
+  const [userDocs, setUserDocs] = useState<AppDocument[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isUploading, setIsUploading] = useState(false);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const loadDocuments = async () => {
+    setIsLoading(true);
+    try {
+      const resp = await fetch(`${API_BASE}/api/documents`);
+      if (resp.ok) {
+        const data = await resp.json();
+        if (Array.isArray(data)) {
+          setUserDocs(data);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to load documents:", err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadDocuments();
+  }, []);
+
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
     if (!files || files.length === 0) return;
 
     const file = files[0];
-    const newDoc: UploadedDoc = {
-      id: "doc_" + Date.now(),
-      name: file.name,
-      size: (file.size / (1024 * 1024)).toFixed(1) + " MB",
-      added: new Date().toLocaleDateString(),
-    };
-    setUserDocs((prev) => [newDoc, ...prev]);
+    setIsUploading(true);
+
+    try {
+      const resp = await fetch(`${API_BASE}/api/documents`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: file.name,
+          mime_type: file.type || "application/pdf",
+        }),
+      });
+
+      if (resp.ok) {
+        await loadDocuments();
+      }
+    } catch (err) {
+      console.error("Failed to upload document:", err);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const resp = await fetch(`${API_BASE}/api/documents/${id}`, { method: "DELETE" });
+      if (resp.ok) {
+        setUserDocs((prev) => prev.filter((d) => d.id !== id));
+      }
+    } catch (err) {
+      console.error("Failed to delete document:", err);
+    }
   };
 
   return (
@@ -55,17 +104,31 @@ function Documents() {
       />
 
       <label className="flex cursor-pointer flex-col items-center rounded-lg border border-dashed border-border-strong bg-cream/50 px-6 py-10 text-center transition-colors hover:bg-cream">
-        <Upload className="size-5 text-muted-foreground" strokeWidth={1.8} />
+        {isUploading ? (
+          <Loader2 className="size-5 text-primary animate-spin" />
+        ) : (
+          <Upload className="size-5 text-muted-foreground" strokeWidth={1.8} />
+        )}
         <span className="mt-3 text-[14px] font-medium text-foreground">
-          Upload a PDF
+          {isUploading ? "Saving document..." : "Upload a PDF"}
         </span>
         <span className="mt-1 text-[13px] text-muted-foreground">
           A deck, catalogue, or company overview to enrich your lead criteria.
         </span>
-        <input type="file" accept="application/pdf" className="sr-only" onChange={handleFileUpload} />
+        <input
+          type="file"
+          accept="application/pdf"
+          disabled={isUploading}
+          className="sr-only"
+          onChange={handleFileUpload}
+        />
       </label>
 
-      {userDocs.length > 0 ? (
+      {isLoading ? (
+        <div className="flex items-center justify-center p-12 text-muted-foreground text-[13.5px]">
+          <Loader2 className="size-4 animate-spin mr-2" /> Loading documents...
+        </div>
+      ) : userDocs.length > 0 ? (
         <Panel title="Uploaded documents">
           <ul className="divide-y divide-border">
             {userDocs.map((doc) => (
@@ -79,9 +142,19 @@ function Documents() {
                     {doc.name}
                   </span>
                 </span>
-                <span className="shrink-0 text-[12.5px] text-muted-foreground">
-                  {doc.size} · {doc.added}
-                </span>
+                <div className="flex items-center gap-4">
+                  <span className="shrink-0 text-[12.5px] text-muted-foreground">
+                    {new Date(doc.created_at).toLocaleDateString()}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => handleDelete(doc.id)}
+                    className="text-red-600 hover:text-red-700 transition-colors p-1"
+                    title="Delete document"
+                  >
+                    <Trash2 className="size-4" />
+                  </button>
+                </div>
               </li>
             ))}
           </ul>

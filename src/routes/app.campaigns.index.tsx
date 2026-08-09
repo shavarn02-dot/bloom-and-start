@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { Plus, Loader2, Target } from "lucide-react";
+import { Plus, Loader2, Target, Trash2 } from "lucide-react";
 import { PageHeader, Panel, PrimaryAction } from "@/components/dashboard/primitives";
 import { API_BASE, type Campaign } from "@/lib/api";
 
@@ -27,24 +27,37 @@ function Campaigns() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    async function loadCampaigns() {
-      try {
-        const resp = await fetch(`${API_BASE}/api/campaigns`);
-        if (resp.ok) {
-          const data = await resp.json();
-          if (Array.isArray(data)) {
-            setCampaigns(data);
-          }
+  const loadCampaigns = async () => {
+    setIsLoading(true);
+    try {
+      const resp = await fetch(`${API_BASE}/api/campaigns`);
+      if (resp.ok) {
+        const data = await resp.json();
+        if (Array.isArray(data)) {
+          setCampaigns(data);
         }
-      } catch (err) {
-        console.warn("Failed to fetch campaigns:", err);
-      } finally {
-        setIsLoading(false);
       }
+    } catch (err) {
+      console.warn("Failed to fetch campaigns:", err);
+    } finally {
+      setIsLoading(false);
     }
+  };
+
+  useEffect(() => {
     loadCampaigns();
   }, []);
+
+  const handleDeleteCampaign = async (id: string) => {
+    try {
+      const resp = await fetch(`${API_BASE}/api/campaigns/${id}`, { method: "DELETE" });
+      if (resp.ok) {
+        setCampaigns((prev) => prev.filter((c) => c.id !== id));
+      }
+    } catch (err) {
+      console.error("Failed to delete campaign:", err);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -86,7 +99,7 @@ function Campaigns() {
             <table className="w-full min-w-[560px] text-left">
               <thead>
                 <tr className="border-b border-border bg-cream/40">
-                  {["Campaign Name", "Search Query", "Target Cap", "Created Date", "Status"].map((h) => (
+                  {["Campaign Name", "Search Query", "Target Cap", "Created Date", "Status", "Actions"].map((h) => (
                     <th
                       key={h}
                       scope="col"
@@ -124,6 +137,16 @@ function Campaigns() {
                       >
                         {c.status}
                       </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteCampaign(c.id)}
+                        className="text-red-600 hover:text-red-700 transition-colors p-1"
+                        title="Delete campaign"
+                      >
+                        <Trash2 className="size-4" />
+                      </button>
                     </td>
                   </tr>
                 ))}
