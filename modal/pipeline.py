@@ -312,6 +312,7 @@ Return ONLY a JSON array of search query strings. Example: ["marketing agencies 
 
         saved_count = 0
         leads_to_insert = []
+        campaign_user_id = campaign.get("user_id") or "682713e9-1dd8-4cce-92f4-ce32b5fda68c"
 
         for s in scored_leads:
             ld = s.lead
@@ -320,6 +321,7 @@ Return ONLY a JSON array of search query strings. Example: ["marketing agencies 
 
             lead_record = {
                 "campaign_id": campaign_id,
+                "user_id": campaign_user_id,
                 "company_name": ld.company_name or "Unknown Company",
                 "contact_name": ld.contact_name or None,
                 "title": ld.title or None,
@@ -327,26 +329,25 @@ Return ONLY a JSON array of search query strings. Example: ["marketing agencies 
                 "phone": ld.phone or None,
                 "website": ld.website or None,
                 "source_url": ld.source_url or None,
-                "confidence": s.total_score,
+                "source_type": "public_web",
+                "confidence": float(s.total_score),
                 "verification_status": v_status,
-                "ai_summary": json.dumps(s.breakdown) if s.breakdown else None,
-                "status": "new",
+                "metadata": {"breakdown": s.breakdown} if s.breakdown else {},
             }
             leads_to_insert.append(lead_record)
 
         if leads_to_insert:
             try:
-                sb.table("extracted_leads").insert(leads_to_insert).execute()
+                sb.table("leads").insert(leads_to_insert).execute()
                 saved_count = len(leads_to_insert)
             except Exception as save_err:
-                logger.error(f"Error inserting leads to Supabase: {save_err}")
-                # Try inserting individually
+                logger.error(f"Error bulk inserting leads to Supabase: {save_err}")
                 for record in leads_to_insert:
                     try:
-                        sb.table("extracted_leads").insert(record).execute()
+                        sb.table("leads").insert(record).execute()
                         saved_count += 1
-                    except Exception:
-                        pass
+                    except Exception as single_err:
+                        logger.warning(f"Could not insert single lead: {single_err}")
 
         # ----- Step 9: Finalize -----
         elapsed = round(time.time() - start_time, 2)
