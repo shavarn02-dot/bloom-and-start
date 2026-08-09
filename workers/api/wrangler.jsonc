@@ -1,6 +1,7 @@
-// leadflowx-api worker — v2.1 — auto-deploy via GitHub Actions
-
+// leadflowx-api worker — auto-deploy via GitHub Actions
+{
   "$schema": "https://developers.cloudflare.com/workers/wrangler/config-schema.json",
+
   "name": "leadflowx-api",
   "main": "src/index.ts",
   "workers_dev": true,
