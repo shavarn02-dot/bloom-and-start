@@ -61,7 +61,7 @@ function Leads() {
               companySize: "10-100",
               location: "India / Global",
               email: l.email || "N/A",
-              emailStatus: l.verification_status === "verified" ? "Verified" : l.verification_status === "rejected" ? "Bounced" : "Catch-all",
+              emailStatus: l.verification_status === "verified" ? "Verified" : "Unverified",
               phone: l.phone || "",
               match: l.confidence || 75,
               source: l.source_url || l.website || "Web Scraping",
