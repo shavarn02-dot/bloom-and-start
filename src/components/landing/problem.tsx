@@ -1,4 +1,6 @@
+import researchBoard from "@/assets/research-board.jpg";
 import { Annotation, SectionLabel } from "@/components/leadgen/marks";
+
 import { Reveal } from "@/components/leadgen/reveal";
 import { SketchCheck, SketchConnector, SketchGlyph } from "@/components/leadgen/sketches";
 import { useInView } from "@/hooks/use-reveal";
