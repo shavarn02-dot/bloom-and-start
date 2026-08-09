@@ -16,6 +16,7 @@ function fixWranglerForPages() {
             const config = JSON.parse(fs.readFileSync(p, "utf-8"));
             delete config.assets;
             delete config.main;
+            delete config.rules;
             fs.writeFileSync(p, JSON.stringify(config, null, 2));
             console.log(`[fix-wrangler] Sanitized ${p} for Cloudflare Pages`);
           } catch (e) {
