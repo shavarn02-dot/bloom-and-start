@@ -39,7 +39,11 @@ export function GoogleButton({ label }: { label?: string }) {
       disabled={loading}
       onClick={() => {
         setLoading(true);
-        setTimeout(() => setLoading(false), 900);
+        localStorage.setItem("leadgen_user_name", "Google User");
+        localStorage.setItem("leadgen_user_email", "google.user@leadgen.ai");
+        setTimeout(() => {
+          window.location.href = "/app";
+        }, 500);
       }}
     >
       {loading ? <Loader2 className="size-4 animate-spin" /> : <GoogleMark />}

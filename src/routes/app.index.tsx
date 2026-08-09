@@ -1,10 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { ArrowRight, Plus, Loader2, Target } from "lucide-react";
+import { ArrowRight, Plus, Loader2, Target, Building2, Sparkles } from "lucide-react";
 import { Annotation } from "@/components/leadgen/marks";
 import { PageHeader, Panel, PrimaryAction } from "@/components/dashboard/primitives";
 import { StatusPill } from "@/components/leadgen/product";
 import { API_BASE, type Campaign } from "@/lib/api";
+import type { BusinessProfile } from "@/routes/app.profiles";
 
 export const Route = createFileRoute("/app/")({
   head: () => ({
@@ -27,25 +28,33 @@ export const Route = createFileRoute("/app/")({
 
 function Overview() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
+  const [profiles, setProfiles] = useState<BusinessProfile[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    async function loadCampaigns() {
+    async function loadData() {
       try {
-        const resp = await fetch(`${API_BASE}/api/campaigns`);
-        if (resp.ok) {
-          const data = await resp.json();
-          if (Array.isArray(data)) {
-            setCampaigns(data);
-          }
+        const [campResp, profResp] = await Promise.all([
+          fetch(`${API_BASE}/api/campaigns`),
+          fetch(`${API_BASE}/api/profiles`),
+        ]);
+
+        if (campResp.ok) {
+          const campData = await campResp.json();
+          if (Array.isArray(campData)) setCampaigns(campData);
+        }
+
+        if (profResp.ok) {
+          const profData = await profResp.json();
+          if (Array.isArray(profData)) setProfiles(profData);
         }
       } catch (err) {
-        console.warn("Failed to fetch campaigns for overview:", err);
+        console.warn("Failed to fetch overview data:", err);
       } finally {
         setIsLoading(false);
       }
     }
-    loadCampaigns();
+    loadData();
   }, []);
 
   return (
@@ -59,6 +68,31 @@ function Overview() {
           </PrimaryAction>
         }
       />
+
+      {/* Step 1 Onboarding Card: Business Profile Prompt */}
+      {!isLoading && profiles.length === 0 && (
+        <div className="rounded-xl border border-primary/20 bg-gradient-to-r from-primary/5 via-primary/10 to-transparent p-5 sm:p-6 shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary">
+                <Sparkles className="size-3" /> Step 1: Recommended Setup
+              </div>
+              <h3 className="text-[16px] font-semibold text-foreground">
+                Create your Business Profile first
+              </h3>
+              <p className="text-[13.5px] text-muted-foreground max-w-xl leading-relaxed">
+                Define what your business does and who your target audience is. This context is automatically used by our AI scraper to score prospects and tailor search queries.
+              </p>
+            </div>
+            <Link
+              to="/app/profiles"
+              className="inline-flex shrink-0 h-10 items-center gap-2 rounded-lg bg-primary px-4 text-[13.5px] font-medium text-primary-foreground transition-all hover:bg-primary/90 hover:shadow-md"
+            >
+              <Building2 className="size-4" /> Create Profile →
+            </Link>
+          </div>
+        </div>
+      )}
 
       <Panel title="Recent campaigns">
         {isLoading ? (
@@ -115,7 +149,7 @@ function Overview() {
       </Panel>
 
       <div className="grid gap-4 sm:grid-cols-3">
-        <UsageCard label="Business profiles" used={0} limit={3} />
+        <UsageCard label="Business profiles" used={profiles.length} limit={3} />
         <UsageCard label="Campaigns this month" used={campaigns.length} limit={10} />
         <UsageCard label="Leads per campaign" used={0} limit={50} />
       </div>
