@@ -14,9 +14,15 @@ const nav = [
 export function SiteHeader() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [progress, setProgress] = useState(0);
 
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 12);
+    const onScroll = () => {
+      const y = window.scrollY;
+      const doc = document.documentElement.scrollHeight - window.innerHeight;
+      setScrolled(y > 12);
+      setProgress(doc > 0 ? Math.min(1, y / doc) : 0);
+    };
     onScroll();
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -46,9 +52,10 @@ export function SiteHeader() {
             <a
               key={item.label}
               href={item.href}
-              className="text-[13.5px] text-muted-foreground transition-colors hover:text-foreground"
+              className="group relative text-[13.5px] text-muted-foreground transition-colors hover:text-foreground"
             >
               {item.label}
+              <span className="absolute -bottom-0.5 left-0 h-px w-full origin-left scale-x-0 bg-primary transition-transform duration-200 group-hover:scale-x-100" />
             </a>
           ))}
         </nav>
@@ -62,9 +69,10 @@ export function SiteHeader() {
           </Link>
           <Link
             to="/register"
-            className="inline-flex h-9 items-center rounded-md bg-primary px-3.5 text-[13.5px] font-medium text-primary-foreground transition-colors duration-200 hover:bg-primary/90"
+            className="group inline-flex h-9 items-center rounded-md bg-primary px-3.5 text-[13.5px] font-medium text-primary-foreground transition-all duration-200 hover:bg-primary/90 hover:-translate-y-0.5 hover:shadow-[var(--shadow-lift)]"
           >
-            Start finding leads&nbsp;→
+            Start finding leads
+            <span className="ml-1 transition-transform duration-200 group-hover:translate-x-0.5">→</span>
           </Link>
         </div>
 
@@ -72,11 +80,18 @@ export function SiteHeader() {
           type="button"
           onClick={() => setOpen((v) => !v)}
           aria-label={open ? "Close menu" : "Open menu"}
-          className="inline-flex size-9 items-center justify-center rounded-md border border-border bg-paper text-foreground md:hidden"
+          className="inline-flex size-9 items-center justify-center rounded-md border border-border bg-paper text-foreground transition-colors hover:bg-cream md:hidden"
         >
           {open ? <X className="size-4" /> : <Menu className="size-4" />}
         </button>
       </div>
+
+      {/* Scroll progress line */}
+      <div
+        className="scroll-progress absolute bottom-0 left-0 h-[2px] bg-primary"
+        style={{ "--scroll-progress": progress } as React.CSSProperties}
+        aria-hidden="true"
+      />
 
       {open && (
         <div className="border-t border-border bg-paper px-5 py-4 md:hidden">

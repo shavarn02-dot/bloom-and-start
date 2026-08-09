@@ -29,7 +29,7 @@ export function Pricing() {
         <Reveal
           variant="scale"
           delay={100}
-          className="mt-10 max-w-md rounded-lg border border-border bg-cream p-7 transition-shadow duration-300 hover:shadow-[var(--shadow-lift)]"
+          className="mt-10 max-w-md rounded-lg border border-border bg-cream p-7 transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-lift)]"
         >
           <div className="flex items-baseline justify-between">
             <h3 className="text-[15px] font-semibold text-foreground">Free</h3>
@@ -46,7 +46,9 @@ export function Pricing() {
                 className="flex animate-row-in items-center gap-2.5 text-[14px]"
                 style={{ animationDelay: `${i * 70}ms` }}
               >
-                <Check className="size-4 shrink-0 text-primary" strokeWidth={2.4} />
+                <span className="inline-flex size-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <Check className="size-3" strokeWidth={2.8} />
+                </span>
                 <span className="text-secondary-foreground">{f}</span>
               </li>
             ))}
@@ -54,7 +56,7 @@ export function Pricing() {
 
           <Link
             to="/app"
-            className="lg-cta mt-8 inline-flex h-11 w-full items-center justify-center rounded-md bg-primary text-sm font-medium text-primary-foreground transition-all duration-200 hover:bg-primary/90 hover:shadow-[var(--shadow-lift)]"
+            className="lg-cta group mt-8 inline-flex h-11 w-full items-center justify-center rounded-md bg-primary text-sm font-medium text-primary-foreground transition-all duration-200 hover:bg-primary/90 hover:shadow-[var(--shadow-lift)] hover:-translate-y-0.5"
           >
             Start finding leads<span className="lg-cta-arrow ml-2">→</span>
           </Link>

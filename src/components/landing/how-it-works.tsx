@@ -8,6 +8,7 @@ import {
   ProductFrame,
 } from "@/components/leadgen/product";
 import { exampleLeads } from "@/data/example";
+import { cn } from "@/lib/utils";
 
 const steps = [
   {
@@ -16,7 +17,7 @@ const steps = [
     copy: "Your offer, your buyers, your regions. Upload a PDF if the detail already lives in a document.",
     note: "Start with what you already know.",
     render: () => (
-      <ProductFrame title="Business profile">
+      <ProductFrame title="Business profile" className="transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-lift)]">
         <BusinessProfilePanel compact />
       </ProductFrame>
     ),
@@ -27,7 +28,7 @@ const steps = [
     copy: "A search strategy is built from your context, then companies are discovered, contacts verified and leads scored.",
     note: null,
     render: () => (
-      <ProductFrame title="Campaign progress">
+      <ProductFrame title="Campaign progress" className="transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-lift)]">
         <CampaignProgressPanel progress={63} />
       </ProductFrame>
     ),
@@ -38,7 +39,7 @@ const steps = [
     copy: "Review, filter, inspect and export the leads that matter. Everything is a plain table you can act on.",
     note: null,
     render: () => (
-      <ProductFrame title="Your leads">
+      <ProductFrame title="Your leads" className="transition-all duration-300 hover:-translate-y-1 hover:shadow-[var(--shadow-lift)]">
         <LeadToolbar />
         <LeadTable leads={exampleLeads.slice(0, 4)} dense />
       </ProductFrame>
@@ -63,7 +64,10 @@ export function HowItWorks() {
               key={step.number}
               className="grid gap-8 lg:grid-cols-2 lg:items-center lg:gap-14"
             >
-              <Reveal className={i % 2 === 1 ? "lg:order-2" : ""}>
+              <Reveal
+                delay={i * 80}
+                className={cn(i % 2 === 1 ? "lg:order-2" : "")}
+              >
                 <p className="font-mono text-[13px] tracking-[0.14em] text-primary">
                   {step.number}
                 </p>
@@ -77,8 +81,8 @@ export function HowItWorks() {
               </Reveal>
               <Reveal
                 variant={i % 2 === 1 ? "wipe" : "scale"}
-                delay={100}
-                className={i % 2 === 1 ? "lg:order-1" : ""}
+                delay={120 + i * 80}
+                className={cn(i % 2 === 1 ? "lg:order-1" : "")}
               >
                 {step.render()}
               </Reveal>

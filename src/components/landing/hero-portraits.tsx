@@ -87,8 +87,8 @@ const PORTRAITS: Portrait[] = [
 ];
 
 const HOLD_MS = 4400;
-/** Portrait reveals after the copy and CTA have settled. */
-const FIRST_REVEAL_MS = 1600;
+/** Portrait reveals shortly after the copy sequence has begun. */
+const FIRST_REVEAL_MS = 720;
 
 export function HeroPortraits() {
   const reduced = usePrefersReducedMotion();
@@ -171,7 +171,8 @@ export function HeroPortraits() {
                   : "idle"
             }
             className={cn(
-              "lg-portrait absolute inset-0 z-10 h-full w-full object-contain object-bottom drop-shadow-[var(--shadow-contact)]",
+              "lg-portrait absolute inset-0 z-10 h-full w-full object-contain object-bottom",
+              i === index && started && "drop-shadow-[var(--shadow-contact)]",
               p.fit,
             )}
             style={{ clipPath: "polygon(6% 0, 100% 3%, 94% 97%, 0 100%)" }}
@@ -187,7 +188,21 @@ export function HeroPortraits() {
             className="animate-thought-in block text-[19px] leading-snug -rotate-[1.5deg] text-foreground/75"
           >
             {current.thought}
-            {current.arrow && <span className="ml-1">→</span>}
+            {current.arrow && (
+              <svg
+                viewBox="0 0 24 12"
+                className="ml-1.5 inline-block h-3 w-6 text-foreground/60"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M2 6c6 0 10-2 14-2 3 0 5 1 6 2-2 2-4 3-6 4"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+              </svg>
+            )}
           </Annotation>
         )}
       </div>
@@ -200,7 +215,21 @@ export function HeroPortraits() {
             className="animate-thought-in block max-w-[19rem] text-center text-[18px] leading-snug -rotate-[1deg] text-foreground/75"
           >
             {current.thought}
-            {current.arrow && <span className="ml-1">→</span>}
+            {current.arrow && (
+              <svg
+                viewBox="0 0 24 12"
+                className="ml-1.5 inline-block h-3 w-6 text-foreground/60"
+                fill="none"
+                aria-hidden="true"
+              >
+                <path
+                  d="M2 6c6 0 10-2 14-2 3 0 5 1 6 2-2 2-4 3-6 4"
+                  stroke="currentColor"
+                  strokeWidth="1.8"
+                  strokeLinecap="round"
+                />
+              </svg>
+            )}
           </Annotation>
         )}
       </div>

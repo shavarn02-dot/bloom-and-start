@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { Plus, Loader2, Target, Trash2 } from "lucide-react";
+import { Plus, Target, Trash2 } from "lucide-react";
 import { PageHeader, Panel, PrimaryAction } from "@/components/dashboard/primitives";
+import { CampaignListSkeleton } from "@/components/dashboard/skeletons";
 import { API_BASE, type Campaign } from "@/lib/api";
 
 export const Route = createFileRoute("/app/campaigns/")({
@@ -73,9 +74,7 @@ function Campaigns() {
 
       <Panel title="All campaigns">
         {isLoading ? (
-          <div className="flex items-center justify-center p-8 text-muted-foreground text-[13.5px]">
-            <Loader2 className="size-4 animate-spin mr-2" /> Loading campaigns...
-          </div>
+          <CampaignListSkeleton rows={5} />
         ) : campaigns.length === 0 ? (
           <div className="p-8 text-center space-y-3">
             <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-primary/10 text-primary">
@@ -111,8 +110,8 @@ function Campaigns() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-border">
-                {campaigns.map((c) => (
-                  <tr key={c.id} className="text-[13.5px]">
+                {campaigns.map((c, i) => (
+                  <tr key={c.id} style={{ animationDelay: `${i * 50}ms` }} className="animate-row-in text-[13.5px]">
                     <td className="px-4 py-3 font-medium text-foreground">
                       <Link to="/app/leads" search={{ campaign: c.id }} className="hover:underline">
                         {c.name}
@@ -142,7 +141,7 @@ function Campaigns() {
                       <button
                         type="button"
                         onClick={() => handleDeleteCampaign(c.id)}
-                        className="text-red-600 hover:text-red-700 transition-colors p-1"
+                        className="text-red-600 hover:text-red-700 transition-all duration-200 hover:scale-110 p-1"
                         title="Delete campaign"
                       >
                         <Trash2 className="size-4" />

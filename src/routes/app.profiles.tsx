@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { Plus, Trash2, Loader2, Building2 } from "lucide-react";
+import { Plus, Trash2, Building2 } from "lucide-react";
 import { EmptyState, PageHeader, Panel } from "@/components/dashboard/primitives";
+import { FormSkeleton } from "@/components/dashboard/skeletons";
 import { API_BASE } from "@/lib/api";
 
 export const Route = createFileRoute("/app/profiles")({
@@ -147,7 +148,7 @@ function Profiles() {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                 placeholder="e.g. Acme Corp"
-                className="h-9 w-full rounded-md border border-input bg-paper px-3 text-[13.5px] text-foreground outline-none focus:border-ring"
+                className="h-9 w-full rounded-md border border-input bg-paper px-3 text-[13.5px] text-foreground outline-none focus-ring-animate transition-colors duration-200 hover:border-border-strong"
               />
             </div>
 
@@ -160,7 +161,7 @@ function Profiles() {
                 value={formData.website}
                 onChange={(e) => setFormData({ ...formData, website: e.target.value })}
                 placeholder="e.g. https://yourcompany.com"
-                className="h-9 w-full rounded-md border border-input bg-paper px-3 text-[13.5px] text-foreground outline-none focus:border-ring"
+                className="h-9 w-full rounded-md border border-input bg-paper px-3 text-[13.5px] text-foreground outline-none focus-ring-animate transition-colors duration-200 hover:border-border-strong"
               />
             </div>
 
@@ -174,7 +175,7 @@ function Profiles() {
                 onChange={(e) => setFormData({ ...formData, offering: e.target.value })}
                 placeholder="Describe your product, service, or offering..."
                 rows={2}
-                className="w-full resize-none rounded-md border border-input bg-paper px-3 py-2 text-[13.5px] text-foreground outline-none focus:border-ring"
+                className="w-full resize-none rounded-md border border-input bg-paper px-3 py-2 text-[13.5px] text-foreground outline-none focus-ring-animate transition-colors duration-200 hover:border-border-strong"
               />
             </div>
 
@@ -187,7 +188,7 @@ function Profiles() {
                 value={formData.targetRole}
                 onChange={(e) => setFormData({ ...formData, targetRole: e.target.value })}
                 placeholder="e.g. Marketing Directors, Founders"
-                className="h-9 w-full rounded-md border border-input bg-paper px-3 text-[13.5px] text-foreground outline-none focus:border-ring"
+                className="h-9 w-full rounded-md border border-input bg-paper px-3 text-[13.5px] text-foreground outline-none focus-ring-animate transition-colors duration-200 hover:border-border-strong"
               />
             </div>
 
@@ -195,9 +196,11 @@ function Profiles() {
               <button
                 type="submit"
                 disabled={isSubmitting || !formData.name.trim()}
-                className="inline-flex h-9 items-center gap-2 rounded-md bg-primary px-3.5 text-[13.5px] font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-50"
+                className="inline-flex h-9 items-center gap-2 rounded-md bg-primary px-3.5 text-[13.5px] font-medium text-primary-foreground transition-all duration-200 hover:bg-primary/90 hover:-translate-y-0.5 disabled:opacity-50"
               >
-                {isSubmitting && <Loader2 className="size-4 animate-spin" />}
+                {isSubmitting && (
+                  <span className="inline-block size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
+                )}
                 Save Business Profile
               </button>
               <button
@@ -213,9 +216,7 @@ function Profiles() {
       )}
 
       {isLoading ? (
-        <div className="flex items-center justify-center p-12 text-muted-foreground text-[13.5px]">
-          <Loader2 className="size-4 animate-spin mr-2" /> Loading business profiles...
-        </div>
+        <FormSkeleton rows={6} />
       ) : profiles.length > 0 ? (
         <div className="space-y-4">
           {profiles.map((p) => (
@@ -234,7 +235,7 @@ function Profiles() {
                   <button
                     type="button"
                     onClick={() => handleDelete(p.id)}
-                    className="inline-flex items-center gap-1 text-[12px] font-medium text-red-600 hover:text-red-700 transition-colors"
+                    className="inline-flex items-center gap-1 text-[12px] font-medium text-red-600 transition-all duration-200 hover:text-red-700 hover:scale-105"
                   >
                     <Trash2 className="size-3.5" /> Delete
                   </button>

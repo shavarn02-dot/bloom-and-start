@@ -1,5 +1,5 @@
-import { Link, Outlet, createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { Link, Outlet, createFileRoute, useNavigate, useRouterState } from "@tanstack/react-router";
+import { useEffect, useRef, useState } from "react";
 import {
   LayoutDashboard,
   Target,
@@ -39,6 +39,12 @@ export const Route = createFileRoute("/app")({
 function AppLayout() {
   const navigate = useNavigate();
   const [userName, setUserName] = useState("Sarthak Shavarn");
+  const navRef = useRef<HTMLElement>(null);
+
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const activeIndex = navItems.findIndex((item) =>
+    item.exact ? pathname === item.to : pathname.startsWith(item.to),
+  );
 
   useEffect(() => {
     const storedUser = localStorage.getItem("leadgen_user_name");
@@ -52,6 +58,10 @@ function AppLayout() {
     localStorage.removeItem("leadgen_user_email");
     navigate({ to: "/login" });
   };
+
+  const activeLink = navRef.current?.children[activeIndex] as HTMLElement | undefined;
+  const indicatorTop = activeLink?.offsetTop ?? 0;
+  const indicatorHeight = activeLink?.offsetHeight ?? 0;
 
   return (
     <div className="min-h-screen bg-background md:flex">
@@ -69,20 +79,36 @@ function AppLayout() {
         </div>
 
         {/* Navigation Links */}
-        <nav className="flex flex-col gap-1 px-3 py-4">
+        <nav ref={navRef} className="relative flex flex-col gap-1 px-3 py-4">
+          {/* Sliding active indicator */}
+          <span
+            className="sidebar-indicator pointer-events-none absolute left-3 right-3 rounded-md bg-sidebar-accent"
+            style={{
+              top: indicatorTop,
+              height: indicatorHeight,
+              opacity: indicatorHeight > 0 ? 1 : 0,
+            }}
+            aria-hidden="true"
+          />
+
           {navItems.map((item) => (
             <Link
               key={item.to}
               to={item.to}
               activeOptions={{ exact: item.exact }}
-              activeProps={{
-                className: "bg-sidebar-accent text-sidebar-accent-foreground font-semibold shadow-xs",
-              }}
-              inactiveProps={{ className: "text-muted-foreground hover:text-foreground" }}
-              className="group inline-flex items-center gap-3 rounded-md px-3 py-2.5 text-[13.5px] transition-colors duration-150 hover:bg-sidebar-accent"
+              className="group relative z-10 inline-flex items-center gap-3 rounded-md px-3 py-2.5 text-[13.5px] transition-colors duration-200 hover:bg-sidebar-accent/50"
             >
-              <span className="text-[15px] font-mono opacity-80 group-hover:opacity-100">{item.symbol}</span>
-              <span>{item.label}</span>
+              <span className="text-[15px] font-mono opacity-70 transition-opacity duration-200 group-hover:opacity-100">
+                {item.symbol}
+              </span>
+              <span className={cn(
+                "transition-colors duration-200",
+                pathname === item.to || (item.exact && pathname === item.to) || (!item.exact && pathname.startsWith(item.to))
+                  ? "text-sidebar-accent-foreground font-semibold"
+                  : "text-muted-foreground group-hover:text-foreground",
+              )}>
+                {item.label}
+              </span>
             </Link>
           ))}
 
@@ -92,11 +118,10 @@ function AppLayout() {
           {/* Settings */}
           <Link
             to="/app/settings"
-            activeProps={{
-              className: "bg-sidebar-accent text-sidebar-accent-foreground font-semibold",
-            }}
-            inactiveProps={{ className: "text-muted-foreground hover:text-foreground" }}
-            className="group inline-flex items-center gap-3 rounded-md px-3 py-2.5 text-[13.5px] transition-colors duration-150 hover:bg-sidebar-accent"
+            className={cn(
+              "group relative z-10 inline-flex items-center gap-3 rounded-md px-3 py-2.5 text-[13.5px] transition-colors duration-200 hover:bg-sidebar-accent/50",
+              pathname.startsWith("/app/settings") ? "text-sidebar-accent-foreground font-semibold" : "text-muted-foreground group-hover:text-foreground",
+            )}
           >
             <Settings className="size-4" strokeWidth={1.8} />
             <span>Settings</span>
@@ -108,7 +133,7 @@ function AppLayout() {
 
         {/* Bottom User Info & Logout Section */}
         <div className="border-t border-sidebar-border p-3 space-y-2">
-          <div className="flex items-center gap-3 rounded-md px-3 py-2 bg-paper/60 border border-sidebar-border/40">
+          <div className="flex items-center gap-3 rounded-md px-3 py-2 bg-paper/60 border border-sidebar-border/40 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[var(--shadow-paper)]">
             <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary font-semibold text-xs">
               <UserIcon className="size-4" />
             </div>
@@ -123,7 +148,7 @@ function AppLayout() {
           <button
             type="button"
             onClick={handleLogout}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-md border border-sidebar-border/80 bg-background px-3 py-2 text-[12.5px] font-medium text-red-600 transition-colors hover:bg-red-50 hover:text-red-700"
+            className="w-full inline-flex items-center justify-center gap-2 rounded-md border border-sidebar-border/80 bg-background px-3 py-2 text-[12.5px] font-medium text-red-600 transition-all duration-200 hover:bg-red-50 hover:text-red-700 hover:-translate-y-0.5"
           >
             <LogOut className="size-3.5" />
             <span>Log out</span>
@@ -133,7 +158,7 @@ function AppLayout() {
 
       {/* Main Content Area */}
       <main className="min-w-0 flex-1 px-5 py-8 sm:px-8 lg:px-10">
-        <div className="mx-auto max-w-5xl">
+        <div className="mx-auto max-w-5xl animate-page-in">
           <Outlet />
         </div>
       </main>
