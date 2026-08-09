@@ -28,7 +28,7 @@ export function Reveal({
     <Tag
       ref={ref}
       data-visible={inView ? "true" : "false"}
-      className={cn("lg-reveal", `lg-reveal-${variant}`, className)}
+      className={cn("lg-reveal min-w-0", `lg-reveal-${variant}`, className)}
       style={delay ? { transitionDelay: `${delay}ms` } : undefined}
     >
       {children}
