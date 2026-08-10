@@ -371,6 +371,8 @@ export default {
           business_profile_id: body.business_profile_id || null,
           locations: body.locations || ["IN", "US"],
           search_mode: body.search_mode || "smart",
+          freshness_preference: body.freshness_preference || "any",
+          allow_deep_search: body.allow_deep_search ?? false,
           status: "draft",
         }),
       });
@@ -396,7 +398,7 @@ export default {
       });
     }
 
-    // POST /api/campaigns/:id/run — Trigger Smart Search / Deep Search pipeline (RC-F)
+    // POST /api/campaigns/:id/run — Trigger Smart Search / Deep Search pipeline (RC-F & Spec Section B/C/D)
     const runMatch = matchRoute(path, "/api/campaigns/:id/run");
     if (runMatch && request.method === "POST") {
       const campaignId = runMatch.id;
@@ -414,6 +416,9 @@ export default {
       const locations = campaignObj?.locations || ["IN", "US"];
       const requestedLimit = campaignObj?.requested_limit || 25;
 
+      console.log(`[CAMPAIGN] campaign_id=${campaignId}`);
+      console.log(`[SEARCH_MODE] ${searchMode.toUpperCase()}`);
+
       // 2. Smart Search: Database-First Check
       if (searchMode === "smart") {
         const inClause = locations.map((c: string) => `"${c.toUpperCase()}"`).join(",");
@@ -423,6 +428,9 @@ export default {
         );
         if (dbResp.ok) {
           const dbCompanies = (await dbResp.json()) as any[];
+          const totalContacts = dbCompanies.reduce((acc: number, c: any) => acc + (c.contacts ? c.contacts.length : 0), 0);
+          console.log(`[DB] companies_found=${dbCompanies.length}, contacts_found=${totalContacts}`);
+
           if (dbCompanies && dbCompanies.length > 0) {
             // DB has matching canonical inventory! Complete campaign immediately
             const jobResp = await supabaseServiceRequest(env, "scrape_jobs", {

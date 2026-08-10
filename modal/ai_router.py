@@ -379,3 +379,16 @@ async def call_ai_json(
 def get_usage_stats() -> dict:
     """Return current usage stats for all providers."""
     return _usage.to_dict()
+
+
+def get_ai_provider_health() -> dict[str, str]:
+    """Check AI provider availability without exposing secret keys (Requirement A)."""
+    health = {
+        "cerebras": "configured" if os.environ.get("CEREBRAS_API_KEY") else "unconfigured",
+        "groq": "configured" if os.environ.get("GROQ_API_KEY") else "unconfigured",
+        "mistral": "configured" if os.environ.get("MISTRAL_API_KEY") else "unconfigured",
+        "cloudflare_ai": "configured" if (os.environ.get("CF_WORKER_URL") or os.environ.get("CLOUDFLARE_API_TOKEN")) else "unconfigured",
+        "ollama": "configured" if os.environ.get("OLLAMA_HOST") else "unconfigured",
+    }
+    logger.info(f"[AI_HEALTH] {health}")
+    return health
