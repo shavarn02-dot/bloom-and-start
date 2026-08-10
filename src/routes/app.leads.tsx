@@ -5,7 +5,7 @@ import { PageHeader, Panel } from "@/components/dashboard/primitives";
 import { TableSkeleton, MobileCardSkeleton } from "@/components/dashboard/skeletons";
 import { LeadTable, MatchBadge, StatusPill } from "@/components/leadgen/product";
 import { exampleLeads, type ExampleLead, type VerificationStatus } from "@/data/example";
-import { getCampaignLeads, API_BASE, Lead } from "@/lib/api";
+import { getCampaignLeads, authFetch, API_BASE, Lead } from "@/lib/api";
 import {
   Sheet,
   SheetContent,
@@ -43,56 +43,64 @@ function Leads() {
   const fetchLeads = async () => {
     setIsLoading(true);
     try {
-      // Fetch latest campaign first
-      const campResp = await fetch(`${API_BASE}/api/campaigns`);
-      if (campResp.ok) {
-        const campaigns = await campResp.json();
-        if (campaigns && campaigns.length > 0) {
-          const latestId = campaigns[0].id;
-          const apiLeads: Lead[] = await getCampaignLeads(latestId);
+      // 1. Fetch user leads directly from /api/leads
+      const leadsResp = await authFetch(`${API_BASE}/api/leads`);
+      let apiLeads: any[] = [];
+      if (leadsResp.ok) {
+        apiLeads = await leadsResp.json();
+      }
 
-          if (apiLeads && apiLeads.length > 0) {
-            const mapped: ExampleLead[] = apiLeads.map((l: any) => {
-              let explicitVer: VerificationStatus = "Unverified";
-              const statusStr = String(l.verification_status || l.status || "").toLowerCase();
-              if (statusStr.includes("verified") || statusStr.includes("valid")) {
-                explicitVer = "Verified";
-              } else if (statusStr.includes("risky") || statusStr.includes("partial")) {
-                explicitVer = "Partially verified";
-              } else if (statusStr.includes("stale")) {
-                explicitVer = "Stale";
-              } else if (statusStr.includes("suppress")) {
-                explicitVer = "Suppressed";
-              }
-
-              return {
-                id: l.id,
-                firstName: (l.contact_name ? l.contact_name.split(" ")[0] : "Team") ?? "Team",
-                lastName: l.contact_name && l.contact_name.split(" ").length > 1 ? l.contact_name.split(" ").slice(1).join(" ") : "",
-                role: l.title || "Decision Maker",
-                company: l.company_name,
-                industry: "B2B / Services",
-                companySize: "10-100",
-                location: "India / Global",
-                email: l.email || "N/A",
-                emailStatus: explicitVer,
-                phone: l.phone || "",
-                match: l.confidence || 75,
-                source: l.source_url || l.website || "Official Data Registry",
-                status: "New",
-              };
-            });
-
-            setRealLeads(mapped);
-            setIsLoading(false);
-            return;
+      // 2. Fallback to latest campaign leads if /api/leads is empty
+      if (!apiLeads || apiLeads.length === 0) {
+        const campResp = await authFetch(`${API_BASE}/api/campaigns`);
+        if (campResp.ok) {
+          const campaigns = await campResp.json();
+          if (campaigns && campaigns.length > 0) {
+            const latestId = campaigns[0].id;
+            apiLeads = await getCampaignLeads(latestId);
           }
         }
+      }
+
+      if (apiLeads && apiLeads.length > 0) {
+        const mapped: ExampleLead[] = apiLeads.map((l: any) => {
+          let explicitVer: VerificationStatus = "Unverified";
+          const statusStr = String(l.verification_status || l.status || "").toLowerCase();
+          if (statusStr.includes("verified") || statusStr.includes("valid")) {
+            explicitVer = "Verified";
+          } else if (statusStr.includes("risky") || statusStr.includes("partial")) {
+            explicitVer = "Partially verified";
+          } else if (statusStr.includes("stale")) {
+            explicitVer = "Stale";
+          } else if (statusStr.includes("suppress")) {
+            explicitVer = "Suppressed";
+          }
+
+          return {
+            id: l.id,
+            firstName: (l.contact_name ? l.contact_name.split(" ")[0] : "Team") ?? "Team",
+            lastName: l.contact_name && l.contact_name.split(" ").length > 1 ? l.contact_name.split(" ").slice(1).join(" ") : "",
+            role: l.title || "Decision Maker",
+            company: l.company_name || l.canonical_name || "Target Business",
+            industry: l.industry || "B2B / Services",
+            companySize: "10-100",
+            location: l.country_code || l.city || "India / Global",
+            email: l.email || "N/A",
+            emailStatus: explicitVer,
+            phone: l.phone || "",
+            match: l.confidence || 75,
+            source: l.source_url || l.website || "Official Data Registry",
+            status: "New",
+          };
+        });
+
+        setRealLeads(mapped);
+        setIsLoading(false);
+        return;
       }
     } catch (err) {
       console.error("Failed to load real leads from API:", err);
     }
-    // Fallback to example leads if API is empty
     setRealLeads([]);
     setIsLoading(false);
   };

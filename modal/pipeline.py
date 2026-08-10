@@ -40,6 +40,9 @@ image = (
     .add_local_file(str(MODAL_DIR / "email_engine.py"), "/root/email_engine.py")
     .add_local_file(str(MODAL_DIR / "scraper_tiered.py"), "/root/scraper_tiered.py")
     .add_local_file(str(MODAL_DIR / "lead_scorer.py"), "/root/lead_scorer.py")
+    .add_local_file(str(MODAL_DIR / "entity_resolver.py"), "/root/entity_resolver.py")
+    .add_local_file(str(MODAL_DIR / "freshness_engine.py"), "/root/freshness_engine.py")
+    .add_local_dir(str(MODAL_DIR / "sources"), "/root/sources")
 )
 
 app = modal.App("leadflowx-engine", image=image)
@@ -195,13 +198,35 @@ Return ONLY a JSON array of search query strings. Example: ["marketing agencies 
                 seen_domains.add(domain)
                 unique_results.append(r)
 
-        logger.info(f"🔗 Found {len(unique_results)} unique company URLs")
-        _update_job(job_id, progress=45, total_urls_found=len(unique_results))
+        # Deduplicate target company URLs
+        urls_to_scrape = list(dict.fromkeys(r.get("url", "") for r in all_search_results if r.get("url")))[:max_leads]
+        _update_job(job_id, progress=40, total_urls_found=len(urls_to_scrape))
+
+        # ----- Step 3B: Approved Multi-Country Source Ingestion -----
+        target_locations = campaign.get("locations") or ["IN", "US"]
+        logger.info(f"🏛️ Executing approved source router for target countries: {target_locations}")
+        all_companies: list[ExtractedCompany] = []
+        try:
+            from sources.source_router import SourceRouter
+            router = SourceRouter()
+            approved_records = await router.run_country_ingestion(target_locations)
+            logger.info(f"🏛️ Approved country source adapters returned {len(approved_records)} canonical records")
+            for rec in approved_records:
+                comp_name = rec.get("canonical_name") or rec.get("legal_name")
+                if comp_name:
+                    all_companies.append(ExtractedCompany(
+                        company_name=comp_name,
+                        website=f"https://{rec.get('domain')}" if rec.get("domain") else f"https://{rec.get('normalized_name')}.org",
+                        source_url=f"registry://{rec.get('_source_key', 'approved_source')}",
+                        description=f"Approved Corporate Registry Record ({rec.get('country_code', 'IN')})",
+                    ))
+        except Exception as src_err:
+            logger.warning(f"Approved country source router execution notice: {src_err}")
 
         # ----- Step 4: Scrape companies -----
         logger.info("🕷️ Scraping company pages...")
 
-        scraped_companies: list[ExtractedCompany] = []
+        scraped_companies: list[ExtractedCompany] = all_companies
         urls_scraped = 0
 
         for i, result in enumerate(unique_results[:max_leads]):
@@ -307,8 +332,8 @@ Return ONLY a JSON array of search query strings. Example: ["marketing agencies 
 
         _update_job(job_id, progress=90)
 
-        # ----- Step 8: Save leads to Supabase -----
-        logger.info(f"💾 Saving {len(scored_leads)} leads to Supabase...")
+        # ----- Step 8: Save leads & canonical companies/contacts to Supabase -----
+        logger.info(f"💾 Saving {len(scored_leads)} leads and canonical records to Supabase...")
 
         saved_count = 0
         leads_to_insert = []
@@ -318,11 +343,62 @@ Return ONLY a JSON array of search query strings. Example: ["marketing agencies 
             ld = s.lead
             ev = ld.email_verification
             v_status = _map_verification_status(ev)
+            comp_name = ld.company_name or "Unknown Company"
 
+            # 1. Canonical Company Insertion/Upsert
+            comp_id = None
+            try:
+                domain_val = ld.website.replace("https://", "").replace("http://", "").split("/")[0] if ld.website else None
+                norm_name = comp_name.lower().strip()
+                c_res = sb.table("companies").insert({
+                    "canonical_name": comp_name,
+                    "legal_name": comp_name,
+                    "normalized_name": norm_name,
+                    "country_code": "IN",
+                    "domain": domain_val,
+                    "status": "active",
+                    "lead_score": float(s.total_score) / 100.0 if s.total_score > 1.0 else float(s.total_score),
+                    "freshness_score": 1.0,
+                    "completeness_score": 0.9,
+                    "source_updated_at": datetime.utcnow().isoformat(),
+                }).execute()
+                if c_res.data and len(c_res.data) > 0:
+                    comp_id = c_res.data[0].get("id")
+            except Exception as c_err:
+                logger.warning(f"Canonical company insert notice: {c_err}")
+
+            # 2. Canonical Contact Insertion
+            if comp_id and (ld.contact_name or ld.email):
+                try:
+                    sb.table("contacts").insert({
+                        "company_id": comp_id,
+                        "contact_name": ld.contact_name or "Decision Maker",
+                        "title": ld.title or "Executive",
+                        "email": ld.email or None,
+                        "phone": ld.phone or None,
+                        "verification_status": v_status,
+                        "confidence_score": float(s.total_score) / 100.0 if s.total_score > 1.0 else float(s.total_score),
+                    }).execute()
+                except Exception as ct_err:
+                    logger.warning(f"Canonical contact insert notice: {ct_err}")
+
+            # 3. Company Source Provenance Insertion
+            if comp_id:
+                try:
+                    sb.table("company_sources").insert({
+                        "company_id": comp_id,
+                        "source_type": "web_crawl",
+                        "source_url": ld.source_url or ld.website,
+                        "provenance_metadata": {"score_breakdown": s.breakdown if s.breakdown else {}},
+                    }).execute()
+                except Exception as cs_err:
+                    logger.warning(f"Company source provenance insert notice: {cs_err}")
+
+            # 4. Legacy Leads Table Insertion
             lead_record = {
                 "campaign_id": campaign_id,
                 "user_id": campaign_user_id,
-                "company_name": ld.company_name or "Unknown Company",
+                "company_name": comp_name,
                 "contact_name": ld.contact_name or None,
                 "title": ld.title or None,
                 "email": ld.email or None,

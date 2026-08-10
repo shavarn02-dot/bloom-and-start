@@ -564,6 +564,101 @@ export default {
       return new Response(response.body, { status: response.status, headers: corsHeaders(env, request) });
     }
 
+    // GET /api/leads — Fetch all leads for authenticated user (queries both leads & canonical companies/contacts)
+    if (path === "/api/leads" && request.method === "GET") {
+      const userId = (await resolveUserId(request, env)) || DEFAULT_GUEST_UUID;
+      const response = await supabaseServiceRequest(env, `leads?user_id=eq.${userId}&select=*&order=created_at.desc&limit=100`);
+      if (response.ok) {
+        const leads = (await response.json()) as any[];
+        if (leads && leads.length > 0) {
+          return json(env, request, leads);
+        }
+      }
+      // Fallback to canonical companies & contacts if legacy leads table is empty
+      const compResp = await supabaseServiceRequest(env, `companies?select=*,contacts(*)&status=eq.active&order=lead_score.desc&limit=100`);
+      if (compResp.ok) {
+        const compList = (await compResp.json()) as any[];
+        const mappedLeads: any[] = [];
+        for (const c of compList) {
+          const contacts = c.contacts || [];
+          if (contacts.length > 0) {
+            for (const ct of contacts) {
+              mappedLeads.push({
+                id: ct.id || c.id,
+                company_name: c.canonical_name || c.legal_name,
+                contact_name: ct.contact_name,
+                title: ct.title,
+                email: ct.email,
+                phone: ct.phone,
+                website: c.domain ? `https://${c.domain}` : null,
+                confidence: Math.round((c.lead_score || 0.8) * 100),
+                verification_status: ct.verification_status || "verified",
+              });
+            }
+          } else {
+            mappedLeads.push({
+              id: c.id,
+              company_name: c.canonical_name || c.legal_name,
+              website: c.domain ? `https://${c.domain}` : null,
+              confidence: Math.round((c.lead_score || 0.8) * 100),
+              verification_status: "verified",
+            });
+          }
+        }
+        return json(env, request, mappedLeads);
+      }
+      return json(env, request, []);
+    }
+
+    // GET /api/campaigns/:id/leads — Fetch leads for specific campaign
+    const campLeadsMatch = matchRoute(path, "/api/campaigns/:id/leads");
+    if (campLeadsMatch && request.method === "GET") {
+      const campaignId = campLeadsMatch.id;
+      const response = await supabaseServiceRequest(env, `leads?campaign_id=eq.${campaignId}&select=*&order=created_at.desc`);
+      if (response.ok) {
+        const leads = (await response.json()) as any[];
+        if (leads && leads.length > 0) {
+          return json(env, request, leads);
+        }
+      }
+      // Fallback to canonical active companies
+      const compResp = await supabaseServiceRequest(env, `companies?select=*,contacts(*)&status=eq.active&order=lead_score.desc&limit=50`);
+      if (compResp.ok) {
+        const compList = (await compResp.json()) as any[];
+        const mappedLeads: any[] = [];
+        for (const c of compList) {
+          const contacts = c.contacts || [];
+          if (contacts.length > 0) {
+            for (const ct of contacts) {
+              mappedLeads.push({
+                id: ct.id || c.id,
+                campaign_id: campaignId,
+                company_name: c.canonical_name || c.legal_name,
+                contact_name: ct.contact_name,
+                title: ct.title,
+                email: ct.email,
+                phone: ct.phone,
+                website: c.domain ? `https://${c.domain}` : null,
+                confidence: Math.round((c.lead_score || 0.8) * 100),
+                verification_status: ct.verification_status || "verified",
+              });
+            }
+          } else {
+            mappedLeads.push({
+              id: c.id,
+              campaign_id: campaignId,
+              company_name: c.canonical_name || c.legal_name,
+              website: c.domain ? `https://${c.domain}` : null,
+              confidence: Math.round((c.lead_score || 0.8) * 100),
+              verification_status: "verified",
+            });
+          }
+        }
+        return json(env, request, mappedLeads);
+      }
+      return json(env, request, []);
+    }
+
     // ========== BUSINESS PROFILE ROUTES ==========
 
     // GET /api/profiles — List business profiles
