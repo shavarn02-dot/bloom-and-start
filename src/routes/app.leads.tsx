@@ -4,7 +4,7 @@ import { Download, Search, RefreshCw, Loader2 } from "lucide-react";
 import { PageHeader, Panel } from "@/components/dashboard/primitives";
 import { TableSkeleton, MobileCardSkeleton } from "@/components/dashboard/skeletons";
 import { LeadTable, MatchBadge, StatusPill } from "@/components/leadgen/product";
-import { exampleLeads, type ExampleLead } from "@/data/example";
+import { exampleLeads, type ExampleLead, type VerificationStatus } from "@/data/example";
 import { getCampaignLeads, API_BASE, Lead } from "@/lib/api";
 import {
   Sheet,
@@ -52,22 +52,36 @@ function Leads() {
           const apiLeads: Lead[] = await getCampaignLeads(latestId);
 
           if (apiLeads && apiLeads.length > 0) {
-            const mapped: ExampleLead[] = apiLeads.map((l) => ({
-              id: l.id,
-              firstName: (l.contact_name ? l.contact_name.split(" ")[0] : "Team") ?? "Team",
-              lastName: l.contact_name && l.contact_name.split(" ").length > 1 ? l.contact_name.split(" ").slice(1).join(" ") : "",
-              role: l.title || "Decision Maker",
-              company: l.company_name,
-              industry: "B2B / Services",
-              companySize: "10-100",
-              location: "India / Global",
-              email: l.email || "N/A",
-              emailStatus: l.verification_status === "verified" ? "Verified" : "Unverified",
-              phone: l.phone || "",
-              match: l.confidence || 75,
-              source: l.source_url || l.website || "Web Scraping",
-              status: "New",
-            }));
+            const mapped: ExampleLead[] = apiLeads.map((l: any) => {
+              let explicitVer: VerificationStatus = "Unverified";
+              const statusStr = String(l.verification_status || l.status || "").toLowerCase();
+              if (statusStr.includes("verified") || statusStr.includes("valid")) {
+                explicitVer = "Verified";
+              } else if (statusStr.includes("risky") || statusStr.includes("partial")) {
+                explicitVer = "Partially verified";
+              } else if (statusStr.includes("stale")) {
+                explicitVer = "Stale";
+              } else if (statusStr.includes("suppress")) {
+                explicitVer = "Suppressed";
+              }
+
+              return {
+                id: l.id,
+                firstName: (l.contact_name ? l.contact_name.split(" ")[0] : "Team") ?? "Team",
+                lastName: l.contact_name && l.contact_name.split(" ").length > 1 ? l.contact_name.split(" ").slice(1).join(" ") : "",
+                role: l.title || "Decision Maker",
+                company: l.company_name,
+                industry: "B2B / Services",
+                companySize: "10-100",
+                location: "India / Global",
+                email: l.email || "N/A",
+                emailStatus: explicitVer,
+                phone: l.phone || "",
+                match: l.confidence || 75,
+                source: l.source_url || l.website || "Official Data Registry",
+                status: "New",
+              };
+            });
 
             setRealLeads(mapped);
             setIsLoading(false);

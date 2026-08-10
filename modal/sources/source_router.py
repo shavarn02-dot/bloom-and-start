@@ -1,33 +1,41 @@
 """
 LeadFlowX Source Router & Registry Orchestrator
-Spec Reference: Section 4 - Country / Location Routing
+Spec Reference: RC-02 Source Registry as Source of Truth
 """
 
 from typing import List, Dict, Any, Optional
 from .base_adapter import SourceAdapter
 from .india_mca import IndiaMCAAdapter
 from .usa_sam import USASAMAdapter
+from .usa_sec import USASECAdapter
 from .uk_companies_house import UKCompaniesHouseAdapter
 from .global_osm import GlobalOSMAdapter
 
 class SourceRouter:
     def __init__(self):
         self.adapters: Dict[str, SourceAdapter] = {
-            "india_mca": IndiaMCAAdapter(),
-            "usa_sam": USASAMAdapter(),
+            "usa_sec": USASECAdapter(),
             "uk_companies_house": UKCompaniesHouseAdapter(),
             "global_osm": GlobalOSMAdapter(),
+            "india_mca": IndiaMCAAdapter(),
+            "usa_sam": USASAMAdapter(),
         }
+
+        # Status registry: Only APPROVED + enabled sources run in production
+        self.approved_sources = {"usa_sec", "uk_companies_house", "global_osm"}
 
     def get_adapters_for_countries(self, country_codes: List[str]) -> List[SourceAdapter]:
         """
-        Route request to source adapters matching target countries (e.g. ['IN', 'US', 'GB']).
-        Includes global adapters (['*']) as fallback.
+        Routes request ONLY to approved and active source adapters matching target countries.
         """
         matched: List[SourceAdapter] = []
         codes_upper = [c.upper() for c in country_codes]
 
-        for adapter in self.adapters.values():
+        for source_key, adapter in self.adapters.items():
+            # Check RC-02 hard rule: Only APPROVED sources are allowed
+            if source_key not in self.approved_sources:
+                continue
+
             if "*" in adapter.country_codes:
                 matched.append(adapter)
             elif any(code in adapter.country_codes for code in codes_upper):
@@ -37,8 +45,7 @@ class SourceRouter:
 
     async def run_country_ingestion(self, country_codes: List[str]) -> List[Dict[str, Any]]:
         """
-        Execute parallel ingestion across approved source adapters for target countries,
-        returning normalized canonical records.
+        Executes real ingestion across approved source adapters for target countries.
         """
         adapters = self.get_adapters_for_countries(country_codes)
         all_normalized: List[Dict[str, Any]] = []

@@ -21,8 +21,7 @@ def test_source_router_country_matching():
     adapters = router.get_adapters_for_countries(["IN", "US"])
     keys = [a.source_key for a in adapters]
     
-    assert "india_mca" in keys
-    assert "usa_sam" in keys
+    assert "usa_sec" in keys
     assert "global_osm" in keys # Global adapter included
 
 def test_india_mca_adapter_normalization():

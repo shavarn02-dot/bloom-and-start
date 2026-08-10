@@ -58,6 +58,7 @@ class ExtractedCompany:
     phones: list[str] = field(default_factory=list)
     source_url: str = ""
     page_type: str = "unknown"
+    content_hash: str = ""
     scrape_tier: str = "httpx"
 
 @dataclass

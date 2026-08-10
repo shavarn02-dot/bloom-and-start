@@ -241,17 +241,21 @@ export default {
         companies = (await dbResp.json()) as any[];
       }
 
-      // Record DB_SEARCH usage event
-      await supabaseServiceRequest(env, "usage_events", {
-        method: "POST",
-        body: JSON.stringify({
-          user_id: userId,
-          event_type: "DB_SEARCH",
-          units: 1,
-          estimated_cost: 0.0,
-          metadata: { query: queryStr, locations: body.locations, results_found: companies.length },
-        }),
-      });
+      // Record DB_SEARCH usage event asynchronously
+      try {
+        await supabaseServiceRequest(env, "usage_events", {
+          method: "POST",
+          body: JSON.stringify({
+            user_id: userId,
+            event_type: "DB_SEARCH",
+            units: 1,
+            estimated_cost: 0.0,
+            metadata: { query: queryStr, locations: body.locations, results_found: companies.length },
+          }),
+        });
+      } catch (err) {
+        console.warn("Usage event record warning:", err);
+      }
 
       return json(env, request, {
         source: "database",

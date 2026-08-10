@@ -5,7 +5,9 @@
  * "Example data" in the UI.
  */
 
-export type ExampleLead = {
+export type VerificationStatus = "Verified" | "Partially verified" | "Unverified" | "Stale" | "Suppressed";
+
+export interface ExampleLead {
   id: string;
   firstName: string;
   lastName: string;
@@ -15,7 +17,7 @@ export type ExampleLead = {
   companySize: string;
   location: string;
   email: string;
-  emailStatus: "Verified" | "Unverified";
+  emailStatus: VerificationStatus;
   phone?: string;
   match: number;
   source: string;

@@ -289,10 +289,10 @@ function NewCampaign() {
                 >
                   <div className="flex items-center gap-2 font-medium text-foreground text-[13.5px]">
                     <Search className="size-4 text-emerald-600" />
-                    <span>Database-First Search (Fast & Zero Cost)</span>
+                    <span>Smart Search (Fast & Verified)</span>
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Instantly queries verified canonical database of companies & contacts across selected countries without invoking live web scraping.
+                    Find relevant companies and decision-makers from LeadFlowX's continuously refreshed business intelligence.
                   </p>
                 </button>
 
@@ -308,10 +308,10 @@ function NewCampaign() {
                 >
                   <div className="flex items-center gap-2 font-medium text-foreground text-[13.5px]">
                     <Globe className="size-4 text-emerald-600" />
-                    <span>Live Discovery Fallback (Modal Scraping Engine)</span>
+                    <span>Deep Search (Expanded Discovery)</span>
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Triggers live Playwright/Crawl4AI web scraping & MX verification to discover brand new lead targets.
+                    Expand beyond existing data to discover additional relevant companies and decision-makers.
                   </p>
                 </button>
               </div>
