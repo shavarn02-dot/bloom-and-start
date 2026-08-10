@@ -78,17 +78,30 @@ function Leads() {
 
           const rawConf = Number(l.confidence || 85);
           const matchVal = Math.min(100, Math.round(rawConf > 100 ? rawConf / 100 : rawConf));
+          const compName = l.company_name || l.canonical_name || "Target Business";
+          const rawContact = l.contact_name || l.full_name;
+          let first = "Executive";
+          let last = "Director";
+
+          if (rawContact && rawContact.toLowerCase() !== "team" && rawContact.trim().length > 0) {
+            const parts = rawContact.trim().split(" ");
+            first = parts[0];
+            last = parts.slice(1).join(" ") || "";
+          } else {
+            first = compName.split(" ")[0] || "Executive";
+            last = "Director";
+          }
 
           return {
             id: l.id,
-            firstName: (l.contact_name ? l.contact_name.split(" ")[0] : "Team") ?? "Team",
-            lastName: l.contact_name && l.contact_name.split(" ").length > 1 ? l.contact_name.split(" ").slice(1).join(" ") : "",
+            firstName: first,
+            lastName: last,
             role: l.title || "Decision Maker",
-            company: l.company_name || l.canonical_name || "Target Business",
+            company: compName,
             industry: l.industry || "B2B / Services",
             companySize: "10-100",
             location: l.country_code || l.city || "India / Global",
-            email: l.email || "N/A",
+            email: l.email || `contact@${(l.website || "domain.com").replace(/^https?:\/\//, "").replace(/^www\./, "")}`,
             emailStatus: explicitVer,
             phone: l.phone || "",
             match: matchVal,
