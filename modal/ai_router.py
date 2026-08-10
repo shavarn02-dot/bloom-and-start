@@ -25,6 +25,26 @@ from typing import Optional
 
 import httpx
 
+def _load_env_local():
+    for env_path in [
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env.local"),
+        os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), ".env.local"),
+        "c:/Users/sarthak shavarn/OneDrive/Desktop/New folder/Linkedout/.env.local",
+    ]:
+        if os.path.exists(env_path):
+            try:
+                with open(env_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and not line.startswith("#") and "=" in line:
+                            k, v = line.split("=", 1)
+                            if k.strip() not in os.environ:
+                                os.environ[k.strip()] = v.strip().strip('"').strip("'")
+            except Exception:
+                pass
+
+_load_env_local()
+
 logger = logging.getLogger("ai_router")
 logger.setLevel(logging.INFO)
 

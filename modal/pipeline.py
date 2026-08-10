@@ -47,8 +47,15 @@ image = (
 
 app = modal.App("leadflowx-engine", image=image)
 
-# Secrets stored in Modal dashboard
-secrets = modal.Secret.from_name("leadflowx-secrets")
+# Secrets passed directly to Modal cloud container environment
+ai_secrets = modal.Secret.from_dict({
+    "CEREBRAS_API_KEY": os.environ.get("CEREBRAS_API_KEY", ""),
+    "GROQ_API_KEY": os.environ.get("GROQ_API_KEY", ""),
+    "MISTRAL_API_KEY": os.environ.get("MISTRAL_API_KEY", ""),
+    "SUPABASE_URL": os.environ.get("SUPABASE_URL", "https://vkwerkdqffvcydksmebn.supabase.co"),
+    "SUPABASE_SERVICE_ROLE_KEY": os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "sb_publishable_2yjgPV4IIo5uXGuy1ETAEg_rRxlyZ2W"),
+    "SUPABASE_ANON_KEY": os.environ.get("SUPABASE_ANON_KEY", "sb_publishable_2yjgPV4IIo5uXGuy1ETAEg_rRxlyZ2W"),
+})
 
 logger = logging.getLogger("pipeline")
 logging.basicConfig(level=logging.INFO)
@@ -61,12 +68,8 @@ logging.basicConfig(level=logging.INFO)
 def _get_supabase():
     """Create Supabase client from env vars."""
     from supabase import create_client
-    url = os.environ.get("SUPABASE_URL")
-    key = (
-        os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
-        or os.environ.get("SUPABASE_SERVICE_KEY")
-        or os.environ.get("SUPABASE_KEY")
-    )
+    url = os.environ.get("SUPABASE_URL", "https://vkwerkdqffvcydksmebn.supabase.co")
+    key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("SUPABASE_ANON_KEY", "sb_publishable_2yjgPV4IIo5uXGuy1ETAEg_rRxlyZ2W")
     if not url or not key:
         raise ValueError(
             f"Supabase environment variables missing in Modal secrets: SUPABASE_URL={bool(url)}, KEY={bool(key)}"
@@ -95,9 +98,9 @@ def _update_job(job_id: str, **fields):
 
 @app.function(
     cpu=1.0,
-    memory=512,
+    memory=1024,
     timeout=600,
-    secrets=[secrets],
+    secrets=[ai_secrets],
     retries=modal.Retries(max_retries=1, backoff_coefficient=2.0),
 )
 async def run_campaign(campaign_id: str, job_id: str):
@@ -482,7 +485,7 @@ def _map_verification_status(ev: dict) -> str:
     cpu=0.25,
     memory=128,
     timeout=30,
-    secrets=[secrets],
+    secrets=[ai_secrets],
 )
 @modal.fastapi_endpoint(method="POST")
 async def trigger_campaign(payload: dict):
