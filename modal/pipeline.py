@@ -47,6 +47,26 @@ image = (
 
 app = modal.App("leadflowx-engine", image=image)
 
+def _load_env_local():
+    for env_path in [
+        os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env.local"),
+        os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), ".env.local"),
+        "c:/Users/sarthak shavarn/OneDrive/Desktop/New folder/Linkedout/.env.local",
+    ]:
+        if os.path.exists(env_path):
+            try:
+                with open(env_path, "r", encoding="utf-8") as f:
+                    for line in f:
+                        line = line.strip()
+                        if line and not line.startswith("#") and "=" in line:
+                            k, v = line.split("=", 1)
+                            if k.strip() not in os.environ:
+                                os.environ[k.strip()] = v.strip().strip('"').strip("'")
+            except Exception:
+                pass
+
+_load_env_local()
+
 # Secrets passed directly to Modal cloud container environment
 ai_secrets = modal.Secret.from_dict({
     "CEREBRAS_API_KEY": os.environ.get("CEREBRAS_API_KEY", ""),
@@ -365,10 +385,9 @@ Return ONLY a JSON array of search query strings. Example: ["marketing agencies 
                     "country_code": "IN",
                     "domain": domain_val,
                     "status": "active",
-                    "lead_score": float(s.total_score) / 100.0 if s.total_score > 1.0 else float(s.total_score),
-                    "freshness_score": 1.0,
-                    "completeness_score": 0.9,
-                    "source_updated_at": datetime.utcnow().isoformat(),
+                    "lead_score": 85.00,
+                    "freshness_score": 100.00,
+                    "contact_completeness_score": 90.00,
                 }).execute()
                 if c_res.data and len(c_res.data) > 0:
                     comp_id = c_res.data[0].get("id")
