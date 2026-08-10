@@ -385,8 +385,6 @@ export default {
         name: body.name,
         query: body.query,
         locations: body.locations || ["IN", "US"],
-        target_roles: body.target_roles || ["Founder", "CEO", "Director", "CTO"],
-        company_size: body.company_size || "10-100",
         search_mode: body.search_mode || "smart",
         requested_limit: reqLimit,
         status: "draft",
