@@ -360,10 +360,13 @@ Return ONLY a JSON array of search query strings. Example: ["marketing agencies 
             logger.warning(f"Scoring error: {score_err}")
             scored_leads = []
 
-        _update_job(job_id, progress=90)
+        # Cap scored leads strictly to user's requested limit (max 50 for free plan)
+        req_limit = int(campaign.get("requested_limit", 25)) if campaign else 25
+        req_limit = min(max(req_limit, 1), 50)
+        scored_leads = scored_leads[:req_limit]
 
         # ----- Step 8: Save leads & canonical companies/contacts to Supabase -----
-        logger.info(f"💾 Saving {len(scored_leads)} leads and canonical records to Supabase...")
+        logger.info(f"💾 Saving {len(scored_leads)} leads (capped to requested limit {req_limit}) to Supabase...")
 
         saved_count = 0
         leads_to_insert = []
