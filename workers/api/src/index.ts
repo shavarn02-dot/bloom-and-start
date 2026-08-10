@@ -39,17 +39,13 @@ const ALLOWED_ORIGINS = new Set([
 ]);
 
 const corsHeaders = (env: Env, request: Request) => {
-  const origin = request.headers.get("origin") || "";
-  const allowedOrigin = ALLOWED_ORIGINS.has(origin)
-    ? origin
-    : env.ALLOWED_ORIGIN ?? "https://leadflowx.pages.dev";
-
+  const origin = request.headers.get("origin") || "*";
   return {
     "content-type": "application/json; charset=utf-8",
-    "access-control-allow-origin": allowedOrigin,
-    "access-control-allow-headers": "authorization, content-type, apikey, x-client-info",
-    "access-control-allow-methods": "GET, POST, PUT, DELETE, OPTIONS",
-    vary: "Origin",
+    "access-control-allow-origin": origin || "*",
+    "access-control-allow-headers": "authorization, content-type, apikey, x-client-info, x-user-email, x-requested-with, *",
+    "access-control-allow-methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
+    "access-control-max-age": "86400",
   };
 };
 
