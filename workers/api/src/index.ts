@@ -663,8 +663,21 @@ export default {
           return json(env, request, leads);
         }
       }
-      // Fallback to canonical active companies
-      const compResp = await supabaseServiceRequest(env, `companies?select=*,contacts(*)&status=eq.active&order=lead_score.desc&limit=50`);
+      // Fallback to canonical active companies matching campaign location filter
+      let compPath = `companies?select=*,contacts(*)&status=eq.active&order=lead_score.desc&limit=50`;
+      try {
+        const cResp = await supabaseServiceRequest(env, `lead_campaigns?id=eq.${campaignId}&select=locations`);
+        if (cResp.ok) {
+          const cData = (await cResp.json()) as any[];
+          if (cData.length > 0 && cData[0].locations && cData[0].locations.length > 0) {
+            const inClause = cData[0].locations.map((loc: string) => `"${loc.toUpperCase()}"`).join(",");
+            compPath += `&country_code=in.(${inClause})`;
+          }
+        }
+      } catch {
+        // ignore
+      }
+      const compResp = await supabaseServiceRequest(env, compPath);
       if (compResp.ok) {
         const compList = (await compResp.json()) as any[];
         const mappedLeads: any[] = [];
