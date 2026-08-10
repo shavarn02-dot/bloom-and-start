@@ -255,11 +255,22 @@ export default {
       const limit = Math.min(Math.max(body.limit ?? 25, 1), 100);
       const queryStr = body.query?.trim() || "";
 
+      // Extract primary keyword from search query
+      const keywords = queryStr
+        .replace(/email|contact|leads|in|for|the|and|or|company|companies/gi, " ")
+        .split(/\s+/)
+        .filter((w) => w.length >= 3);
+      const mainKeyword = keywords[0] || "";
+
       // Query indexed canonical companies & contacts tables
       let dbQueryPath = `companies?select=*,contacts(*)&status=eq.active&order=lead_score.desc&limit=${limit}`;
       if (body.locations && body.locations.length > 0) {
         const inClause = body.locations.map((c) => `"${c.toUpperCase()}"`).join(",");
         dbQueryPath += `&country_code=in.(${inClause})`;
+      }
+      if (mainKeyword) {
+        const kw = encodeURIComponent(`*${mainKeyword}*`);
+        dbQueryPath += `&or=(canonical_name.ilike.${kw},normalized_name.ilike.${kw},domain.ilike.${kw})`;
       }
 
       const dbResp = await supabaseServiceRequest(env, dbQueryPath);
@@ -422,12 +433,35 @@ export default {
       // 2. Smart Search: Database-First Check
       if (searchMode === "smart") {
         const inClause = locations.map((c: string) => `"${c.toUpperCase()}"`).join(",");
-        const dbResp = await supabaseServiceRequest(
-          env,
-          `companies?select=*,contacts(*)&status=eq.active&country_code=in.(${inClause})&order=lead_score.desc&limit=${requestedLimit}`
-        );
+        const queryStr = campaignObj?.query?.trim() || "";
+        const keywords = queryStr
+          .replace(/email|contact|leads|in|for|the|and|or|company|companies/gi, " ")
+          .split(/\s+/)
+          .filter((w: string) => w.length >= 3);
+        const mainKeyword = keywords[0] || "";
+
+        let dbPath = `companies?select=*,contacts(*)&status=eq.active&country_code=in.(${inClause})&order=lead_score.desc&limit=${requestedLimit}`;
+        if (mainKeyword) {
+          const kw = encodeURIComponent(`*${mainKeyword}*`);
+          dbPath += `&or=(canonical_name.ilike.${kw},normalized_name.ilike.${kw},domain.ilike.${kw})`;
+        }
+
+        let dbResp = await supabaseServiceRequest(env, dbPath);
+        let dbCompanies: any[] = [];
         if (dbResp.ok) {
-          const dbCompanies = (await dbResp.json()) as any[];
+          dbCompanies = (await dbResp.json()) as any[];
+        }
+
+        // Fallback to general location inventory if keyword query yields 0 results
+        if (!dbCompanies || dbCompanies.length === 0) {
+          dbResp = await supabaseServiceRequest(
+            env,
+            `companies?select=*,contacts(*)&status=eq.active&country_code=in.(${inClause})&order=lead_score.desc&limit=${requestedLimit}`
+          );
+          if (dbResp.ok) dbCompanies = (await dbResp.json()) as any[];
+        }
+
+        if (dbCompanies && dbCompanies.length > 0) {
           const totalContacts = dbCompanies.reduce((acc: number, c: any) => acc + (c.contacts ? c.contacts.length : 0), 0);
           console.log(`[DB] companies_found=${dbCompanies.length}, contacts_found=${totalContacts}`);
 
