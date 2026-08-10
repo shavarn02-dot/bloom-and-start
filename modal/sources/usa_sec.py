@@ -9,7 +9,10 @@ import json
 import datetime
 import urllib.request
 from typing import Dict, Any, List, Optional
-from .base_adapter import SourceAdapter
+try:
+    from .base_adapter import SourceAdapter
+except ImportError:
+    from base_adapter import SourceAdapter
 
 class USASECAdapter(SourceAdapter):
     def __init__(self):

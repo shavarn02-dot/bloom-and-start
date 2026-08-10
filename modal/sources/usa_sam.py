@@ -7,7 +7,10 @@ Pending official SAM.gov API key. Set to status PENDING_REVIEW (disabled by defa
 import re
 import datetime
 from typing import Dict, Any, List, Optional
-from .base_adapter import SourceAdapter
+try:
+    from .base_adapter import SourceAdapter
+except ImportError:
+    from base_adapter import SourceAdapter
 
 class USASAMAdapter(SourceAdapter):
     def __init__(self):

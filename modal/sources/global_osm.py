@@ -9,7 +9,10 @@ import datetime
 import urllib.request
 import json
 from typing import Dict, Any, List, Optional
-from .base_adapter import SourceAdapter
+try:
+    from .base_adapter import SourceAdapter
+except ImportError:
+    from base_adapter import SourceAdapter
 
 class GlobalOSMAdapter(SourceAdapter):
     def __init__(self):
@@ -58,7 +61,7 @@ class GlobalOSMAdapter(SourceAdapter):
                         "postcode": addr.get("postcode"),
                         "street": addr.get("road"),
                         "housenumber": addr.get("house_number"),
-                        "website": f"https://www.{re.sub(r'[^a-z0-9]', '', name.lower())}.com",
+                        "website": item.get("extratags", {}).get("website") if isinstance(item.get("extratags"), dict) else None,
                         "phone": None,
                         "category": item.get("type", "office")
                     })
@@ -74,8 +77,8 @@ class GlobalOSMAdapter(SourceAdapter):
         name = raw_record.get("name", "Unnamed Business")
         clean_norm = re.sub(r'[^a-zA-Z0-9\s]', '', name).strip().lower()
 
-        raw_web = raw_record.get("website", "")
-        domain = raw_web.replace("https://", "").replace("http://", "").split("/")[0]
+        raw_web = raw_record.get("website") or ""
+        domain = raw_web.replace("https://", "").replace("http://", "").split("/")[0] if raw_web else None
 
         return {
             "canonical_name": name,

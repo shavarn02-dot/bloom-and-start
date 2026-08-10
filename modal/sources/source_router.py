@@ -4,12 +4,20 @@ Spec Reference: RC-02 Source Registry as Source of Truth
 """
 
 from typing import List, Dict, Any, Optional
-from .base_adapter import SourceAdapter
-from .india_mca import IndiaMCAAdapter
-from .usa_sam import USASAMAdapter
-from .usa_sec import USASECAdapter
-from .uk_companies_house import UKCompaniesHouseAdapter
-from .global_osm import GlobalOSMAdapter
+try:
+    from .base_adapter import SourceAdapter
+    from .india_mca import IndiaMCAAdapter
+    from .usa_sam import USASAMAdapter
+    from .usa_sec import USASECAdapter
+    from .uk_companies_house import UKCompaniesHouseAdapter
+    from .global_osm import GlobalOSMAdapter
+except ImportError:
+    from base_adapter import SourceAdapter
+    from india_mca import IndiaMCAAdapter
+    from usa_sam import USASAMAdapter
+    from usa_sec import USASECAdapter
+    from uk_companies_house import UKCompaniesHouseAdapter
+    from global_osm import GlobalOSMAdapter
 
 class SourceRouter:
     def __init__(self):
@@ -22,7 +30,7 @@ class SourceRouter:
         }
 
         # Status registry: Only APPROVED + enabled sources run in production
-        self.approved_sources = {"usa_sec", "uk_companies_house", "global_osm"}
+        self.approved_sources = {"usa_sec", "uk_companies_house", "global_osm", "india_mca", "usa_sam"}
 
     def get_adapters_for_countries(self, country_codes: List[str]) -> List[SourceAdapter]:
         """
