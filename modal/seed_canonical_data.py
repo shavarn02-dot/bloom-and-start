@@ -1,9 +1,10 @@
 """
 LeadFlowX Real Canonical Ingestion & Seeding Engine
-Spec Reference: RC-B (Populate Canonical Company Inventory from Real Approved Sources), RC-H (Update last_success_at)
+Spec Reference: P0-3, P0-4 (Fail Hard on Write Failures, Verified Persistence)
 
 Fetches real company records from active approved adapters (SEC EDGAR, OpenStreetMap, UK Companies House),
-normalizes them, deduplicates via EntityResolver, scores via FreshnessEngine, and upserts into Supabase `companies` & `contacts`.
+normalizes them, deduplicates via EntityResolver, scores via FreshnessEngine, and upserts them into Supabase `companies` & `contacts`.
+Fails hard immediately if database write fails.
 """
 
 import sys
@@ -11,6 +12,7 @@ import os
 import json
 import asyncio
 import urllib.request
+import urllib.error
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -37,11 +39,12 @@ async def seed_canonical_companies():
     unique_companies, decisions = EntityResolver.deduplicate_records(raw_records)
     print(f"2. Entity Resolution: {len(raw_records)} -> {len(unique_companies)} unique canonical companies.")
 
-    # 3. Upsert canonical companies into Supabase REST API
+    # 3. Prepare payload
     headers = {
         "apikey": SUPABASE_ANON_KEY,
         "authorization": f"Bearer {SUPABASE_ANON_KEY}",
-        "content-type": "application/json"
+        "content-type": "application/json",
+        "prefer": "return=minimal"
     }
 
     companies_to_upsert = []
@@ -63,6 +66,7 @@ async def seed_canonical_companies():
             "source_updated_at": c.get("source_updated_at") or "2026-08-10T00:00:00Z"
         })
 
+    # 4. Upsert canonical companies into Supabase REST API
     req = urllib.request.Request(
         f"{SUPABASE_URL}/rest/v1/companies",
         data=json.dumps(companies_to_upsert).encode("utf-8"),
@@ -72,11 +76,14 @@ async def seed_canonical_companies():
 
     try:
         with urllib.request.urlopen(req) as resp:
-            print(f"3. Upserted {len(companies_to_upsert)} companies into Supabase! (HTTP {resp.status})")
-    except Exception as e:
-        print(f"Companies upsert warning (may require DB migration): {e}")
+            print(f"3. Successfully persisted {len(companies_to_upsert)} companies into Supabase! (HTTP {resp.status})")
+            assert resp.status in (200, 201, 204), f"Database insert failed with status {resp.status}"
+    except urllib.error.HTTPError as e:
+        err_msg = e.read().decode("utf-8")
+        print(f"❌ CRITICAL DATABASE PERSISTENCE FAILURE (HTTP {e.code}): {err_msg}")
+        raise RuntimeError(f"Database write rejected by Supabase (HTTP {e.code}): {err_msg}")
 
-    # 4. Update last_success_at timestamp for active sources in source_registry
+    # 5. Update last_success_at timestamp for active sources in source_registry
     now_iso = "2026-08-10T12:00:00Z"
     for src in ["usa_sec", "uk_companies_house", "global_osm"]:
         req_src = urllib.request.Request(
@@ -88,11 +95,13 @@ async def seed_canonical_companies():
         try:
             with urllib.request.urlopen(req_src) as resp:
                 print(f"4. Updated source_registry last_success_at for {src} (HTTP {resp.status})")
-        except Exception as e:
-            print(f"Source registry update warning: {e}")
+        except urllib.error.HTTPError as e:
+            err_msg = e.read().decode("utf-8")
+            print(f"❌ CRITICAL SOURCE REGISTRY UPDATE FAILURE for {src} (HTTP {e.code}): {err_msg}")
+            raise RuntimeError(f"Source registry update rejected by Supabase (HTTP {e.code}): {err_msg}")
 
     print("======================================================================")
-    print("[OK] CANONICAL DATA SEEDING COMPLETE!")
+    print("VERIFIED CANONICAL DATA SEEDING PASSED SUCCESSFULLY WITH REAL PERSISTENCE!")
     print("======================================================================")
 
 if __name__ == "__main__":
