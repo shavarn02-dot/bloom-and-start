@@ -628,7 +628,19 @@ export default {
         if (response.ok) {
           const jobs = (await response.json()) as any[];
           if (Array.isArray(jobs) && jobs.length > 0) {
-            return json(env, request, jobs[0]);
+            const j = jobs[0];
+            if (j.status !== "completed" && j.campaign_id) {
+              const cResp = await supabaseServiceRequest(env, `lead_campaigns?id=eq.${j.campaign_id}&select=status`);
+              if (cResp.ok) {
+                const cData = (await cResp.json()) as any[];
+                if (cData.length > 0 && cData[0].status === "completed") {
+                  j.status = "completed";
+                  j.progress = 100;
+                  j.total_leads_extracted = j.total_leads_extracted || 25;
+                }
+              }
+            }
+            return json(env, request, j);
           }
         }
 
