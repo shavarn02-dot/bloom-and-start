@@ -463,7 +463,7 @@ export default {
             const scoreVal = Math.round(rawScore > 1 ? rawScore : rawScore * 100);
             return {
               campaign_id: campaignId,
-              user_id: validUserId,
+              user_id: userId,
               company_name: c.canonical_name || c.legal_name || "B2B Company",
               contact_name: ct?.contact_name || ct?.full_name || "Decision Maker",
               title: ct?.title || ct?.role || "Executive",
@@ -486,7 +486,7 @@ export default {
             headers: { prefer: "return=representation" },
             body: JSON.stringify({
               campaign_id: campaignId,
-              user_id: validUserId,
+              user_id: userId,
               status: "completed",
               progress: 100,
               total_urls_found: dbCompanies.length,
