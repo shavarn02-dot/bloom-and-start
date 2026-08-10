@@ -382,6 +382,7 @@ export default {
       const reqLimit = Math.min(Math.max(body.requested_limit ?? 25, 1), 50);
 
       const payload: any = {
+        user_id: userId || DEFAULT_GUEST_UUID,
         name: body.name,
         query: body.query,
         locations: body.locations || ["IN", "US"],
@@ -390,25 +391,14 @@ export default {
         status: "draft",
       };
 
-      if (userId && userId !== DEFAULT_GUEST_UUID) {
-        payload.user_id = userId;
-      }
       if (body.profile_id) {
         payload.profile_id = body.profile_id;
       }
 
-      let response = await supabaseServiceRequest(env, "lead_campaigns", {
+      const response = await supabaseServiceRequest(env, "lead_campaigns", {
         method: "POST",
         body: JSON.stringify(payload),
       });
-
-      if (!response.ok && payload.user_id) {
-        delete payload.user_id;
-        response = await supabaseServiceRequest(env, "lead_campaigns", {
-          method: "POST",
-          body: JSON.stringify(payload),
-        });
-      }
 
       return new Response(response.body, {
         status: response.status,
