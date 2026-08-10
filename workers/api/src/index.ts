@@ -456,30 +456,37 @@ export default {
           const totalContacts = dbCompanies.reduce((acc: number, c: any) => acc + (c.contacts ? c.contacts.length : 0), 0);
           console.log(`[DB] Smart Search matches found: companies=${dbCompanies.length}, contacts=${totalContacts}`);
 
-          // Persist campaign-isolated leads into public.leads table
-          const leadsToInsert = dbCompanies.map((c: any) => {
-            const ct = (c.contacts && c.contacts.length > 0) ? c.contacts[0] : null;
-            const rawScore = c.lead_score != null ? Number(c.lead_score) : 85;
-            const scoreVal = Math.round(rawScore > 1 ? rawScore : rawScore * 100);
-            return {
-              campaign_id: campaignId,
-              user_id: userId,
-              company_name: c.canonical_name || c.legal_name || "B2B Company",
-              contact_name: ct?.contact_name || ct?.full_name || "Decision Maker",
-              title: ct?.title || ct?.role || "Executive",
-              email: ct?.email || `contact@${c.domain || "company.com"}`,
-              phone: ct?.phone || c.phone || null,
-              website: c.domain ? `https://${c.domain}` : null,
-              confidence: scoreVal,
-              verification_status: ct?.verification_status || "verified",
-              source_url: `Canonical DB (${c.country_code || "IN"})`,
-            };
-          });
+          // Persist campaign-isolated leads into public.leads table safely
+          try {
+            const leadsToInsert = dbCompanies.map((c: any) => {
+              const ct = (c.contacts && c.contacts.length > 0) ? c.contacts[0] : null;
+              const rawScore = c.lead_score != null ? Number(c.lead_score) : 85;
+              const scoreVal = Math.round(rawScore > 1 ? rawScore : rawScore * 100);
+              const leadRecord: any = {
+                campaign_id: campaignId,
+                company_name: c.canonical_name || c.legal_name || "B2B Company",
+                contact_name: ct?.contact_name || ct?.full_name || "Decision Maker",
+                title: ct?.title || ct?.role || "Executive",
+                email: ct?.email || `contact@${c.domain || "company.com"}`,
+                phone: ct?.phone || c.phone || null,
+                website: c.domain ? `https://${c.domain}` : null,
+                confidence: scoreVal,
+                verification_status: ct?.verification_status || "verified",
+                source_url: `Canonical DB (${c.country_code || "IN"})`,
+              };
+              if (userId && userId !== DEFAULT_GUEST_UUID) {
+                leadRecord.user_id = userId;
+              }
+              return leadRecord;
+            });
 
-          await supabaseServiceRequest(env, "leads", {
-            method: "POST",
-            body: JSON.stringify(leadsToInsert),
-          });
+            await supabaseServiceRequest(env, "leads", {
+              method: "POST",
+              body: JSON.stringify(leadsToInsert),
+            });
+          } catch (insertErr) {
+            console.warn("Smart Search leads insert warning:", insertErr);
+          }
 
           await supabaseServiceRequest(env, "scrape_jobs", {
             method: "POST",
