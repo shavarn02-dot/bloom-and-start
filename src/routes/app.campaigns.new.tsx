@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { Check, Building2, Plus, Sparkles } from "lucide-react";
+import { Check, Building2, Plus, Sparkles, Search, Globe } from "lucide-react";
 import { PageHeader, Panel } from "@/components/dashboard/primitives";
 import { FormSkeleton } from "@/components/dashboard/skeletons";
 import { createCampaign, runCampaign, getJobStatus, ScrapeJob, API_BASE } from "@/lib/api";
@@ -40,6 +40,8 @@ function NewCampaign() {
   const [name, setName] = useState("Marketing Agencies in Mumbai");
   const [query, setQuery] = useState("Digital Marketing Agencies in Mumbai email contact");
   const [limit, setLimit] = useState(25);
+  const [selectedLocations, setSelectedLocations] = useState<string[]>(["IN", "US"]);
+  const [searchMode, setSearchMode] = useState<"database" | "live">("database");
 
   // Execution state
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -213,6 +215,48 @@ function NewCampaign() {
             </div>
 
             <div>
+              <label className="block text-[13px] font-medium text-foreground">Target Country / Location Routing</label>
+              <p className="text-[12px] text-muted-foreground mb-2">
+                Select target jurisdictions. Source router dispatches queries to national registries & dataset adapters.
+              </p>
+              <div className="flex flex-wrap gap-2 pt-1">
+                {[
+                  { code: "IN", name: "India 🇮🇳" },
+                  { code: "US", name: "USA 🇺🇸" },
+                  { code: "GB", name: "UK 🇬🇧" },
+                  { code: "AU", name: "Australia 🇦🇺" },
+                  { code: "FR", name: "France 🇫🇷" },
+                  { code: "DE", name: "Germany 🇩🇪" },
+                  { code: "CA", name: "Canada 🇨🇦" },
+                  { code: "SG", name: "Singapore 🇸🇬" },
+                  { code: "AE", name: "UAE 🇦🇪" },
+                ].map((loc) => {
+                  const active = selectedLocations.includes(loc.code);
+                  return (
+                    <button
+                      key={loc.code}
+                      type="button"
+                      onClick={() => {
+                        setSelectedLocations((prev) =>
+                          active ? prev.filter((c) => c !== loc.code) : [...prev, loc.code]
+                        );
+                      }}
+                      className={cn(
+                        "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium border transition-colors",
+                        active
+                          ? "border-emerald-600 bg-emerald-50 text-emerald-800"
+                          : "border-border bg-paper text-muted-foreground hover:bg-cream"
+                      )}
+                    >
+                      <span>{loc.name}</span>
+                      {active && <Check className="size-3 text-emerald-600" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div>
               <label className="block text-[13px] font-medium text-foreground">Leads Cap (Free Tier Max 50)</label>
               <input
                 type="number"
@@ -228,18 +272,61 @@ function NewCampaign() {
       )}
 
       {step === 1 && (
-        <Panel title="Step 2: Target Search Query & ICP">
-          <div className="space-y-4 p-5">
+        <Panel title="Step 2: Target Search Query & Search Strategy">
+          <div className="space-y-5 p-5">
             <div>
-              <label className="block text-[13px] font-medium text-foreground">Web Search Query</label>
+              <label className="block text-[13px] font-medium text-foreground">Search Strategy Mode</label>
+              <div className="grid gap-3 sm:grid-cols-2 mt-1.5">
+                <button
+                  type="button"
+                  onClick={() => setSearchMode("database")}
+                  className={cn(
+                    "rounded-lg border p-3.5 text-left transition-colors",
+                    searchMode === "database"
+                      ? "border-emerald-600 bg-emerald-50/60 ring-1 ring-emerald-600"
+                      : "border-border bg-paper hover:bg-cream/50"
+                  )}
+                >
+                  <div className="flex items-center gap-2 font-medium text-foreground text-[13.5px]">
+                    <Search className="size-4 text-emerald-600" />
+                    <span>Database-First Search (Fast & Zero Cost)</span>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Instantly queries verified canonical database of companies & contacts across selected countries without invoking live web scraping.
+                  </p>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setSearchMode("live")}
+                  className={cn(
+                    "rounded-lg border p-3.5 text-left transition-colors",
+                    searchMode === "live"
+                      ? "border-emerald-600 bg-emerald-50/60 ring-1 ring-emerald-600"
+                      : "border-border bg-paper hover:bg-cream/50"
+                  )}
+                >
+                  <div className="flex items-center gap-2 font-medium text-foreground text-[13.5px]">
+                    <Globe className="size-4 text-emerald-600" />
+                    <span>Live Discovery Fallback (Modal Scraping Engine)</span>
+                  </div>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Triggers live Playwright/Crawl4AI web scraping & MX verification to discover brand new lead targets.
+                  </p>
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-[13px] font-medium text-foreground">Search Query / Prompt</label>
               <p className="text-[12px] text-muted-foreground mb-2">
-                The AI scraping engine uses this search query on public web search engines to discover prospective companies.
+                Specify roles, industries, or keywords (e.g. CTOs, Founders, Software).
               </p>
               <input
                 type="text"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="e.g. B2B SaaS companies Bangalore email contact"
+                placeholder="e.g. CTOs at B2B SaaS companies contact email"
                 className="w-full rounded-md border border-border bg-paper px-3 py-2.5 text-[13.5px] outline-none focus-ring-animate transition-colors duration-200 hover:border-border-strong font-mono"
               />
             </div>

@@ -70,11 +70,14 @@ function Profiles() {
     loadProfiles();
   }, []);
 
+  const [error, setError] = useState<string | null>(null);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.name.trim()) return;
 
     setIsSubmitting(true);
+    setError(null);
     try {
       const resp = await authFetch(`${API_BASE}/api/profiles`, {
         method: "POST",
@@ -82,12 +85,16 @@ function Profiles() {
           name: formData.name.trim(),
           website: formData.website.trim(),
           description: formData.offering.trim(),
-          target_customer: `${formData.targetRole} | ${formData.targetLocation} | ${formData.icp}`.trim(),
+          target_customer: `${formData.targetRole} ${formData.targetLocation} ${formData.icp}`.trim(),
         }),
       });
 
       if (resp.ok) {
-        await loadProfiles();
+        const created = await resp.json();
+        const newProfile = Array.isArray(created) ? created[0] : created;
+        if (newProfile && newProfile.id) {
+          setProfiles((prev) => [newProfile, ...prev.filter((p) => p.id !== newProfile.id)]);
+        }
         setIsCreating(false);
         setFormData({
           name: "",
@@ -97,9 +104,14 @@ function Profiles() {
           targetLocation: "",
           icp: "",
         });
+        await loadProfiles();
+      } else {
+        const errText = await resp.text().catch(() => "Failed to save business profile");
+        setError(`Error (${resp.status}): ${errText}`);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Failed to save business profile:", err);
+      setError(err?.message || "Network error. Failed to save profile.");
     } finally {
       setIsSubmitting(false);
     }
@@ -133,6 +145,12 @@ function Profiles() {
           )
         }
       />
+
+      {error && (
+        <div className="rounded-md border border-red-200 bg-red-50 p-4 text-[13.5px] text-red-800">
+          {error}
+        </div>
+      )}
 
       {isCreating && (
         <Panel title="New Business Profile">

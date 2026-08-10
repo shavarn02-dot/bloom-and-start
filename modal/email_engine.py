@@ -338,3 +338,11 @@ def extract_emails_from_text(text: str) -> list[str]:
             seen.add(email_lower)
             result.append(email_lower)
     return result
+
+
+class EmailVerifier:
+    async def verify_email(self, email: str) -> dict:
+        return await verify_email(email)
+
+    async def verify_emails_batch(self, emails: list[str], max_concurrent: int = 10) -> list[dict]:
+        return await verify_emails_batch(emails, max_concurrent=max_concurrent)

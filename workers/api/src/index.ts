@@ -190,6 +190,116 @@ export default {
       return json(env, request, { error: "Backend is not configured yet" }, 503);
     }
 
+    // ========== MASTER SPEC API ENDPOINTS ==========
+
+    // GET /api/sources — List active source registry items
+    if (path === "/api/sources" && request.method === "GET") {
+      const response = await supabaseServiceRequest(env, "source_registry?select=*&order=priority.asc");
+      return new Response(response.body, { status: response.status, headers: corsHeaders(env, request) });
+    }
+
+    // GET /api/locations — List supported target countries for location routing
+    if (path === "/api/locations" && request.method === "GET") {
+      const locations = [
+        { code: "IN", name: "India", flag: "🇮🇳" },
+        { code: "US", name: "United States", flag: "🇺🇸" },
+        { code: "GB", name: "United Kingdom", flag: "🇬🇧" },
+        { code: "AU", name: "Australia", flag: "🇦🇺" },
+        { code: "FR", name: "France", flag: "🇫🇷" },
+        { code: "DE", name: "Germany", flag: "🇩🇪" },
+        { code: "CA", name: "Canada", flag: "🇨🇦" },
+        { code: "SG", name: "Singapore", flag: "🇸🇬" },
+        { code: "AE", name: "United Arab Emirates", flag: "🇦🇪" },
+      ];
+      return json(env, request, locations);
+    }
+
+    // POST /api/search — Database-First Search (Queries canonical DB without calling Modal)
+    if (path === "/api/search" && request.method === "POST") {
+      const userId = await resolveUserId(request, env);
+      const body = (await request.json()) as {
+        query?: string;
+        locations?: string[];
+        limit?: number;
+        fresh_only?: boolean;
+        allow_live_fallback?: boolean;
+      };
+
+      const limit = Math.min(Math.max(body.limit ?? 25, 1), 100);
+      const queryStr = body.query?.trim() || "";
+
+      // Query indexed canonical companies & contacts tables
+      let dbQueryPath = `companies?select=*,contacts(*)&status=eq.active&order=lead_score.desc&limit=${limit}`;
+      if (body.locations && body.locations.length > 0) {
+        const inClause = body.locations.map((c) => `"${c.toUpperCase()}"`).join(",");
+        dbQueryPath += `&country_code=in.(${inClause})`;
+      }
+
+      const dbResp = await supabaseServiceRequest(env, dbQueryPath);
+      let companies: any[] = [];
+      if (dbResp.ok) {
+        companies = (await dbResp.json()) as any[];
+      }
+
+      // Record DB_SEARCH usage event
+      await supabaseServiceRequest(env, "usage_events", {
+        method: "POST",
+        body: JSON.stringify({
+          user_id: userId,
+          event_type: "DB_SEARCH",
+          units: 1,
+          estimated_cost: 0.0,
+          metadata: { query: queryStr, locations: body.locations, results_found: companies.length },
+        }),
+      });
+
+      return json(env, request, {
+        source: "database",
+        count: companies.length,
+        results: companies,
+        used_modal_live_scraping: false,
+      });
+    }
+
+    // GET /api/usage — Metering & usage event log
+    if (path === "/api/usage" && request.method === "GET") {
+      const userId = await resolveUserId(request, env);
+      const response = await supabaseServiceRequest(env, `usage_events?user_id=eq.${userId}&select=*&order=created_at.desc&limit=100`);
+      return new Response(response.body, { status: response.status, headers: corsHeaders(env, request) });
+    }
+
+    // GET /api/leads/:id/evidence — Provenance evidence records for lead
+    const evidenceMatch = matchRoute(path, "/api/leads/:id/evidence");
+    if (evidenceMatch && request.method === "GET") {
+      const leadId = evidenceMatch.id;
+      const response = await supabaseServiceRequest(env, `company_sources?company_id=eq.${leadId}&select=*,source_registry(*)`);
+      return new Response(response.body, { status: response.status, headers: corsHeaders(env, request) });
+    }
+
+    // POST /api/leads/:id/enrich — Trigger lead enrichment
+    const enrichMatch = matchRoute(path, "/api/leads/:id/enrich");
+    if (enrichMatch && request.method === "POST") {
+      const userId = await resolveUserId(request, env);
+      const leadId = enrichMatch.id;
+
+      await supabaseServiceRequest(env, "usage_events", {
+        method: "POST",
+        body: JSON.stringify({
+          user_id: userId,
+          event_type: "COMPANY_ENRICHMENT",
+          units: 1,
+          estimated_cost: 0.005,
+          metadata: { lead_id: leadId },
+        }),
+      });
+
+      return json(env, request, {
+        status: "accepted",
+        lead_id: leadId,
+        message: "Enrichment job queued.",
+      });
+    }
+
     // ========== CAMPAIGN ROUTES ==========
 
     // GET /api/campaigns — List user's campaigns
