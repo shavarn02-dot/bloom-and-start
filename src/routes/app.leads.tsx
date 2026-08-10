@@ -79,29 +79,42 @@ function Leads() {
           const rawConf = Number(l.confidence || 85);
           const matchVal = Math.min(100, Math.round(rawConf > 100 ? rawConf / 100 : rawConf));
           const compName = l.company_name || l.canonical_name || "Target Business";
-          const rawContact = l.contact_name || l.full_name;
-          let first = "Executive";
-          let last = "Director";
+          
+          // Truthful location formatting
+          let locStr = "India";
+          const cc = String(l.country_code || "").toUpperCase();
+          if (cc === "IN") locStr = "India";
+          else if (cc === "US") locStr = "United States";
+          else if (cc === "GB") locStr = "United Kingdom";
+          else if (cc === "AU") locStr = "Australia";
+          else if (cc === "FR") locStr = "France";
+          else if (cc) locStr = cc;
+          else locStr = l.city || "India";
 
-          if (rawContact && rawContact.toLowerCase() !== "team" && rawContact.trim().length > 0) {
+          // Truthful Contact Name & Role (No Fabricated "Team" or "Executive")
+          const rawContact = l.contact_name || l.full_name;
+          let first = "Unknown";
+          let last = "";
+
+          if (rawContact && !["team", "unknown", "executive", "decision maker"].includes(rawContact.toLowerCase().trim())) {
             const parts = rawContact.trim().split(" ");
             first = parts[0];
             last = parts.slice(1).join(" ") || "";
-          } else {
-            first = compName.split(" ")[0] || "Executive";
-            last = "Director";
           }
+
+          const rawRole = l.title || l.role;
+          const roleStr = (rawRole && !["executive", "decision maker"].includes(rawRole.toLowerCase().trim())) ? rawRole : "Unknown";
 
           return {
             id: l.id,
             firstName: first,
             lastName: last,
-            role: l.title || "Decision Maker",
+            role: roleStr,
             company: compName,
             industry: l.industry || "B2B / Services",
             companySize: "10-100",
-            location: l.country_code || l.city || "India / Global",
-            email: l.email || `contact@${(l.website || "domain.com").replace(/^https?:\/\//, "").replace(/^www\./, "")}`,
+            location: locStr,
+            email: l.email || "N/A",
             emailStatus: explicitVer,
             phone: l.phone || "",
             match: matchVal,
