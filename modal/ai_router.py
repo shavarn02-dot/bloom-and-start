@@ -143,7 +143,7 @@ TASK_PRIORITY = {
 # ---------------------------------------------------------------------------
 
 async def _call_cerebras(prompt: str, system_prompt: str = "") -> tuple[str, int]:
-    """Call Cerebras API (llama-3.3-70b or llama-3.1-8b-instant)."""
+    """Call Cerebras API (llama3.1-8b or llama-3.3-70b)."""
     api_key = os.environ.get("CEREBRAS_API_KEY", "")
     if not api_key:
         raise ValueError("CEREBRAS_API_KEY not set")
@@ -154,18 +154,25 @@ async def _call_cerebras(prompt: str, system_prompt: str = "") -> tuple[str, int
     messages.append({"role": "user", "content": prompt})
 
     async with httpx.AsyncClient(timeout=60) as client:
-        resp = await client.post(
-            "https://api.cerebras.ai/v1/chat/completions",
-            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
-            json={"model": "llama-3.3-70b", "messages": messages, "max_tokens": 2048, "temperature": 0.3},
-        )
-        if resp.status_code == 429:
-            raise RateLimitError("cerebras", resp.text)
-        resp.raise_for_status()
-        data = resp.json()
-        content = data["choices"][0]["message"]["content"]
-        tokens = data.get("usage", {}).get("total_tokens", len(content) // 4)
-        return content, tokens
+        for model in ["llama3.1-8b", "llama-3.3-70b"]:
+            try:
+                resp = await client.post(
+                    "https://api.cerebras.ai/v1/chat/completions",
+                    headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json"},
+                    json={"model": model, "messages": messages, "max_tokens": 2048, "temperature": 0.3},
+                )
+                if resp.status_code == 429:
+                    raise RateLimitError("cerebras", resp.text)
+                if resp.status_code == 200:
+                    data = resp.json()
+                    content = data["choices"][0]["message"]["content"]
+                    tokens = data.get("usage", {}).get("total_tokens", len(content) // 4)
+                    return content, tokens
+            except RateLimitError:
+                raise
+            except Exception:
+                continue
+        raise ValueError("Cerebras API models failed")
 
 
 async def _call_groq(prompt: str, system_prompt: str = "") -> tuple[str, int]:

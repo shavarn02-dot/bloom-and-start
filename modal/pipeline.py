@@ -35,7 +35,9 @@ image = (
         "dnspython",
         "supabase",
         "fastapi",
+        "playwright",
     )
+    .run_commands("playwright install --with-deps chromium")
     .add_local_file(str(MODAL_DIR / "ai_router.py"), "/root/ai_router.py")
     .add_local_file(str(MODAL_DIR / "email_engine.py"), "/root/email_engine.py")
     .add_local_file(str(MODAL_DIR / "scraper_tiered.py"), "/root/scraper_tiered.py")
@@ -399,12 +401,13 @@ Return ONLY a JSON array of search query strings. Example: ["marketing agencies 
                 try:
                     sb.table("contacts").insert({
                         "company_id": comp_id,
-                        "contact_name": ld.contact_name or "Decision Maker",
-                        "title": ld.title or "Executive",
+                        "full_name": ld.contact_name or "Decision Maker",
+                        "role": ld.title or "Executive",
                         "email": ld.email or None,
                         "phone": ld.phone or None,
-                        "verification_status": v_status,
-                        "confidence_score": float(s.total_score) / 100.0 if s.total_score > 1.0 else float(s.total_score),
+                        "confidence": 90.00,
+                        "status": "active",
+                        "verification_method": "smtp" if v_status == "verified" else "unverified",
                     }).execute()
                 except Exception as ct_err:
                     logger.warning(f"Canonical contact insert notice: {ct_err}")
@@ -414,9 +417,9 @@ Return ONLY a JSON array of search query strings. Example: ["marketing agencies 
                 try:
                     sb.table("company_sources").insert({
                         "company_id": comp_id,
-                        "source_type": "web_crawl",
-                        "source_url": ld.source_url or ld.website,
-                        "provenance_metadata": {"score_breakdown": s.breakdown if s.breakdown else {}},
+                        "source_url": ld.source_url or ld.website or "https://web.crawl",
+                        "source_status": "active",
+                        "confidence": 90.00,
                     }).execute()
                 except Exception as cs_err:
                     logger.warning(f"Company source provenance insert notice: {cs_err}")

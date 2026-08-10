@@ -64,3 +64,23 @@ CREATE POLICY "Public read usage_events" ON public.usage_events
 
 CREATE POLICY "Allow anon insert usage_events" ON public.usage_events
   FOR INSERT WITH CHECK (true);
+
+-- 7. Leads RLS Policies
+DROP POLICY IF EXISTS "Allow anon insert leads" ON public.leads;
+CREATE POLICY "Allow anon insert leads" ON public.leads
+  FOR INSERT WITH CHECK (true);
+
+DROP POLICY IF EXISTS "Allow anon select leads" ON public.leads;
+CREATE POLICY "Allow anon select leads" ON public.leads
+  FOR SELECT USING (true);
+
+-- 8. Schema extensions for compatibility
+ALTER TABLE public.company_sources
+  ADD COLUMN IF NOT EXISTS provenance_metadata JSONB DEFAULT '{}'::jsonb,
+  ALTER COLUMN source_id DROP NOT NULL;
+
+ALTER TABLE public.contacts
+  ADD COLUMN IF NOT EXISTS contact_name TEXT,
+  ADD COLUMN IF NOT EXISTS title TEXT,
+  ADD COLUMN IF NOT EXISTS confidence_score NUMERIC(5,2) DEFAULT 80.00,
+  ADD COLUMN IF NOT EXISTS verification_status TEXT DEFAULT 'verified';
