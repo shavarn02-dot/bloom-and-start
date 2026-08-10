@@ -196,13 +196,18 @@ Return ONLY a JSON array of search query strings. Example: ["marketing agencies 
         seen_domains = set()
         unique_results = []
         for r in all_search_results:
-            domain = urlparse(r.url).netloc.lower()
+            r_url = r.url if hasattr(r, "url") else (r.get("url", "") if isinstance(r, dict) else "")
+            domain = urlparse(r_url).netloc.lower() if r_url else ""
             if domain and domain not in seen_domains:
                 seen_domains.add(domain)
                 unique_results.append(r)
 
         # Deduplicate target company URLs
-        urls_to_scrape = list(dict.fromkeys(r.get("url", "") for r in all_search_results if r.get("url")))[:max_leads]
+        urls_to_scrape = [
+            (r.url if hasattr(r, "url") else r.get("url", ""))
+            for r in unique_results
+            if (hasattr(r, "url") and r.url) or (isinstance(r, dict) and r.get("url"))
+        ][:max_leads]
         _update_job(job_id, progress=40, total_urls_found=len(urls_to_scrape))
 
         # ----- Step 3B: Approved Multi-Country Source Ingestion -----
