@@ -297,11 +297,11 @@ async def scrape_page_tier2(url: str) -> Optional[ExtractedCompany]:
             return company
 
     except ImportError:
-        logger.warning("crawl4ai not installed — skipping Tier 2")
-        return None
+        logger.info(f"crawl4ai not installed — delegating JS scraping to Playwright Tier 3 for {url}")
+        return await scrape_page_tier3(url)
     except Exception as e:
         logger.error(f"Tier 2 error for {url}: {e}")
-        return None
+        return await scrape_page_tier3(url)
 
 
 # ---------------------------------------------------------------------------
