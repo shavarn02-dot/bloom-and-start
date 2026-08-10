@@ -3,9 +3,8 @@ import { useState, useEffect } from "react";
 import { Check, Building2, Plus, Sparkles, Search, Globe } from "lucide-react";
 import { PageHeader, Panel } from "@/components/dashboard/primitives";
 import { FormSkeleton } from "@/components/dashboard/skeletons";
-import { createCampaign, runCampaign, getJobStatus, ScrapeJob, API_BASE } from "@/lib/api";
+import { createCampaign, runCampaign, getJobStatus, getProfiles, ScrapeJob, API_BASE, type BusinessProfile } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import type { BusinessProfile } from "@/routes/app.profiles";
 
 export const Route = createFileRoute("/app/campaigns/new")({
   head: () => ({
@@ -54,18 +53,17 @@ function NewCampaign() {
   useEffect(() => {
     async function fetchProfiles() {
       try {
-        const resp = await fetch(`${API_BASE}/api/profiles`);
-        if (resp.ok) {
-          const data = await resp.json();
-          if (Array.isArray(data) && data.length > 0) {
-            setProfiles(data);
-            setSelectedProfileId(data[0].id);
-            // Pre-fill default name & query if profile exists
-            if (data[0].name) {
-              setName(`${data[0].name} Lead Discovery`);
+        const data = await getProfiles();
+        if (Array.isArray(data) && data.length > 0) {
+          setProfiles(data);
+          const first = data[0];
+          if (first && first.id) {
+            setSelectedProfileId(first.id);
+            if (first.name) {
+              setName(`${first.name} Lead Discovery`);
             }
-            if (data[0].target_customer || data[0].description) {
-              setQuery(`${data[0].name} ${data[0].target_customer || data[0].description} email contact`.trim());
+            if (first.target_customer || first.description) {
+              setQuery(`${first.name} ${first.target_customer || first.description} email contact`.trim());
             }
           }
         }
@@ -110,7 +108,14 @@ function NewCampaign() {
     setIsSubmitting(true);
     setError(null);
     try {
-      const campaign = await createCampaign(name, query, limit, selectedProfileId || undefined);
+      const campaign = await createCampaign(
+        name,
+        query,
+        limit,
+        selectedProfileId || undefined,
+        selectedLocations,
+        searchMode === "database" ? "smart" : "deep"
+      );
       setCampaignId(campaign.id);
 
       const result = await runCampaign(campaign.id);
@@ -342,7 +347,8 @@ function NewCampaign() {
               ["Campaign Name", name],
               ["Search Query", query],
               ["Target Cap", `${limit} leads`],
-              ["Lead Discovery", "Live AI Web Search"],
+              ["Target Locations", selectedLocations.join(", ")],
+              ["Lead Discovery", searchMode === "database" ? "Smart Search (Database-First)" : "Deep Search (Expanded Discovery)"],
               ["Contact Verification", "Real-Time Email Check"],
               ["Matching Engine", "ICP Quality Scoring"],
             ].map(([k, v]) => (

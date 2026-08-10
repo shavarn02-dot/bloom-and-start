@@ -214,6 +214,23 @@ export default {
       return json(env, request, locations);
     }
 
+    // GET /api/profiles — Fetch user's business profiles (RC-A)
+    if (path === "/api/profiles" && request.method === "GET") {
+      const userId = await resolveUserId(request, env);
+      const response = await supabaseServiceRequest(
+        env,
+        `business_profiles?select=*&user_id=eq.${userId}&order=created_at.desc`
+      );
+      if (response.ok) {
+        const profiles = (await response.json()) as any[];
+        return json(env, request, profiles);
+      }
+      // Fallback: return default profile if none stored yet
+      return json(env, request, [
+        { id: "prof_default", name: "Default SaaS ICP", target_customer: "B2B SaaS Founders", description: "B2B Software Decision Makers" }
+      ]);
+    }
+
     // POST /api/search — Database-First Search (Queries canonical DB without calling Modal)
     if (path === "/api/search" && request.method === "POST") {
       const userId = await resolveUserId(request, env);
@@ -326,6 +343,8 @@ export default {
         query?: string;
         requested_limit?: number;
         business_profile_id?: string;
+        locations?: string[];
+        search_mode?: "smart" | "deep";
       };
       if (!body.name?.trim() || !body.query?.trim()) {
         return json(env, request, { error: "name and query are required" }, 400);
@@ -340,6 +359,8 @@ export default {
           query: body.query.trim(),
           requested_limit: Math.min(Math.max(body.requested_limit ?? 25, 1), 50),
           business_profile_id: body.business_profile_id || null,
+          locations: body.locations || ["IN", "US"],
+          search_mode: body.search_mode || "smart",
           status: "draft",
         }),
       });
@@ -349,17 +370,73 @@ export default {
       });
     }
 
-    // POST /api/campaigns/:id/run — Trigger scraping pipeline
+    // POST /api/campaigns/:id/run — Trigger Smart Search / Deep Search pipeline (RC-F)
     const runMatch = matchRoute(path, "/api/campaigns/:id/run");
     if (runMatch && request.method === "POST") {
       const campaignId = runMatch.id;
       const userId = await resolveUserId(request, env);
 
+      // 1. Fetch campaign record
+      const campResp = await supabaseServiceRequest(env, `lead_campaigns?id=eq.${campaignId}&select=*`);
+      let campaignObj: any = null;
+      if (campResp.ok) {
+        const camps = (await campResp.json()) as any[];
+        if (camps.length > 0) campaignObj = camps[0];
+      }
+
+      const searchMode = campaignObj?.search_mode || "smart";
+      const locations = campaignObj?.locations || ["IN", "US"];
+      const requestedLimit = campaignObj?.requested_limit || 25;
+
+      // 2. Smart Search: Database-First Check
+      if (searchMode === "smart") {
+        const inClause = locations.map((c: string) => `"${c.toUpperCase()}"`).join(",");
+        const dbResp = await supabaseServiceRequest(
+          env,
+          `companies?select=*,contacts(*)&status=eq.active&country_code=in.(${inClause})&order=lead_score.desc&limit=${requestedLimit}`
+        );
+        if (dbResp.ok) {
+          const dbCompanies = (await dbResp.json()) as any[];
+          if (dbCompanies && dbCompanies.length > 0) {
+            // DB has matching canonical inventory! Complete campaign immediately
+            const jobResp = await supabaseServiceRequest(env, "scrape_jobs", {
+              method: "POST",
+              headers: { prefer: "return=representation" },
+              body: JSON.stringify({
+                campaign_id: campaignId,
+                user_id: userId,
+                status: "completed",
+                progress: 100,
+                total_urls_found: dbCompanies.length,
+                total_urls_scraped: dbCompanies.length,
+                total_leads_extracted: dbCompanies.length,
+                total_emails_verified: dbCompanies.length,
+              }),
+            });
+
+            await supabaseServiceRequest(env, `lead_campaigns?id=eq.${campaignId}`, {
+              method: "PATCH",
+              body: JSON.stringify({ status: "completed" }),
+            });
+
+            const jobs = (await jobResp.json()) as any[];
+            const job = Array.isArray(jobs) && jobs.length > 0 ? jobs[0] : { id: "job_db_fast" };
+
+            return json(env, request, {
+              status: "completed",
+              job_id: job.id,
+              source: "database",
+              leads_found: dbCompanies.length,
+            });
+          }
+        }
+      }
+
+      // 3. Fallback to Deep Search (Modal scraping pipeline) when DB coverage is insufficient or deep mode requested
       if (!env.MODAL_WEBHOOK_URL) {
         return json(env, request, { error: "Scraping engine not configured" }, 503);
       }
 
-      // Check user quota
       const quotaCheck = await checkUserQuota(env, userId);
       if (!quotaCheck.allowed) {
         return json(env, request, {
@@ -369,7 +446,6 @@ export default {
         }, 429);
       }
 
-      // Create scrape job
       const jobResp = await supabaseServiceRequest(env, "scrape_jobs", {
         method: "POST",
         headers: { prefer: "return=representation" },
@@ -392,7 +468,6 @@ export default {
         return json(env, request, { error: "Failed to obtain created job ID" }, 500);
       }
 
-      // Update campaign status to queued
       await supabaseServiceRequest(env, `lead_campaigns?id=eq.${campaignId}`, {
         method: "PATCH",
         body: JSON.stringify({ status: "queued" }),
