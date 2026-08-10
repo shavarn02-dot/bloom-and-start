@@ -74,6 +74,8 @@ ai_secrets = modal.Secret.from_dict({
     "CEREBRAS_API_KEY": os.environ.get("CEREBRAS_API_KEY", ""),
     "GROQ_API_KEY": os.environ.get("GROQ_API_KEY", ""),
     "MISTRAL_API_KEY": os.environ.get("MISTRAL_API_KEY", ""),
+    "UK_COMPANIES_HOUSE_API_KEY": os.environ.get("UK_COMPANIES_HOUSE_API_KEY", "COe9c261f5-b576-4c9a-808a-1237522ee423"),
+    "INDIA_OGD_API_KEY": os.environ.get("INDIA_OGD_API_KEY", "579b464db66ec23bdd0000016ab645bc4bfc4e5b641a806352f864c8"),
     "SUPABASE_URL": os.environ.get("SUPABASE_URL", "https://vkwerkdqffvcydksmebn.supabase.co"),
     "SUPABASE_SERVICE_ROLE_KEY": os.environ.get("SUPABASE_SERVICE_ROLE_KEY", "sb_publishable_2yjgPV4IIo5uXGuy1ETAEg_rRxlyZ2W"),
     "SUPABASE_ANON_KEY": os.environ.get("SUPABASE_ANON_KEY", "sb_publishable_2yjgPV4IIo5uXGuy1ETAEg_rRxlyZ2W"),
