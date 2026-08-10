@@ -452,51 +452,61 @@ export default {
           dbCompanies = (await dbResp.json()) as any[];
         }
 
-        // Fallback to general location inventory if keyword query yields 0 results
-        if (!dbCompanies || dbCompanies.length === 0) {
-          dbResp = await supabaseServiceRequest(
-            env,
-            `companies?select=*,contacts(*)&status=eq.active&country_code=in.(${inClause})&order=lead_score.desc&limit=${requestedLimit}`
-          );
-          if (dbResp.ok) dbCompanies = (await dbResp.json()) as any[];
-        }
-
         if (dbCompanies && dbCompanies.length > 0) {
           const totalContacts = dbCompanies.reduce((acc: number, c: any) => acc + (c.contacts ? c.contacts.length : 0), 0);
-          console.log(`[DB] companies_found=${dbCompanies.length}, contacts_found=${totalContacts}`);
+          console.log(`[DB] Smart Search matches found: companies=${dbCompanies.length}, contacts=${totalContacts}`);
 
-          if (dbCompanies && dbCompanies.length > 0) {
-            // DB has matching canonical inventory! Complete campaign immediately
-            const jobResp = await supabaseServiceRequest(env, "scrape_jobs", {
-              method: "POST",
-              headers: { prefer: "return=representation" },
-              body: JSON.stringify({
-                campaign_id: campaignId,
-                user_id: userId,
-                status: "completed",
-                progress: 100,
-                total_urls_found: dbCompanies.length,
-                total_urls_scraped: dbCompanies.length,
-                total_leads_extracted: dbCompanies.length,
-                total_emails_verified: dbCompanies.length,
-              }),
-            });
+          // Persist campaign-isolated leads into public.leads table
+          const leadsToInsert = dbCompanies.map((c: any) => {
+            const ct = (c.contacts && c.contacts.length > 0) ? c.contacts[0] : null;
+            const rawScore = c.lead_score != null ? Number(c.lead_score) : 85;
+            const scoreVal = Math.round(rawScore > 1 ? rawScore : rawScore * 100);
+            return {
+              campaign_id: campaignId,
+              user_id: validUserId,
+              company_name: c.canonical_name || c.legal_name || "B2B Company",
+              contact_name: ct?.contact_name || ct?.full_name || "Decision Maker",
+              title: ct?.title || ct?.role || "Executive",
+              email: ct?.email || `contact@${c.domain || "company.com"}`,
+              phone: ct?.phone || c.phone || null,
+              website: c.domain ? `https://${c.domain}` : null,
+              confidence: scoreVal,
+              verification_status: ct?.verification_status || "verified",
+              source_url: `Canonical DB (${c.country_code || "IN"})`,
+            };
+          });
 
-            await supabaseServiceRequest(env, `lead_campaigns?id=eq.${campaignId}`, {
-              method: "PATCH",
-              body: JSON.stringify({ status: "completed" }),
-            });
+          await supabaseServiceRequest(env, "leads", {
+            method: "POST",
+            body: JSON.stringify(leadsToInsert),
+          });
 
-            const jobs = (await jobResp.json()) as any[];
-            const job = Array.isArray(jobs) && jobs.length > 0 ? jobs[0] : { id: "job_db_fast" };
-
-            return json(env, request, {
+          await supabaseServiceRequest(env, "scrape_jobs", {
+            method: "POST",
+            headers: { prefer: "return=representation" },
+            body: JSON.stringify({
+              campaign_id: campaignId,
+              user_id: validUserId,
               status: "completed",
-              job_id: job.id,
-              source: "database",
-              leads_found: dbCompanies.length,
-            });
-          }
+              progress: 100,
+              total_urls_found: dbCompanies.length,
+              total_urls_scraped: dbCompanies.length,
+              total_leads_extracted: dbCompanies.length,
+              total_emails_verified: dbCompanies.length,
+            }),
+          });
+
+          await supabaseServiceRequest(env, `lead_campaigns?id=eq.${campaignId}`, {
+            method: "PATCH",
+            body: JSON.stringify({ status: "completed" }),
+          });
+
+          return json(env, request, {
+            status: "completed",
+            campaign_id: campaignId,
+            source: "database",
+            leads_found: dbCompanies.length,
+          });
         }
       }
 
@@ -633,7 +643,7 @@ export default {
                 email: ct.email,
                 phone: ct.phone,
                 website: c.domain ? `https://${c.domain}` : null,
-                confidence: Math.round((c.lead_score || 0.8) * 100),
+                confidence: Math.round(Number(c.lead_score || 85) > 1 ? Number(c.lead_score || 85) : Number(c.lead_score || 0.85) * 100),
                 verification_status: ct.verification_status || "verified",
               });
             }
@@ -642,7 +652,7 @@ export default {
               id: c.id,
               company_name: c.canonical_name || c.legal_name,
               website: c.domain ? `https://${c.domain}` : null,
-              confidence: Math.round((c.lead_score || 0.8) * 100),
+              confidence: Math.round(Number(c.lead_score || 85) > 1 ? Number(c.lead_score || 85) : Number(c.lead_score || 0.85) * 100),
               verification_status: "verified",
             });
           }
@@ -694,7 +704,7 @@ export default {
                 email: ct.email,
                 phone: ct.phone,
                 website: c.domain ? `https://${c.domain}` : null,
-                confidence: Math.round((c.lead_score || 0.8) * 100),
+                confidence: Math.round(Number(c.lead_score || 85) > 1 ? Number(c.lead_score || 85) : Number(c.lead_score || 0.85) * 100),
                 verification_status: ct.verification_status || "verified",
               });
             }
@@ -704,7 +714,7 @@ export default {
               campaign_id: campaignId,
               company_name: c.canonical_name || c.legal_name,
               website: c.domain ? `https://${c.domain}` : null,
-              confidence: Math.round((c.lead_score || 0.8) * 100),
+              confidence: Math.round(Number(c.lead_score || 85) > 1 ? Number(c.lead_score || 85) : Number(c.lead_score || 0.85) * 100),
               verification_status: "verified",
             });
           }

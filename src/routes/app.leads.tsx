@@ -76,6 +76,9 @@ function Leads() {
             explicitVer = "Suppressed";
           }
 
+          const rawConf = Number(l.confidence || 85);
+          const matchVal = Math.min(100, Math.round(rawConf > 100 ? rawConf / 100 : rawConf));
+
           return {
             id: l.id,
             firstName: (l.contact_name ? l.contact_name.split(" ")[0] : "Team") ?? "Team",
@@ -88,13 +91,22 @@ function Leads() {
             email: l.email || "N/A",
             emailStatus: explicitVer,
             phone: l.phone || "",
-            match: l.confidence || 75,
+            match: matchVal,
             source: l.source_url || l.website || "Official Data Registry",
             status: "New",
           };
         });
 
-        setRealLeads(mapped);
+        // Deduplicate leads by company name + email
+        const seen = new Set<string>();
+        const deduped = mapped.filter((item) => {
+          const key = `${item.company.toLowerCase()}-${item.email.toLowerCase()}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+
+        setRealLeads(deduped);
         setIsLoading(false);
         return;
       }
