@@ -478,6 +478,7 @@ export default {
 
               const leadRecord: any = {
                 campaign_id: campaignId,
+                user_id: userId || DEFAULT_GUEST_UUID,
                 company_name: c.canonical_name || c.legal_name || "B2B Company",
                 contact_name: personName,
                 title: personRole,
@@ -488,9 +489,6 @@ export default {
                 verification_status: verStatus,
                 source_url: `Canonical DB (${c.country_code || "IN"})`,
               };
-              if (userId && userId !== DEFAULT_GUEST_UUID) {
-                leadRecord.user_id = userId;
-              }
               return leadRecord;
             });
 

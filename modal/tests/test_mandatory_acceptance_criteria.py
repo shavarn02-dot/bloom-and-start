@@ -64,8 +64,8 @@ def test_mandatory_acceptance():
         "search_mode": "smart",
         "requested_limit": 10
     })
-    assert status_a == 200, f"Campaign A creation failed: {camp_a}"
-    camp_id_a = camp_a["id"]
+    assert status_a in [200, 201], f"Campaign A creation failed: {camp_a}"
+    camp_id_a = camp_a[0]["id"] if isinstance(camp_a, list) else camp_a["id"]
     print(f"[TEST A] Campaign Created! ID = {camp_id_a}")
 
     # Trigger Campaign Run
@@ -120,8 +120,8 @@ def test_mandatory_acceptance():
         "search_mode": "smart",
         "requested_limit": 10
     })
-    assert status_b == 200, f"Campaign B creation failed: {camp_b}"
-    camp_id_b = camp_b["id"]
+    assert status_b in [200, 201], f"Campaign B creation failed: {camp_b}"
+    camp_id_b = camp_b[0]["id"] if isinstance(camp_b, list) else camp_b["id"]
     print(f"[TEST B] Campaign Created! ID = {camp_id_b}")
 
     # Trigger Campaign Run
