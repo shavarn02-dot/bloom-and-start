@@ -147,7 +147,7 @@ function Profiles() {
       />
 
       {error && (
-        <div className="rounded-md border border-red-200 bg-red-50 p-4 text-[13.5px] text-red-800">
+        <div className="rounded-md border border-destructive/30 bg-destructive-soft p-4 text-[13.5px] text-destructive">
           {error}
         </div>
       )}
@@ -252,7 +252,7 @@ function Profiles() {
                   <button
                     type="button"
                     onClick={() => handleDelete(p.id)}
-                    className="inline-flex items-center gap-1 text-[12px] font-medium text-red-600 transition-all duration-200 hover:text-red-700 hover:scale-105"
+                    className="inline-flex items-center gap-1 text-[12px] font-medium text-destructive transition-all duration-200 hover:text-destructive/80 hover:scale-105"
                   >
                     <Trash2 className="size-3.5" /> Delete
                   </button>

@@ -72,7 +72,7 @@ function Overview() {
 
       {/* Step 1 Onboarding Card: Business Profile Prompt */}
       {!isLoading && profiles.length === 0 && (
-        <div className="rounded-xl border border-primary/20 bg-gradient-to-r from-primary/5 via-primary/10 to-transparent p-5 sm:p-6 shadow-xs">
+        <div className="rounded-xl border border-primary/20 bg-linear-to-r from-primary/5 via-primary/10 to-transparent p-5 sm:p-6 shadow-xs">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-1">
               <div className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary">

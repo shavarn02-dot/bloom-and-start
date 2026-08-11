@@ -1,7 +1,9 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import islandOne from "@/assets/island-scene-01.jpg";
-import islandTwo from "@/assets/island-scene-02.jpg";
+import islandOneAsset from "@/assets/island-scene-01.jpg.asset.json";
+const islandOne = islandOneAsset.url;
+import islandTwoAsset from "@/assets/island-scene-02.jpg.asset.json";
+const islandTwo = islandTwoAsset.url;
 import { Wordmark } from "@/components/leadgen/wordmark";
 import { Annotation, HandArrow } from "@/components/leadgen/marks";
 
@@ -57,9 +59,9 @@ function IslandWorld() {
       })}
 
       {/* environment blends into the warm paper background — no card, no frame */}
-      <div className="absolute inset-0 bg-gradient-to-t from-foreground/60 via-foreground/10 to-foreground/25" />
-      <div className="absolute inset-y-0 right-0 w-24 bg-gradient-to-l from-background to-transparent lg:w-32" />
-      <div className="absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-background/70 to-transparent lg:hidden" />
+      <div className="absolute inset-0 bg-linear-to-t from-foreground/60 via-foreground/10 to-foreground/25" />
+      <div className="absolute inset-y-0 right-0 w-24 bg-linear-to-l from-background to-transparent lg:w-32" />
+      <div className="absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-background/70 to-transparent lg:hidden" />
     </div>
   );
 }

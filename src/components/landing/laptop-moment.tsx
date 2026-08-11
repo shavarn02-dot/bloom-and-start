@@ -1,4 +1,5 @@
-import founderSeated from "@/assets/founder-seated.png";
+import founderSeatedAsset from "@/assets/founder-seated.png.asset.json";
+const founderSeated = founderSeatedAsset.url;
 import { Annotation, HandUnderline } from "@/components/leadgen/marks";
 import { LeadTable, ProductFrame } from "@/components/leadgen/product";
 import { Reveal } from "@/components/leadgen/reveal";

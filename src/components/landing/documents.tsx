@@ -1,4 +1,5 @@
-import documentsFounder from "@/assets/documents-founder.jpg";
+import documentsFounderAsset from "@/assets/documents-founder.jpg.asset.json";
+const documentsFounder = documentsFounderAsset.url;
 import { Annotation, SectionLabel } from "@/components/leadgen/marks";
 import { ProductFrame, UploadPanel } from "@/components/leadgen/product";
 import { Reveal } from "@/components/leadgen/reveal";

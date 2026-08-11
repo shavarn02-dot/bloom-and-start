@@ -1,4 +1,5 @@
-import researchBoard from "@/assets/research-board.jpg";
+import researchBoardAsset from "@/assets/research-board.jpg.asset.json";
+const researchBoard = researchBoardAsset.url;
 import { Annotation, SectionLabel } from "@/components/leadgen/marks";
 
 import { Reveal } from "@/components/leadgen/reveal";
