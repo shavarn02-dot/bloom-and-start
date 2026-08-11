@@ -103,8 +103,14 @@
 
   --highlight: oklch(0.915 0.098 96);
 
+  --success: oklch(0.918 0.046 152);
+  --success-foreground: oklch(0.375 0.062 152);
+  --warning: oklch(0.93 0.072 96);
+  --warning-foreground: oklch(0.42 0.062 78);
+
   --destructive: oklch(0.545 0.16 28);
   --destructive-foreground: oklch(0.985 0.006 88);
+  --destructive-soft: oklch(0.958 0.024 28);
 
   --border: oklch(0.905 0.012 84);
   --border-strong: oklch(0.845 0.016 82);
@@ -125,19 +131,78 @@
   --sidebar-accent-foreground: oklch(0.245 0.014 62);
   --sidebar-border: oklch(0.9 0.014 84);
   --sidebar-ring: oklch(0.455 0.068 152);
+
+  color-scheme: light;
 }
 
 /*
- * LeadGen AI is a light-only editorial brand. There is intentionally no dark
- * palette: OS/browser dark mode must never reinterpret the paper background,
- * charcoal type or green accent.
+ * Dark palette.
+ * LeadGen AI ships light by default, but every token above has an exact
+ * counterpart here so a `.dark` class (theme switch, embed host, or user
+ * override) produces a coherent warm-charcoal editorial theme instead of
+ * half-inverted colors. Never add a dark-only hardcoded color in a component:
+ * add or reuse a token in this block.
  */
-:root {
-  color-scheme: only light;
+.dark {
+  --background: oklch(0.185 0.008 62);
+  --foreground: oklch(0.945 0.008 88);
+  --paper: oklch(0.225 0.009 62);
+  --cream: oklch(0.255 0.011 68);
+  --cream-foreground: oklch(0.945 0.008 88);
+
+  --card: oklch(0.225 0.009 62);
+  --card-foreground: oklch(0.945 0.008 88);
+  --popover: oklch(0.235 0.009 62);
+  --popover-foreground: oklch(0.945 0.008 88);
+
+  --primary: oklch(0.685 0.088 152);
+  --primary-foreground: oklch(0.175 0.02 152);
+  --primary-soft: oklch(0.335 0.05 152);
+
+  --secondary: oklch(0.275 0.011 66);
+  --secondary-foreground: oklch(0.925 0.008 88);
+
+  --muted: oklch(0.265 0.01 66);
+  --muted-foreground: oklch(0.735 0.012 84);
+
+  --accent: oklch(0.295 0.014 72);
+  --accent-foreground: oklch(0.955 0.008 88);
+
+  --highlight: oklch(0.62 0.098 96);
+
+  --success: oklch(0.33 0.052 152);
+  --success-foreground: oklch(0.855 0.07 152);
+  --warning: oklch(0.35 0.056 92);
+  --warning-foreground: oklch(0.885 0.08 96);
+
+  --destructive: oklch(0.62 0.155 28);
+  --destructive-foreground: oklch(0.985 0.006 88);
+  --destructive-soft: oklch(0.32 0.062 28);
+
+  --border: oklch(0.315 0.011 70);
+  --border-strong: oklch(0.415 0.014 72);
+  --input: oklch(0.335 0.012 70);
+  --ring: oklch(0.685 0.088 152);
+
+  --chart-1: oklch(0.685 0.088 152);
+  --chart-2: oklch(0.545 0.07 152);
+  --chart-3: oklch(0.72 0.08 96);
+  --chart-4: oklch(0.66 0.02 72);
+  --chart-5: oklch(0.5 0.02 72);
+
+  --sidebar: oklch(0.205 0.009 62);
+  --sidebar-foreground: oklch(0.905 0.008 88);
+  --sidebar-primary: oklch(0.685 0.088 152);
+  --sidebar-primary-foreground: oklch(0.175 0.02 152);
+  --sidebar-accent: oklch(0.285 0.013 70);
+  --sidebar-accent-foreground: oklch(0.965 0.008 88);
+  --sidebar-border: oklch(0.315 0.011 70);
+  --sidebar-ring: oklch(0.685 0.088 152);
+
+  color-scheme: dark;
 }
 
 html {
-  color-scheme: only light;
   background-color: var(--background);
   /* Anchor jumps must clear the fixed header. */
   scroll-behavior: smooth;
@@ -153,23 +218,25 @@ html {
 /*
  * Browsers with OS/auto dark mode (Chrome "Auto Dark Mode for Web Contents")
  * only skip auto-darkening a page when it explicitly answers the dark query.
- * We answer it by re-asserting the exact same light palette, so the brand
- * stays paper-white in a dark browser.
+ * We answer it by re-asserting the token palette, so an opted-out visitor
+ * still sees the intended brand. An explicit `.dark` opt-in always wins.
  */
 @media (prefers-color-scheme: dark) {
-  :root,
-  html {
+  html:not(.dark),
+  html:not(.dark) body {
     color-scheme: light;
-    background-color: var(--background);
     forced-color-adjust: none;
+    background-color: var(--background);
+    color: var(--foreground);
   }
 
-  html,
-  body {
-    background-color: var(--background) !important;
-    color: var(--foreground) !important;
+  html.dark,
+  html.dark body {
+    background-color: var(--background);
+    color: var(--foreground);
   }
 }
+
 
 
 @layer base {
