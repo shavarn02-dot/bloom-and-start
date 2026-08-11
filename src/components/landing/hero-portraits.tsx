@@ -124,7 +124,8 @@ export function HeroPortraits() {
     setIndex((i) => (i + 1) % PORTRAITS.length);
   };
 
-  const current = PORTRAITS[index] ?? PORTRAITS[0]!;
+  const current = PORTRAITS[index] ?? PORTRAITS[0];
+  if (!current) return null;
 
   return (
     <div
@@ -154,11 +155,11 @@ export function HeroPortraits() {
         {PORTRAITS.map((p, i) => (
           <img
             key={p.src}
-            src={p.src}
+            src={`${p.src}?v=20260811`}
             alt={i === index ? p.alt : ""}
             width={912}
             height={1200}
-            loading={i === 0 ? "eager" : "lazy"}
+            loading="eager"
             decoding="async"
             aria-hidden={i === index ? undefined : true}
             data-state={
