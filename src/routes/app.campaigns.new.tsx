@@ -378,7 +378,7 @@ function NewCampaign() {
           <div className="p-6 space-y-6">
             <div className="flex items-center gap-3">
               {jobStatus?.status === "completed" ? (
-                <div className="flex size-10 items-center justify-center rounded-full bg-emerald-100 text-primary">
+                <div className="flex size-10 items-center justify-center rounded-full bg-primary-soft text-primary">
                   <Check className="size-5" />
                 </div>
               ) : (

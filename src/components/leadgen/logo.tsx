@@ -30,7 +30,7 @@ export function LeadFlowXLogo({
       {/* Unique LeadFlowX Icon Mark */}
       <div
         className={cn(
-          "relative flex items-center justify-center rounded-xl bg-gradient-to-br from-primary via-primary to-foreground p-1.5 shadow-md border border-primary/30 transition-transform duration-300 hover:scale-105",
+          "relative flex items-center justify-center rounded-xl bg-linear-to-br from-primary via-primary to-foreground p-1.5 shadow-md border border-primary/30 transition-transform duration-300 hover:scale-105",
           sizeClasses[size]
         )}
       >
@@ -80,7 +80,7 @@ export function LeadFlowXLogo({
       {/* Brand Typography */}
       {!iconOnly && (
         <span className={cn("font-bold tracking-tight text-foreground flex items-center", textClasses[size])}>
-          Lead<span className="bg-gradient-to-r from-emerald-600 to-teal-500 bg-clip-text text-transparent">FlowX</span>
+          Lead<span className="bg-linear-to-r from-primary to-primary/70 bg-clip-text text-transparent">FlowX</span>
         </span>
       )}
     </div>
