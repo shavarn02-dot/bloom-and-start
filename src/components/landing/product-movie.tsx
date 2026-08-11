@@ -59,7 +59,7 @@ export function ProductMovie() {
 
   return (
     <section id="product-movie" className="bg-cream">
-      <div ref={ref} className="relative h-[320vh]">
+      <div ref={ref} className="relative h-[240vh]">
         <div className="sticky top-0 flex min-h-screen items-center">
           <div className="mx-auto grid w-full max-w-6xl gap-10 px-5 py-16 sm:px-8 lg:grid-cols-[minmax(0,0.72fr)_minmax(0,1.28fr)] lg:items-center lg:gap-14">
             <div>

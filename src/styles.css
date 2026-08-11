@@ -133,6 +133,15 @@
 html {
   color-scheme: only light;
   background-color: var(--background);
+  /* Anchor jumps must clear the fixed header. */
+  scroll-behavior: smooth;
+  scroll-padding-top: 5.5rem;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
 }
 
 /*

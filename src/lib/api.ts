@@ -132,7 +132,7 @@ export async function createCampaign(
   throw new Error("Unexpected response from campaign creation");
 }
 
-export async function runCampaign(campaignId: string): Promise<{ status: string; job_id: string }> {
+export async function runCampaign(campaignId: string): Promise<{ status: string; job_id: string; leads_found?: number }> {
   const resp = await authFetch(`${API_BASE}/api/campaigns/${campaignId}/run`, {
     method: "POST",
   });
