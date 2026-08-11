@@ -1,7 +1,9 @@
 import { useEffect, useState, type ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
-import islandOne from "@/assets/island-scene-01.jpg";
-import islandTwo from "@/assets/island-scene-02.jpg";
+import islandOneAsset from "@/assets/island-scene-01.jpg.asset.json";
+const islandOne = islandOneAsset.url;
+import islandTwoAsset from "@/assets/island-scene-02.jpg.asset.json";
+const islandTwo = islandTwoAsset.url;
 import { Wordmark } from "@/components/leadgen/wordmark";
 import { Annotation, HandArrow } from "@/components/leadgen/marks";
 

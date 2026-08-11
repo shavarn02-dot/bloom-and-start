@@ -1,5 +1,6 @@
 import { Link } from "@tanstack/react-router";
-import ctaFounder from "@/assets/cta-founder.jpg";
+import ctaFounderAsset from "@/assets/cta-founder.jpg.asset.json";
+const ctaFounder = ctaFounderAsset.url;
 import { Annotation, HandUnderline } from "@/components/leadgen/marks";
 import { Reveal } from "@/components/leadgen/reveal";
 

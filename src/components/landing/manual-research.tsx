@@ -1,4 +1,5 @@
-import manualResearch from "@/assets/manual-research.jpg";
+import manualResearchAsset from "@/assets/manual-research.jpg.asset.json";
+const manualResearch = manualResearchAsset.url;
 import { Annotation, HandUnderline } from "@/components/leadgen/marks";
 import { Reveal } from "@/components/leadgen/reveal";
 import { SketchArrow, SketchGlyph } from "@/components/leadgen/sketches";

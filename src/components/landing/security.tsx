@@ -1,4 +1,5 @@
-import securityDesk from "@/assets/security-desk.jpg";
+import securityDeskAsset from "@/assets/security-desk.jpg.asset.json";
+const securityDesk = securityDeskAsset.url;
 import { SectionLabel } from "@/components/leadgen/marks";
 import { Reveal } from "@/components/leadgen/reveal";
 
