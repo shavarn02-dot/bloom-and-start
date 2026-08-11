@@ -128,9 +128,9 @@ function Campaigns() {
                       <span
                         className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold uppercase tracking-wider ${
                           c.status === "completed"
-                            ? "bg-emerald-100 text-emerald-700"
+                            ? "bg-success text-success-foreground"
                             : c.status === "running" || c.status === "queued"
-                            ? "bg-amber-100 text-amber-700 animate-pulse"
+                            ? "bg-warning text-warning-foreground animate-pulse"
                             : "bg-secondary text-muted-foreground"
                         }`}
                       >
@@ -141,7 +141,7 @@ function Campaigns() {
                       <button
                         type="button"
                         onClick={() => handleDeleteCampaign(c.id)}
-                        className="text-red-600 hover:text-red-700 transition-all duration-200 hover:scale-110 p-1"
+                        className="text-destructive hover:text-destructive/80 transition-all duration-200 hover:scale-110 p-1"
                         title="Delete campaign"
                       >
                         <Trash2 className="size-4" />

@@ -30,7 +30,7 @@ export function LeadFlowXLogo({
       {/* Unique LeadFlowX Icon Mark */}
       <div
         className={cn(
-          "relative flex items-center justify-center rounded-xl bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-950 p-1.5 shadow-md border border-emerald-400/30 transition-transform duration-300 hover:scale-105",
+          "relative flex items-center justify-center rounded-xl bg-gradient-to-br from-primary via-primary to-foreground p-1.5 shadow-md border border-primary/30 transition-transform duration-300 hover:scale-105",
           sizeClasses[size]
         )}
       >
@@ -38,7 +38,7 @@ export function LeadFlowXLogo({
           viewBox="0 0 32 32"
           fill="none"
           xmlns="http://www.w3.org/2000/svg"
-          className="size-full text-white"
+          className="size-full text-primary-foreground"
         >
           <defs>
             <linearGradient id="lfx-grad-1" x1="0%" y1="0%" x2="100%" y2="100%">

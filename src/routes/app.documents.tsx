@@ -148,7 +148,7 @@ function Documents() {
                   <button
                     type="button"
                     onClick={() => handleDelete(doc.id)}
-                    className="text-red-600 hover:text-red-700 transition-colors p-1"
+                    className="text-destructive hover:text-destructive/80 transition-colors p-1"
                     title="Delete document"
                   >
                     <Trash2 className="size-4" />

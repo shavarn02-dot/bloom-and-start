@@ -120,7 +120,7 @@ function Settings() {
               )}
             </button>
             {isSaved && (
-              <span className="text-[13px] text-emerald-600 font-medium">Account settings updated successfully.</span>
+              <span className="text-[13px] text-primary font-medium">Account settings updated successfully.</span>
             )}
           </div>
         </form>
@@ -130,7 +130,7 @@ function Settings() {
         <div className="space-y-3 px-4 py-4">
           <div className="flex items-center justify-between">
             <p className="text-[14px] font-semibold text-foreground">Free Tier Plan</p>
-            <span className="inline-block rounded bg-emerald-100 px-2 py-0.5 text-[11px] font-bold tracking-wider text-emerald-800 uppercase">
+            <span className="inline-block rounded bg-success px-2 py-0.5 text-[11px] font-bold tracking-wider text-success-foreground uppercase">
               Active
             </span>
           </div>

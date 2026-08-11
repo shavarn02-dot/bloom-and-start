@@ -172,7 +172,7 @@ function NewCampaign() {
       </ol>
 
       {error && (
-        <div className="rounded-md border border-red-200 bg-red-50 p-4 text-[13.5px] text-red-800">
+        <div className="rounded-md border border-destructive/30 bg-destructive-soft p-4 text-[13.5px] text-destructive">
           {error}
         </div>
       )}
@@ -261,12 +261,12 @@ function NewCampaign() {
                       className={cn(
                         "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium border transition-colors",
                         active
-                          ? "border-emerald-600 bg-emerald-50 text-emerald-800"
+                          ? "border-primary bg-primary-soft text-primary"
                           : "border-border bg-paper text-muted-foreground hover:bg-cream"
                       )}
                     >
                       <span>{loc.name}</span>
-                      {active && <Check className="size-3 text-emerald-600" />}
+                      {active && <Check className="size-3 text-primary" />}
                     </button>
                   );
                 })}
@@ -300,12 +300,12 @@ function NewCampaign() {
                   className={cn(
                     "rounded-lg border p-3.5 text-left transition-colors",
                     searchMode === "database"
-                      ? "border-emerald-600 bg-emerald-50/60 ring-1 ring-emerald-600"
+                      ? "border-primary bg-primary-soft/60 ring-1 ring-primary"
                       : "border-border bg-paper hover:bg-cream/50"
                   )}
                 >
                   <div className="flex items-center gap-2 font-medium text-foreground text-[13.5px]">
-                    <Search className="size-4 text-emerald-600" />
+                    <Search className="size-4 text-primary" />
                     <span>Smart Search (Fast & Verified)</span>
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
@@ -319,12 +319,12 @@ function NewCampaign() {
                   className={cn(
                     "rounded-lg border p-3.5 text-left transition-colors",
                     searchMode === "live"
-                      ? "border-emerald-600 bg-emerald-50/60 ring-1 ring-emerald-600"
+                      ? "border-primary bg-primary-soft/60 ring-1 ring-primary"
                       : "border-border bg-paper hover:bg-cream/50"
                   )}
                 >
                   <div className="flex items-center gap-2 font-medium text-foreground text-[13.5px]">
-                    <Globe className="size-4 text-emerald-600" />
+                    <Globe className="size-4 text-primary" />
                     <span>Deep Search (Expanded Discovery)</span>
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
@@ -378,7 +378,7 @@ function NewCampaign() {
           <div className="p-6 space-y-6">
             <div className="flex items-center gap-3">
               {jobStatus?.status === "completed" ? (
-                <div className="flex size-10 items-center justify-center rounded-full bg-emerald-100 text-emerald-600">
+                <div className="flex size-10 items-center justify-center rounded-full bg-emerald-100 text-primary">
                   <Check className="size-5" />
                 </div>
               ) : (

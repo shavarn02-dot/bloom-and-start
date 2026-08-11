@@ -155,7 +155,7 @@ function AppLayout() {
             </div>
             <div className="min-w-0 flex-1">
               <p className="truncate text-[13px] font-semibold text-foreground">{userName}</p>
-              <span className="inline-block rounded bg-emerald-100 px-1.5 py-0.2 text-[10px] font-bold tracking-wider text-emerald-800 uppercase">
+              <span className="inline-block rounded bg-success px-1.5 py-0.2 text-[10px] font-bold tracking-wider text-success-foreground uppercase">
                 Free plan
               </span>
             </div>
@@ -164,7 +164,7 @@ function AppLayout() {
           <button
             type="button"
             onClick={handleLogout}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-md border border-sidebar-border/80 bg-background px-3 py-2 text-[12.5px] font-medium text-red-600 transition-all duration-200 hover:bg-red-50 hover:text-red-700 hover:-translate-y-0.5"
+            className="w-full inline-flex items-center justify-center gap-2 rounded-md border border-sidebar-border/80 bg-background px-3 py-2 text-[12.5px] font-medium text-destructive transition-all duration-200 hover:bg-destructive-soft hover:text-destructive hover:-translate-y-0.5"
           >
             <LogOut className="size-3.5" />
             <span>Log out</span>
