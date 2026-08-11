@@ -35,50 +35,50 @@ type Portrait = {
 
 const PORTRAITS: Portrait[] = [
   {
-    src: founder01,
+    src: founder01Asset.url,
     alt: "A business owner, photographed for illustration",
     thought: "This could really grow my business.",
     arrow: true,
     plate: "bg-primary-soft/50",
   },
   {
-    src: founder02,
+    src: founder02Asset.url,
     alt: "A business owner, photographed for illustration",
     thought: "What if I could finally reach the right customers?",
     plate: "bg-primary-soft/35",
   },
   {
-    src: founder03,
+    src: founder03Asset.url,
     alt: "A business owner, photographed for illustration",
     thought: "I could spend less time searching.",
     plate: "bg-primary-soft/40",
   },
   {
-    src: founder04,
+    src: founder04Asset.url,
     alt: "A business owner, photographed for illustration",
     thought: "More of the right people. Less wasted time.",
     plate: "bg-highlight/30",
   },
   {
-    src: founder05,
+    src: founder05Asset.url,
     alt: "A business owner, photographed for illustration",
     thought: "I don't need more contacts. I need the right ones.",
     plate: "bg-primary-soft/55",
   },
   {
-    src: founder06,
+    src: founder06Asset.url,
     alt: "A business owner, photographed for illustration",
     thought: "This could change how I find customers.",
     plate: "bg-primary-soft/35",
   },
   {
-    src: founder07,
+    src: founder07Asset.url,
     alt: "A business owner, photographed for illustration",
     thought: "Maybe finding new customers doesn't have to be this hard.",
     plate: "bg-primary-soft/45",
   },
   {
-    src: founder08,
+    src: founder08Asset.url,
     alt: "A business owner, photographed for illustration",
     thought: "I could finally focus on selling.",
     arrow: true,
