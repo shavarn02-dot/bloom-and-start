@@ -94,18 +94,13 @@ export function HeroPortraits() {
   const reduced = usePrefersReducedMotion();
   const [index, setIndex] = useState(0);
   const [previous, setPrevious] = useState<number | null>(null);
-  const [started, setStarted] = useState(false);
+  const [started, setStarted] = useState(true);
   const paused = useRef(false);
 
   // Initial staged reveal of the first portrait.
   useEffect(() => {
-    if (reduced) {
-      setStarted(true);
-      return;
-    }
-    const t = window.setTimeout(() => setStarted(true), FIRST_REVEAL_MS);
-    return () => window.clearTimeout(t);
-  }, [reduced]);
+    setStarted(true);
+  }, []);
 
   useEffect(() => {
     if (!started) return;
@@ -176,7 +171,6 @@ export function HeroPortraits() {
               i === index && started && "drop-shadow-[var(--shadow-contact)]",
               p.fit,
             )}
-            style={{ clipPath: "polygon(6% 0, 100% 3%, 94% 97%, 0 100%)" }}
           />
         ))}
       </div>
