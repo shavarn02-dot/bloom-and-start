@@ -608,6 +608,51 @@ export default {
         return json(env, request, []);
       }
 
+      // GET /api/leads/export — Export leads as CSV (HubSpot / Twenty CRM compatible format)
+      if (path === "/api/leads/export" && request.method === "GET") {
+        const userId = (await resolveUserId(request, env)) || DEFAULT_GUEST_UUID;
+        const campaignId = url.searchParams.get("campaign_id");
+
+        let dbPath = `leads?user_id=eq.${userId}&select=*&order=created_at.desc&limit=500`;
+        if (campaignId) {
+          dbPath = `leads?campaign_id=eq.${campaignId}&select=*&order=created_at.desc&limit=500`;
+        }
+
+        const response = await supabaseServiceRequest(env, dbPath);
+        let leads: any[] = [];
+        if (response.ok) {
+          leads = (await response.json()) as any[];
+        }
+
+        const csvHeaders = ["Company Name", "Contact Name", "Title", "Email", "Phone", "Website", "ICP Match Score", "Verification Status", "Source URL"];
+        const csvRows = [csvHeaders.join(",")];
+
+        for (const l of leads) {
+          const row = [
+            `"${(l.company_name || "").replace(/"/g, '""')}"`,
+            `"${(l.contact_name || "").replace(/"/g, '""')}"`,
+            `"${(l.title || "").replace(/"/g, '""')}"`,
+            `"${(l.email || "").replace(/"/g, '""')}"`,
+            `"${(l.phone || "").replace(/"/g, '""')}"`,
+            `"${(l.website || "").replace(/"/g, '""')}"`,
+            `"${l.confidence || 0}"`,
+            `"${(l.verification_status || "").replace(/"/g, '""')}"`,
+            `"${(l.source_url || "").replace(/"/g, '""')}"`,
+          ];
+          csvRows.push(row.join(","));
+        }
+
+        const csvText = csvRows.join("\n");
+        return new Response(csvText, {
+          status: 200,
+          headers: {
+            "content-type": "text/csv;charset=UTF-8",
+            "content-disposition": `attachment; filename="leadflowx_leads_export_${Date.now()}.csv"`,
+            ...corsHeaders(env, request),
+          },
+        });
+      }
+
       // GET /api/campaigns/:id/leads — Fetch leads for specific campaign
       const campLeadsMatch = matchRoute(path, "/api/campaigns/:id/leads");
       if (campLeadsMatch && request.method === "GET") {

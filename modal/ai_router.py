@@ -107,7 +107,68 @@ class ProviderUsage:
         } for p, d in self._data.items()}
 
 
-# Singleton usage tracker
+# ---------------------------------------------------------------------------
+# Circuit Breaker for Mode A (AI) vs Mode B (Algorithmic BANT Fallback)
+# ---------------------------------------------------------------------------
+
+class CircuitState(Enum):
+    CLOSED = "CLOSED"       # Normal Mode A (AI Enabled)
+    OPEN = "OPEN"           # Tripped Mode B (Algorithmic Fallback)
+    HALF_OPEN = "HALF_OPEN" # Canary testing after cooldown
+
+
+class CircuitBreaker:
+    def __init__(self, failure_threshold: float = 0.5, window_size: int = 20, latency_threshold_ms: int = 5000, cooldown_sec: int = 60):
+        self.state = CircuitState.CLOSED
+        self.failure_threshold = failure_threshold
+        self.window_size = window_size
+        self.latency_threshold_ms = latency_threshold_ms
+        self.cooldown_sec = cooldown_sec
+        self.window: list[bool] = []
+        self.latencies: list[int] = []
+        self.last_state_change: float = time.monotonic()
+
+    def record_result(self, success: bool, latency_ms: int = 0):
+        self.window.append(success)
+        if len(self.window) > self.window_size:
+            self.window.pop(0)
+
+        if latency_ms > 0:
+            self.latencies.append(latency_ms)
+            if len(self.latencies) > self.window_size:
+                self.latencies.pop(0)
+
+        self._evaluate()
+
+    def _evaluate(self):
+        now = time.monotonic()
+        if self.state == CircuitState.OPEN:
+            if now - self.last_state_change >= self.cooldown_sec:
+                self.state = CircuitState.HALF_OPEN
+                self.last_state_change = now
+                logger.info("Circuit Breaker transitioned to HALF_OPEN (Canary testing)")
+            return
+
+        if len(self.window) >= 5:
+            failures = self.window.count(False)
+            fail_rate = failures / len(self.window)
+            avg_latency = (sum(self.latencies) / len(self.latencies)) if self.latencies else 0
+
+            if fail_rate >= self.failure_threshold or avg_latency >= self.latency_threshold_ms:
+                if self.state != CircuitState.OPEN:
+                    self.state = CircuitState.OPEN
+                    self.last_state_change = now
+                    logger.warning(f"Circuit Breaker TRIPPED to OPEN (Mode B Fallback). Fail rate: {fail_rate:.0%}, Avg Latency: {avg_latency:.0f}ms")
+
+        if self.state == CircuitState.HALF_OPEN:
+            if self.window and self.window[-1]:
+                self.state = CircuitState.CLOSED
+                self.last_state_change = now
+                logger.info("Circuit Breaker reset to CLOSED (Mode A Restored)")
+
+
+# Singleton Circuit Breaker
+circuit_breaker = CircuitBreaker()
 _usage = ProviderUsage()
 
 
@@ -317,6 +378,11 @@ async def call_ai(
     Returns the AI response text.
     Raises AllProvidersExhaustedError if every provider fails.
     """
+    # Check Circuit Breaker
+    if circuit_breaker.state == CircuitState.OPEN:
+        logger.warning("Circuit Breaker is OPEN — skipping AI and forcing Mode B Fallback")
+        raise AllProvidersExhaustedError("Circuit Breaker OPEN — Mode B Algorithmic Fallback active")
+
     providers = TASK_PRIORITY.get(task, TASK_PRIORITY[TaskType.GENERAL])
     last_error: Optional[Exception] = None
 
@@ -339,23 +405,27 @@ async def call_ai(
                 latency = int((time.monotonic() - start) * 1000)
 
                 _usage.record_success(provider_name, tokens, latency)
+                circuit_breaker.record_result(True, latency)
                 logger.info(f"✅ {provider_name} responded in {latency}ms ({tokens} tokens)")
                 return content
 
             except RateLimitError as e:
                 _usage.record_error(provider_name, str(e))
+                circuit_breaker.record_result(False)
                 logger.warning(f"⚠️ {provider_name} rate limited: {e}")
                 last_error = e
                 break  # skip to next provider
 
             except Exception as e:
                 _usage.record_error(provider_name, str(e))
+                circuit_breaker.record_result(False)
                 logger.warning(f"⚠️ {provider_name} error (attempt {attempt + 1}): {e}")
                 last_error = e
                 if attempt < max_retries:
                     await asyncio.sleep(1 * (attempt + 1))  # backoff
                 continue
 
+    circuit_breaker.record_result(False)
     raise AllProvidersExhaustedError(
         f"All AI providers exhausted. Last error: {last_error}"
     )

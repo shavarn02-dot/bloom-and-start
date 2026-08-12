@@ -202,19 +202,75 @@ def is_free_provider(domain: str) -> bool:
 
 
 # ---------------------------------------------------------------------------
-# Catch-all detection (basic heuristic)
+# Direct SMTP Handshake & Catch-All Detection
 # ---------------------------------------------------------------------------
 
-async def is_catch_all(domain: str) -> Optional[bool]:
+async def verify_email_smtp(email: str, mx_host: str, timeout: int = 5) -> tuple[bool, str]:
     """
-    Basic catch-all detection by checking if a random email is accepted.
-    Returns True (catch-all), False (not catch-all), or None (couldn't determine).
+    Perform direct SMTP handshake:
+    EHLO -> MAIL FROM -> RCPT TO -> QUIT
+    Returns (is_deliverable, response_message)
+    """
+    if not mx_host or not email:
+        return False, "No MX host"
 
-    NOTE: This does a real SMTP connection. Use sparingly to avoid IP blacklisting.
-    For MVP, we skip this and return None.
+    try:
+        reader, writer = await asyncio.wait_for(
+            asyncio.open_connection(mx_host, 25), timeout=timeout
+        )
+
+        # Read banner
+        banner = await asyncio.wait_for(reader.readline(), timeout=timeout)
+        if not banner.startswith(b"220"):
+            writer.close()
+            await writer.wait_closed()
+            return False, f"Invalid banner: {banner.decode('utf-8', 'ignore').strip()}"
+
+        # Send EHLO
+        writer.write(b"EHLO mail.leadflowx.com\r\n")
+        await writer.drain()
+        ehlo_resp = await asyncio.wait_for(reader.read(1024), timeout=timeout)
+
+        # Send MAIL FROM
+        writer.write(b"MAIL FROM: <verify@leadflowx.com>\r\n")
+        await writer.drain()
+        mail_resp = await asyncio.wait_for(reader.readline(), timeout=timeout)
+
+        # Send RCPT TO
+        writer.write(f"RCPT TO: <{email}>\r\n".encode("utf-8"))
+        await writer.drain()
+        rcpt_resp = await asyncio.wait_for(reader.readline(), timeout=timeout)
+
+        rcpt_str = rcpt_resp.decode("utf-8", "ignore").strip()
+        is_ok = rcpt_str.startswith("250") or rcpt_str.startswith("251")
+
+        # QUIT
+        writer.write(b"QUIT\r\n")
+        await writer.drain()
+        writer.close()
+        await writer.wait_closed()
+
+        return is_ok, rcpt_str
+    except Exception as e:
+        return False, f"SMTP handshake error: {e}"
+
+
+async def is_catch_all(domain: str, mx_host: str = "") -> Optional[bool]:
     """
-    # For MVP, skip SMTP-based catch-all detection
-    return None
+    Catch-all detection by probing a random nonexistent email address on domain.
+    Returns True if catch-all, False if strict, or None if probe failed.
+    """
+    if not domain:
+        return None
+    if not mx_host:
+        mx_valid, mx_hosts = await verify_mx(domain)
+        if not mx_valid or not mx_hosts:
+            return None
+        mx_host = mx_hosts[0]
+
+    probe_email = f"probe_test_{hashlib.md5(domain.encode()).hexdigest()[:8]}@{domain}"
+    is_ok, _ = await verify_email_smtp(probe_email, mx_host, timeout=4)
+    return is_ok
 
 
 # ---------------------------------------------------------------------------
@@ -223,20 +279,7 @@ async def is_catch_all(domain: str) -> Optional[bool]:
 
 async def verify_email(email: str) -> dict:
     """
-    Verify a single email address.
-
-    Returns dict with:
-      - email: str
-      - domain: str
-      - syntax_valid: bool
-      - mx_valid: bool
-      - mx_records: list[str]
-      - is_disposable: bool
-      - is_role: bool
-      - is_free: bool
-      - is_catch_all: bool | None
-      - quality_score: int (0-100)
-      - status: 'valid' | 'invalid' | 'risky' | 'unknown'
+    Verify a single email address using 4-step pipeline.
     """
     email = email.strip().lower()
     domain = email.split("@")[-1] if "@" in email else ""
@@ -251,6 +294,7 @@ async def verify_email(email: str) -> dict:
         "is_role": False,
         "is_free": False,
         "is_catch_all": None,
+        "smtp_verified": False,
         "quality_score": 0,
         "status": "invalid",
     }
@@ -280,24 +324,35 @@ async def verify_email(email: str) -> dict:
         result["quality_score"] = 10
         return result
 
-    # Step 4: Calculate quality score
-    score = 50  # Base: syntax valid + MX valid
+    # Step 4: Direct SMTP & Catch-all Check (if non-free business domain)
+    score = 50
+    if not result["is_free"] and mx_records:
+        catch_all = await is_catch_all(domain, mx_records[0])
+        result["is_catch_all"] = catch_all
+
+        if catch_all is False:
+            score += 15
+            # Real SMTP Handshake
+            is_ok, _ = await verify_email_smtp(email, mx_records[0], timeout=4)
+            result["smtp_verified"] = is_ok
+            if is_ok:
+                score += 25
+        elif catch_all is True:
+            result["smtp_verified"] = False
+            score += 5
 
     if not result["is_free"]:
-        score += 20  # Business email is higher quality
+        score += 10
     if not result["is_role"]:
-        score += 15  # Personal email is higher quality
+        score += 10
     if len(mx_records) > 1:
-        score += 5   # Multiple MX records = well-configured domain
-    if any(mx for mx in mx_records if "google" in mx.lower() or "outlook" in mx.lower()):
-        score += 10  # Major email provider = legit domain
+        score += 5
 
     result["quality_score"] = min(score, 100)
 
-    # Step 5: Determine status
-    if score >= 70:
+    if score >= 75:
         result["status"] = "valid"
-    elif score >= 40:
+    elif score >= 45:
         result["status"] = "risky"
     else:
         result["status"] = "unknown"

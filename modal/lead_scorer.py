@@ -321,6 +321,52 @@ def deduplicate_leads(leads: list[ScoredLead]) -> list[ScoredLead]:
 # Main scoring function
 # ---------------------------------------------------------------------------
 
+def compute_bant_score(lead: LeadData, icp: ICPProfile) -> float:
+    """
+    Algorithmic BANT Scoring Formula (Mode B Fallback):
+    Score = 0.35 * I(Title) + 0.25 * I(Employees) + 0.25 * I(TechStack) + 0.15 * I(Location)
+    where I(x) in [0.0, 1.0] binary or tiered match score.
+    Returns float score between 0.0 and 100.0.
+    """
+    # 1. I(Title) — 0.35 weight
+    i_title = 0.0
+    if lead.title:
+        t = lead.title.lower()
+        if any(w in t for w in ["ceo", "cto", "cfo", "coo", "founder", "owner", "president"]):
+            i_title = 1.0
+        elif any(w in t for w in ["vp", "director", "head of"]):
+            i_title = 0.8
+        elif any(w in t for w in ["manager", "lead", "senior"]):
+            i_title = 0.5
+        else:
+            i_title = 0.3
+
+    # 2. I(Employees / Size) — 0.25 weight
+    i_size = 0.0
+    if lead.company_size:
+        i_size = 0.8
+        if icp.target_company_sizes:
+            if any(s.lower() in lead.company_size.lower() for s in icp.target_company_sizes):
+                i_size = 1.0
+
+    # 3. I(TechStack / Industry) — 0.25 weight
+    i_tech = 0.0
+    if lead.company_industry:
+        i_tech = 0.7
+        if icp.target_industry and icp.target_industry.lower() in lead.company_industry.lower():
+            i_tech = 1.0
+
+    # 4. I(Location) — 0.15 weight
+    i_loc = 0.0
+    if lead.company_location:
+        i_loc = 0.7
+        if icp.target_location and icp.target_location.lower() in lead.company_location.lower():
+            i_loc = 1.0
+
+    bant_val = (0.35 * i_title) + (0.25 * i_size) + (0.25 * i_tech) + (0.15 * i_loc)
+    return round(bant_val * 100, 2)
+
+
 def score_lead(lead: LeadData, icp: ICPProfile) -> ScoredLead:
     """
     Score a single lead against the ICP.
@@ -332,6 +378,7 @@ def score_lead(lead: LeadData, icp: ICPProfile) -> ScoredLead:
     completeness_score, completeness_breakdown = _score_completeness(lead)
 
     total = company_score + contact_score + email_score + completeness_score
+    bant_score = compute_bant_score(lead, icp)
 
     return ScoredLead(
         lead=lead,
@@ -345,6 +392,7 @@ def score_lead(lead: LeadData, icp: ICPProfile) -> ScoredLead:
             "contact": contact_breakdown,
             "email": email_breakdown,
             "completeness": completeness_breakdown,
+            "bant_score": bant_score,
         },
         dedup_key=compute_dedup_key(lead),
     )
