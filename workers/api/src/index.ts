@@ -562,15 +562,21 @@ export default {
 
         if (env.MODAL_WEBHOOK_URL) {
           try {
-            fetch(env.MODAL_WEBHOOK_URL, {
-              method: "POST",
-              headers: { "content-type": "application/json" },
-              body: JSON.stringify({
-                action: "run_pipeline",
-                campaign_id: campaignId,
-                job_id: jobId,
-              }),
-            }).catch((err) => console.warn("Modal trigger async warning:", err));
+            console.log(`[MODAL TRIGGER] Invoking ${env.MODAL_WEBHOOK_URL} for campaign=${campaignId}, job=${jobId}`);
+            ctx.waitUntil(
+              fetch(env.MODAL_WEBHOOK_URL, {
+                method: "POST",
+                headers: { "content-type": "application/json" },
+                body: JSON.stringify({
+                  action: "run_pipeline",
+                  campaign_id: campaignId,
+                  job_id: jobId,
+                }),
+              })
+                .then((r) => r.text())
+                .then((txt) => console.log(`[MODAL TRIGGER SUCCESS] ${txt}`))
+                .catch((err) => console.warn("Modal trigger async warning:", err))
+            );
           } catch (err) {
             console.warn("Modal trigger error:", err);
           }
