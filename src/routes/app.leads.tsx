@@ -78,7 +78,22 @@ function Leads() {
 
           const rawConf = Number(l.confidence || 85);
           const matchVal = Math.min(100, Math.round(rawConf > 100 ? rawConf / 100 : rawConf));
-          const compName = l.company_name || l.canonical_name || "Target Business";
+          
+          // Clean listicle page titles into neat company names
+          let rawComp = l.company_name || l.canonical_name || "";
+          if (/^(top|best|\d+|saas startups|companies in)\b/i.test(rawComp) || rawComp.includes(" | ") || rawComp.includes(" - ")) {
+            const parts = rawComp.split(/ \| | – | - /);
+            for (let i = parts.length - 1; i >= 0; i--) {
+              const part = parts[i].trim();
+              if (part && !/^(top|best|\d+|ecosystem|funding|opportunities|home|official|guide|list)\b/i.test(part) && part.length < 45) {
+                rawComp = part;
+                break;
+              }
+            }
+          }
+          if (rawComp.toLowerCase().includes("startups india")) rawComp = "Startups India";
+          if (rawComp.length > 50) rawComp = rawComp.slice(0, 48) + "...";
+          const compName = rawComp || "Target Business";
           
           // Truthful location formatting
           let locStr = "India";
@@ -96,7 +111,7 @@ function Leads() {
           let first = "Unknown";
           let last = "";
 
-          if (rawContact && !["team", "unknown", "executive", "decision maker"].includes(rawContact.toLowerCase().trim())) {
+          if (rawContact && !["team", "unknown", "executive", "decision maker", "core team", "our core values"].includes(rawContact.toLowerCase().trim())) {
             const parts = rawContact.trim().split(" ");
             first = parts[0];
             last = parts.slice(1).join(" ") || "";
