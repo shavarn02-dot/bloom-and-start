@@ -3,7 +3,17 @@ import { useState, useEffect } from "react";
 import { Check, Building2, Plus, Sparkles, Search, Globe } from "lucide-react";
 import { PageHeader, Panel } from "@/components/dashboard/primitives";
 import { FormSkeleton } from "@/components/dashboard/skeletons";
-import { createCampaign, runCampaign, getJobStatus, getProfiles, ScrapeJob, API_BASE, type BusinessProfile } from "@/lib/api";
+import {
+  createCampaign,
+  runCampaign,
+  getJobStatus,
+  getProfiles,
+  getSearchQuota,
+  ScrapeJob,
+  API_BASE,
+  type BusinessProfile,
+  type SearchQuota,
+} from "@/lib/api";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/app/campaigns/new")({
@@ -38,7 +48,8 @@ function NewCampaign() {
   // Form State
   const [name, setName] = useState("Marketing Agencies in Mumbai");
   const [query, setQuery] = useState("Digital Marketing Agencies in Mumbai email contact");
-  const [limit, setLimit] = useState(25);
+  const [limit, setLimit] = useState(5);
+  const [quota, setQuota] = useState<SearchQuota | null>(null);
   const [selectedLocations, setSelectedLocations] = useState<string[]>(["IN", "US"]);
   const [searchMode, setSearchMode] = useState<"database" | "live">("database");
 
@@ -49,8 +60,15 @@ function NewCampaign() {
   const [jobStatus, setJobStatus] = useState<ScrapeJob | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // Fetch profiles on mount
+  // Fetch profiles and current plan quota on mount
   useEffect(() => {
+    getSearchQuota()
+      .then((currentQuota) => {
+        setQuota(currentQuota);
+        setLimit(currentQuota.leads_per_search_limit);
+      })
+      .catch((err) => console.warn("Failed to load search quota:", err));
+
     async function fetchProfiles() {
       try {
         const data = await getProfiles();
@@ -63,7 +81,9 @@ function NewCampaign() {
               setName(`${first.name} Lead Discovery`);
             }
             if (first.target_customer || first.description) {
-              setQuery(`${first.name} ${first.target_customer || first.description} email contact`.trim());
+              setQuery(
+                `${first.name} ${first.target_customer || first.description} email contact`.trim(),
+              );
             }
           }
         }
@@ -81,7 +101,9 @@ function NewCampaign() {
     const prof = profiles.find((p) => p.id === profileId);
     if (prof) {
       setName(`${prof.name} Prospect Search`);
-      setQuery(`${prof.name} ${prof.target_customer || prof.description || ''} email contact`.trim());
+      setQuery(
+        `${prof.name} ${prof.target_customer || prof.description || ""} email contact`.trim(),
+      );
     }
   };
 
@@ -105,6 +127,11 @@ function NewCampaign() {
   }, [jobId, step]);
 
   const handleLaunch = async () => {
+    if (quota && quota.searches_remaining <= 0) {
+      setError(`You have used all ${quota.searches_limit} ${quota.plan} searches for this month.`);
+      return;
+    }
+
     setIsSubmitting(true);
     setError(null);
     try {
@@ -114,7 +141,7 @@ function NewCampaign() {
         limit,
         selectedProfileId || undefined,
         selectedLocations,
-        searchMode === "database" ? "smart" : "deep"
+        searchMode === "database" ? "smart" : "deep",
       );
       setCampaignId(campaign.id);
 
@@ -127,9 +154,9 @@ function NewCampaign() {
           campaign_id: campaign.id,
           status: "completed",
           progress: 100,
-          total_leads_extracted: result.leads_found || 25,
-          total_urls_scraped: result.leads_found || 25,
-          total_emails_verified: result.leads_found || 25,
+          total_leads_extracted: result.leads_found || limit,
+          total_urls_scraped: result.leads_found || limit,
+          total_emails_verified: result.leads_found || 0,
         } as any);
       }
 
@@ -201,7 +228,8 @@ function NewCampaign() {
                     ))}
                   </select>
                   <p className="text-[12px] text-muted-foreground">
-                    Selected profile provides business context & ICP scoring parameters to the scraping engine.
+                    Selected profile provides business context & ICP scoring parameters to the
+                    scraping engine.
                   </p>
                 </div>
               ) : (
@@ -232,9 +260,12 @@ function NewCampaign() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-medium text-foreground">Target Country / Location Routing</label>
+              <label className="block text-[13px] font-medium text-foreground">
+                Target Country / Location Routing
+              </label>
               <p className="text-[12px] text-muted-foreground mb-2">
-                Select target jurisdictions. Source router dispatches queries to national registries & dataset adapters.
+                Select target jurisdictions. Source router dispatches queries to national registries
+                & dataset adapters.
               </p>
               <div className="flex flex-wrap gap-2 pt-1">
                 {[
@@ -255,14 +286,14 @@ function NewCampaign() {
                       type="button"
                       onClick={() => {
                         setSelectedLocations((prev) =>
-                          active ? prev.filter((c) => c !== loc.code) : [...prev, loc.code]
+                          active ? prev.filter((c) => c !== loc.code) : [...prev, loc.code],
                         );
                       }}
                       className={cn(
                         "inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium border transition-colors",
                         active
                           ? "border-primary bg-primary-soft text-primary"
-                          : "border-border bg-paper text-muted-foreground hover:bg-cream"
+                          : "border-border bg-paper text-muted-foreground hover:bg-cream",
                       )}
                     >
                       <span>{loc.name}</span>
@@ -274,16 +305,27 @@ function NewCampaign() {
             </div>
 
             <div>
-              <label className="block text-[13px] font-medium text-foreground">Leads Cap (Free Tier Max 50)</label>
+              <label className="block text-[13px] font-medium text-foreground">
+                Leads per search ({quota?.plan === "premium" ? "Premium max 50" : "Free max 5"})
+              </label>
               <input
                 type="number"
                 min={1}
-                max={50}
-                value={limit}
-                onChange={(e) => setLimit(Number(e.target.value))}
+                max={quota?.leads_per_search_limit || 5}
+                value={Math.min(limit, quota?.leads_per_search_limit || 5)}
+                onChange={(e) =>
+                  setLimit(Math.min(Number(e.target.value), quota?.leads_per_search_limit || 5))
+                }
                 className="mt-1.5 w-32 rounded-md border border-border bg-paper px-3 py-2 text-[13.5px] outline-none focus-ring-animate transition-colors duration-200 hover:border-border-strong"
               />
             </div>
+            {quota && (
+              <div className="rounded-md border border-border bg-muted/30 px-3 py-2 text-[12.5px] text-muted-foreground">
+                {quota.plan === "premium" ? "Premium" : "Free"} plan: {quota.searches_remaining} of{" "}
+                {quota.searches_limit} searches remaining this month, up to{" "}
+                {quota.leads_per_search_limit} unique leads per search.
+              </div>
+            )}
           </div>
         </Panel>
       )}
@@ -292,7 +334,9 @@ function NewCampaign() {
         <Panel title="Step 2: Target Search Query & Search Strategy">
           <div className="space-y-5 p-5">
             <div>
-              <label className="block text-[13px] font-medium text-foreground">Search Strategy Mode</label>
+              <label className="block text-[13px] font-medium text-foreground">
+                Search Strategy Mode
+              </label>
               <div className="grid gap-3 sm:grid-cols-2 mt-1.5">
                 <button
                   type="button"
@@ -301,7 +345,7 @@ function NewCampaign() {
                     "rounded-lg border p-3.5 text-left transition-colors",
                     searchMode === "database"
                       ? "border-primary bg-primary-soft/60 ring-1 ring-primary"
-                      : "border-border bg-paper hover:bg-cream/50"
+                      : "border-border bg-paper hover:bg-cream/50",
                   )}
                 >
                   <div className="flex items-center gap-2 font-medium text-foreground text-[13.5px]">
@@ -309,7 +353,8 @@ function NewCampaign() {
                     <span>Smart Search (Fast & Verified)</span>
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Find relevant companies and decision-makers from LeadFlowX's continuously refreshed business intelligence.
+                    Find relevant companies and decision-makers from LeadFlowX's continuously
+                    refreshed business intelligence.
                   </p>
                 </button>
 
@@ -320,7 +365,7 @@ function NewCampaign() {
                     "rounded-lg border p-3.5 text-left transition-colors",
                     searchMode === "live"
                       ? "border-primary bg-primary-soft/60 ring-1 ring-primary"
-                      : "border-border bg-paper hover:bg-cream/50"
+                      : "border-border bg-paper hover:bg-cream/50",
                   )}
                 >
                   <div className="flex items-center gap-2 font-medium text-foreground text-[13.5px]">
@@ -328,14 +373,17 @@ function NewCampaign() {
                     <span>Deep Search (Expanded Discovery)</span>
                   </div>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Expand beyond existing data to discover additional relevant companies and decision-makers.
+                    Expand beyond existing data to discover additional relevant companies and
+                    decision-makers.
                   </p>
                 </button>
               </div>
             </div>
 
             <div>
-              <label className="block text-[13px] font-medium text-foreground">Search Query / Prompt</label>
+              <label className="block text-[13px] font-medium text-foreground">
+                Search Query / Prompt
+              </label>
               <p className="text-[12px] text-muted-foreground mb-2">
                 Specify roles, industries, or keywords (e.g. CTOs, Founders, Software).
               </p>
@@ -355,12 +403,20 @@ function NewCampaign() {
         <Panel title="Step 3: Confirm & Launch">
           <dl className="divide-y divide-border">
             {[
-              ["Business Profile", profiles.find((p) => p.id === selectedProfileId)?.name || "Default Profile"],
+              [
+                "Business Profile",
+                profiles.find((p) => p.id === selectedProfileId)?.name || "Default Profile",
+              ],
               ["Campaign Name", name],
               ["Search Query", query],
               ["Target Cap", `${limit} leads`],
               ["Target Locations", selectedLocations.join(", ")],
-              ["Lead Discovery", searchMode === "database" ? "Smart Search (Database-First)" : "Deep Search (Expanded Discovery)"],
+              [
+                "Lead Discovery",
+                searchMode === "database"
+                  ? "Smart Search (Database-First)"
+                  : "Deep Search (Expanded Discovery)",
+              ],
               ["Contact Verification", "Real-Time Email Check"],
               ["Matching Engine", "ICP Quality Scoring"],
             ].map(([k, v]) => (
@@ -391,8 +447,8 @@ function NewCampaign() {
                   {jobStatus?.status === "completed"
                     ? "Scraping Completed Successfully!"
                     : jobStatus?.status === "failed"
-                    ? "Scraping Execution Failed"
-                    : "AI Web Search Engine Running..."}
+                      ? "Scraping Execution Failed"
+                      : "AI Web Search Engine Running..."}
                 </h4>
                 <p className="text-[13px] text-muted-foreground">
                   {jobStatus?.status === "completed"
@@ -419,7 +475,9 @@ function NewCampaign() {
               <div className="pt-2">
                 <button
                   type="button"
-                  onClick={() => navigate({ to: "/app/leads", search: { campaign: campaignId || "" } })}
+                  onClick={() =>
+                    navigate({ to: "/app/leads", search: { campaign: campaignId || "" } })
+                  }
                   className="inline-flex h-9 items-center gap-1.5 rounded-md bg-primary px-4 text-[13.5px] font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
                 >
                   View Extracted Leads →

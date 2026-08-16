@@ -11,7 +11,8 @@ function corsHeaders(env: Env, request: Request): HeadersInit {
   return {
     "access-control-allow-origin": origin,
     "access-control-allow-methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
-    "access-control-allow-headers": "content-type, authorization, x-api-key, x-user-id, x-user-email, x-client-info, apikey",
+    "access-control-allow-headers":
+      "content-type, authorization, x-api-key, x-user-id, x-user-email, x-client-info, apikey",
     "access-control-allow-credentials": "true",
   };
 }
@@ -64,6 +65,26 @@ function supabaseServiceRequest(env: Env, path: string, init: RequestInit = {}) 
 }
 
 const DEFAULT_GUEST_UUID = "682713e9-1dd8-4cce-92f4-ce32b5fda68c";
+
+async function sha256Hex(value: string): Promise<string> {
+  const bytes = new TextEncoder().encode(value);
+  const digest = await crypto.subtle.digest("SHA-256", bytes);
+  return Array.from(new Uint8Array(digest), (byte) => byte.toString(16).padStart(2, "0")).join("");
+}
+
+function leadFingerprintInput(company: any, contact: any): string {
+  const companyKey = String(
+    company?.id || company?.domain || company?.canonical_name || company?.legal_name || "",
+  )
+    .trim()
+    .toLowerCase();
+  const contactKey = String(
+    contact?.id || contact?.email || contact?.contact_name || contact?.full_name || "",
+  )
+    .trim()
+    .toLowerCase();
+  return `${companyKey}|${contactKey}`;
+}
 
 /** Extract user ID from Supabase JWT (robust Base64URL decode with padding). */
 function extractUserIdFromJWT(authHeader: string | null): string | null {
@@ -134,7 +155,10 @@ function extractSearchKeywords(queryStr: string): string[] {
   const cleaned = queryStr
     .toLowerCase()
     .replace(/[^\w\s]/gi, " ")
-    .replace(/\b(companies|company|leads|contact|email|emails|for|the|and|or|in|of|to|with|from|top|best|list|guide|2025|2026)\b/gi, " ");
+    .replace(
+      /\b(companies|company|leads|contact|email|emails|for|the|and|or|in|of|to|with|from|top|best|list|guide|2025|2026)\b/gi,
+      " ",
+    );
 
   const tokens = cleaned
     .split(/\s+/)
@@ -150,7 +174,12 @@ function isListicleOrArticle(name: string): boolean {
   const lower = name.toLowerCase();
   if (/^(top|best|\d+)\b/i.test(lower)) return true;
   if (/list of|companies in europe|guide 202|reviews \|/i.test(lower)) return true;
-  if (lower.includes("email list") || lower.includes("verified contacts") || lower.includes("how to find")) return true;
+  if (
+    lower.includes("email list") ||
+    lower.includes("verified contacts") ||
+    lower.includes("how to find")
+  )
+    return true;
   return false;
 }
 
@@ -160,7 +189,13 @@ function computeICPScore(company: any, contact: any, queryTokens: string[]): num
 
   if (company.domain) score += 15;
 
-  if (contact && (contact.contact_name || contact.full_name) && !["unknown", "team", "executive"].includes(String(contact.contact_name || contact.full_name).toLowerCase())) {
+  if (
+    contact &&
+    (contact.contact_name || contact.full_name) &&
+    !["unknown", "team", "executive"].includes(
+      String(contact.contact_name || contact.full_name).toLowerCase(),
+    )
+  ) {
     score += 15;
   }
 
@@ -171,7 +206,8 @@ function computeICPScore(company: any, contact: any, queryTokens: string[]): num
     }
   }
 
-  const haystack = `${company.canonical_name || ''} ${company.industry || ''} ${company.domain || ''}`.toLowerCase();
+  const haystack =
+    `${company.canonical_name || ""} ${company.industry || ""} ${company.domain || ""}`.toLowerCase();
   let kwMatches = 0;
   for (const tok of queryTokens) {
     if (haystack.includes(tok)) kwMatches++;
@@ -207,8 +243,14 @@ export default {
 
       // GET /api/sources — List active source registry items
       if (path === "/api/sources" && request.method === "GET") {
-        const response = await supabaseServiceRequest(env, "source_registry?select=*&order=priority.asc");
-        return new Response(response.body, { status: response.status, headers: corsHeaders(env, request) });
+        const response = await supabaseServiceRequest(
+          env,
+          "source_registry?select=*&order=priority.asc",
+        );
+        return new Response(response.body, {
+          status: response.status,
+          headers: corsHeaders(env, request),
+        });
       }
 
       // GET /api/locations — List supported target countries for location routing
@@ -235,7 +277,7 @@ export default {
         }
         const response = await supabaseServiceRequest(
           env,
-          `business_profiles?select=*&user_id=eq.${userId}&order=created_at.desc`
+          `business_profiles?select=*&user_id=eq.${userId}&order=created_at.desc`,
         );
         if (response.ok) {
           const profiles = (await response.json()) as any[];
@@ -265,10 +307,12 @@ export default {
           dbQueryPath += `&country_code=in.(${inClause})`;
         }
         if (queryTokens.length > 0) {
-          const ilikeOrs = queryTokens.map((tok) => {
-            const kw = encodeURIComponent(`*${tok}*`);
-            return `canonical_name.ilike.${kw},normalized_name.ilike.${kw},domain.ilike.${kw},industry.ilike.${kw}`;
-          }).join(",");
+          const ilikeOrs = queryTokens
+            .map((tok) => {
+              const kw = encodeURIComponent(`*${tok}*`);
+              return `canonical_name.ilike.${kw},normalized_name.ilike.${kw},domain.ilike.${kw},industry.ilike.${kw}`;
+            })
+            .join(",");
           dbQueryPath += `&or=(${ilikeOrs})`;
         }
 
@@ -290,7 +334,11 @@ export default {
               event_type: "DB_SEARCH",
               units: 1,
               estimated_cost: 0.0,
-              metadata: { query: queryStr, locations: body.locations, results_found: companies.length },
+              metadata: {
+                query: queryStr,
+                locations: body.locations,
+                results_found: companies.length,
+              },
             }),
           });
         } catch (err) {
@@ -305,19 +353,48 @@ export default {
         });
       }
 
+      // GET /api/quota — Current monthly search allowance
+      if (path === "/api/quota" && request.method === "GET") {
+        const userId = await resolveUserId(request, env);
+        if (!userId || userId === DEFAULT_GUEST_UUID) {
+          return json(env, request, { status: "error", message: "Authentication required" }, 401);
+        }
+        const response = await supabaseServiceRequest(env, "rpc/get_lead_search_quota", {
+          method: "POST",
+          body: JSON.stringify({ p_user_id: userId }),
+        });
+        if (!response.ok) {
+          return json(env, request, { status: "error", message: "Unable to load quota" }, 502);
+        }
+        const quota = await response.json();
+        return json(env, request, quota);
+      }
+
       // GET /api/usage — Metering & usage event log
       if (path === "/api/usage" && request.method === "GET") {
         const userId = await resolveUserId(request, env);
-        const response = await supabaseServiceRequest(env, `usage_events?user_id=eq.${userId}&select=*&order=created_at.desc&limit=100`);
-        return new Response(response.body, { status: response.status, headers: corsHeaders(env, request) });
+        const response = await supabaseServiceRequest(
+          env,
+          `usage_events?user_id=eq.${userId}&select=*&order=created_at.desc&limit=100`,
+        );
+        return new Response(response.body, {
+          status: response.status,
+          headers: corsHeaders(env, request),
+        });
       }
 
       // GET /api/leads/:id/evidence — Provenance evidence records for lead
       const evidenceMatch = matchRoute(path, "/api/leads/:id/evidence");
       if (evidenceMatch && request.method === "GET") {
         const leadId = evidenceMatch.id;
-        const response = await supabaseServiceRequest(env, `company_sources?company_id=eq.${leadId}&select=*,source_registry(*)`);
-        return new Response(response.body, { status: response.status, headers: corsHeaders(env, request) });
+        const response = await supabaseServiceRequest(
+          env,
+          `company_sources?company_id=eq.${leadId}&select=*,source_registry(*)`,
+        );
+        return new Response(response.body, {
+          status: response.status,
+          headers: corsHeaders(env, request),
+        });
       }
 
       // POST /api/leads/:id/enrich — Trigger lead enrichment
@@ -327,7 +404,12 @@ export default {
         const leadId = enrichMatch.id;
 
         if (!env.MODAL_WEBHOOK_URL) {
-          return json(env, request, { status: "error", message: "MODAL_WEBHOOK_URL not configured" }, 500);
+          return json(
+            env,
+            request,
+            { status: "error", message: "MODAL_WEBHOOK_URL not configured" },
+            500,
+          );
         }
 
         try {
@@ -348,9 +430,12 @@ export default {
         const userId = await resolveUserId(request, env);
         const response = await supabaseServiceRequest(
           env,
-          `lead_campaigns?select=*&user_id=eq.${userId}&order=created_at.desc`
+          `lead_campaigns?select=*&user_id=eq.${userId}&order=created_at.desc`,
         );
-        return new Response(response.body, { status: response.status, headers: corsHeaders(env, request) });
+        return new Response(response.body, {
+          status: response.status,
+          headers: corsHeaders(env, request),
+        });
       }
 
       // POST /api/campaigns — Create new campaign
@@ -359,7 +444,12 @@ export default {
         const body = (await request.json()) as any;
 
         if (!body.name || !body.query) {
-          return json(env, request, { status: "error", message: "Campaign name and query are required" }, 400);
+          return json(
+            env,
+            request,
+            { status: "error", message: "Campaign name and query are required" },
+            400,
+          );
         }
 
         const reqLimit = Math.min(Math.max(body.requested_limit ?? 25, 1), 50);
@@ -396,30 +486,73 @@ export default {
         const campaignId = runMatch.id;
         const userId = (await resolveUserId(request, env)) || DEFAULT_GUEST_UUID;
 
-        const campResp = await supabaseServiceRequest(env, `lead_campaigns?id=eq.${campaignId}&select=*`);
+        const campResp = await supabaseServiceRequest(
+          env,
+          `lead_campaigns?id=eq.${campaignId}&user_id=eq.${userId}&select=*`,
+        );
         let campaignObj: any = null;
         if (campResp.ok) {
           const camps = (await campResp.json()) as any[];
           if (camps.length > 0) campaignObj = camps[0];
         }
+        if (!campaignObj) {
+          return json(env, request, { status: "error", message: "Campaign not found" }, 404);
+        }
 
-        const searchMode = campaignObj?.search_mode || "smart";
+        const quotaResp = await supabaseServiceRequest(env, "rpc/reserve_lead_search", {
+          method: "POST",
+          body: JSON.stringify({ p_user_id: userId, p_requested_limit: 50 }),
+        });
+        if (!quotaResp.ok) {
+          return json(
+            env,
+            request,
+            { status: "error", message: "Unable to reserve monthly search quota" },
+            502,
+          );
+        }
+        const quotaReservation = (await quotaResp.json()) as {
+          allowed: boolean;
+          plan: "free" | "premium";
+          searches_used: number;
+          searches_limit: number;
+          leads_per_search_limit: number;
+          requested_limit: number;
+        };
+        if (!quotaReservation.allowed) {
+          return json(
+            env,
+            request,
+            {
+              status: "quota_exceeded",
+              message: `Monthly ${quotaReservation.plan} search limit reached`,
+              quota: quotaReservation,
+            },
+            429,
+          );
+        }
+
+        const searchMode = campaignObj.search_mode || "smart";
         const locations = campaignObj?.locations || ["IN", "US"];
-        const requestedLimit = campaignObj?.requested_limit || 25;
+        const requestedLimit = quotaReservation.requested_limit;
 
-        console.log(`[CAMPAIGN] campaign_id=${campaignId} | search_mode=${searchMode.toUpperCase()}`);
+        console.log(
+          `[CAMPAIGN] campaign_id=${campaignId} | plan=${quotaReservation.plan} | search_mode=${searchMode.toUpperCase()} | lead_limit=${requestedLimit}`,
+        );
 
         if (searchMode === "smart") {
           const inClause = locations.map((c: string) => `"${c.toUpperCase()}"`).join(",");
           const queryStr = campaignObj?.query?.trim() || "";
           const queryTokens = extractSearchKeywords(queryStr);
 
-          let dbPath = `companies?select=*,contacts(*)&status=eq.active&country_code=in.(${inClause})&order=lead_score.desc&limit=${requestedLimit * 2}`;
+          let dbPath = `companies?select=*,contacts(*)&status=eq.active&country_code=in.(${inClause})&order=lead_score.desc&limit=${Math.min(requestedLimit * 10, 500)}`;
           if (queryTokens.length > 0) {
-            const ilikeOrs = queryTokens.map((tok) => {
-              const kw = encodeURIComponent(`*${tok}*`);
-              return `canonical_name.ilike.${kw},normalized_name.ilike.${kw},domain.ilike.${kw},industry.ilike.${kw}`;
-            }).join(",");
+            const ilikeOrs = queryTokens
+              .map((tok) => {
+                const kw = encodeURIComponent(`*${tok}*`);
+                return `canonical_name.ilike.${kw},normalized_name.ilike.${kw},domain.ilike.${kw},industry.ilike.${kw}`;
+              })
+              .join(",");
             dbPath += `&or=(${ilikeOrs})`;
           }
 
@@ -429,45 +562,85 @@ export default {
             rawCompanies = (await dbResp.json()) as any[];
           }
 
-          const dbCompanies = rawCompanies
-            .filter((c) => !isListicleOrArticle(c.canonical_name || c.legal_name))
-            .slice(0, requestedLimit);
+          const deliveredResp = await supabaseServiceRequest(
+            env,
+            `leads?user_id=eq.${userId}&select=lead_fingerprint&lead_fingerprint=not.is.null&limit=10000`,
+          );
+          const deliveredFingerprints = new Set<string>();
+          if (deliveredResp.ok) {
+            const delivered = (await deliveredResp.json()) as Array<{ lead_fingerprint?: string }>;
+            for (const row of delivered) {
+              if (row.lead_fingerprint) deliveredFingerprints.add(row.lead_fingerprint);
+            }
+          }
+
+          const currentFingerprints = new Set<string>();
+          const freshCompanies: any[] = [];
+          for (const company of rawCompanies) {
+            if (isListicleOrArticle(company.canonical_name || company.legal_name)) continue;
+            const contacts = company.contacts || [];
+            const contact = contacts.length > 0 ? contacts[0] : null;
+            const fingerprint = await sha256Hex(leadFingerprintInput(company, contact));
+            if (deliveredFingerprints.has(fingerprint) || currentFingerprints.has(fingerprint))
+              continue;
+            currentFingerprints.add(fingerprint);
+            freshCompanies.push(company);
+            if (freshCompanies.length >= requestedLimit) break;
+          }
+          const dbCompanies = freshCompanies;
 
           if (dbCompanies && dbCompanies.length > 0) {
             try {
-              const leadsToInsert = dbCompanies.map((c: any) => {
-                const contacts = c.contacts || [];
-                const ct = contacts.length > 0 ? contacts[0] : null;
+              const leadsToInsert = await Promise.all(
+                dbCompanies.map(async (c: any) => {
+                  const contacts = c.contacts || [];
+                  const ct = contacts.length > 0 ? contacts[0] : null;
 
-                const rawPersonName = ct?.contact_name || ct?.full_name;
-                const personName = (rawPersonName && !["team", "unknown", "executive", "decision maker"].includes(rawPersonName.toLowerCase().trim())) 
-                  ? rawPersonName 
-                  : "Unknown";
+                  const rawPersonName = ct?.contact_name || ct?.full_name;
+                  const personName =
+                    rawPersonName &&
+                    !["team", "unknown", "executive", "decision maker"].includes(
+                      rawPersonName.toLowerCase().trim(),
+                    )
+                      ? rawPersonName
+                      : "Unknown";
 
-                const rawRole = ct?.title || ct?.role;
-                const personRole = (rawRole && !["executive", "decision maker"].includes(rawRole.toLowerCase().trim())) 
-                  ? rawRole 
-                  : "Unknown";
+                  const rawRole = ct?.title || ct?.role;
+                  const personRole =
+                    rawRole &&
+                    !["executive", "decision maker"].includes(rawRole.toLowerCase().trim())
+                      ? rawRole
+                      : "Unknown";
 
-                const personEmail = (ct?.email && ct.email.includes("@")) ? ct.email : null;
-                const verStatus = ct?.verification_status || (personEmail ? "verified" : "unverified");
-                const computedScore = computeICPScore(c, ct, queryTokens);
+                  const personEmail = ct?.email && ct.email.includes("@") ? ct.email : null;
+                  const verStatus =
+                    ct?.verification_status || (personEmail ? "verified" : "unverified");
+                  const computedScore = computeICPScore(c, ct, queryTokens);
+                  const leadFingerprint = await sha256Hex(leadFingerprintInput(c, ct));
 
-                const leadRecord: any = {
-                  campaign_id: campaignId,
-                  user_id: userId || DEFAULT_GUEST_UUID,
-                  company_name: c.canonical_name || c.legal_name || "B2B Company",
-                  contact_name: personName,
-                  title: personRole,
-                  email: personEmail,
-                  phone: ct?.phone || c.phone || null,
-                  website: c.domain ? `https://${c.domain.replace(/^https?:\/\//, "").replace(/^www\./, "")}` : null,
-                  confidence: computedScore,
-                  verification_status: verStatus,
-                  source_url: `Canonical DB (${c.country_code || "IN"})`,
-                };
-                return leadRecord;
-              });
+                  const leadRecord: any = {
+                    campaign_id: campaignId,
+                    user_id: userId || DEFAULT_GUEST_UUID,
+                    company_name: c.canonical_name || c.legal_name || "B2B Company",
+                    contact_name: personName,
+                    title: personRole,
+                    email: personEmail,
+                    phone: ct?.phone || c.phone || null,
+                    website: c.domain
+                      ? `https://${c.domain.replace(/^https?:\/\//, "").replace(/^www\./, "")}`
+                      : null,
+                    confidence: computedScore,
+                    verification_status: verStatus,
+                    source_url:
+                      c.source_url ||
+                      (c.domain
+                        ? `https://${c.domain}`
+                        : `registry://${c.country_code || "unknown"}`),
+                    lead_fingerprint: leadFingerprint,
+                  };
+                  return leadRecord;
+                }),
+              );
 
               await supabaseServiceRequest(env, "leads", {
                 method: "POST",
@@ -508,7 +681,10 @@ export default {
 
         let validUserId = userId;
         if (userId === DEFAULT_GUEST_UUID) {
-          const profileResp = await supabaseServiceRequest(env, "business_profiles?select=user_id&limit=1");
+          const profileResp = await supabaseServiceRequest(
+            env,
+            "business_profiles?select=user_id&limit=1",
+          );
           if (profileResp.ok) {
             const profs = (await profileResp.json()) as any[];
             if (profs.length > 0 && profs[0].user_id) {
@@ -562,7 +738,9 @@ export default {
 
         if (env.MODAL_WEBHOOK_URL) {
           try {
-            console.log(`[MODAL TRIGGER] Invoking ${env.MODAL_WEBHOOK_URL} for campaign=${campaignId}, job=${jobId}`);
+            console.log(
+              `[MODAL TRIGGER] Invoking ${env.MODAL_WEBHOOK_URL} for campaign=${campaignId}, job=${jobId}`,
+            );
             ctx.waitUntil(
               fetch(env.MODAL_WEBHOOK_URL, {
                 method: "POST",
@@ -575,19 +753,24 @@ export default {
               })
                 .then((r) => r.text())
                 .then((txt) => console.log(`[MODAL TRIGGER SUCCESS] ${txt}`))
-                .catch((err) => console.warn("Modal trigger async warning:", err))
+                .catch((err) => console.warn("Modal trigger async warning:", err)),
             );
           } catch (err) {
             console.warn("Modal trigger error:", err);
           }
         }
 
-        return json(env, request, {
-          status: "accepted",
-          campaign_id: campaignId,
-          job_id: jobId,
-          message: "Scraping pipeline started. Poll /api/jobs/:id for progress.",
-        }, 202);
+        return json(
+          env,
+          request,
+          {
+            status: "accepted",
+            campaign_id: campaignId,
+            job_id: jobId,
+            message: "Scraping pipeline started. Poll /api/jobs/:id for progress.",
+          },
+          202,
+        );
       }
 
       // DELETE /api/campaigns/:id — Delete campaign
@@ -595,16 +778,30 @@ export default {
       if (deleteCampMatch && request.method === "DELETE") {
         const userId = await resolveUserId(request, env);
         const campaignId = deleteCampMatch.id;
-        await supabaseServiceRequest(env, `leads?campaign_id=eq.${campaignId}`, { method: "DELETE" });
-        await supabaseServiceRequest(env, `scrape_jobs?campaign_id=eq.${campaignId}`, { method: "DELETE" });
-        const response = await supabaseServiceRequest(env, `lead_campaigns?id=eq.${campaignId}&user_id=eq.${userId}`, { method: "DELETE" });
-        return new Response(response.body, { status: response.status, headers: corsHeaders(env, request) });
+        await supabaseServiceRequest(env, `leads?campaign_id=eq.${campaignId}`, {
+          method: "DELETE",
+        });
+        await supabaseServiceRequest(env, `scrape_jobs?campaign_id=eq.${campaignId}`, {
+          method: "DELETE",
+        });
+        const response = await supabaseServiceRequest(
+          env,
+          `lead_campaigns?id=eq.${campaignId}&user_id=eq.${userId}`,
+          { method: "DELETE" },
+        );
+        return new Response(response.body, {
+          status: response.status,
+          headers: corsHeaders(env, request),
+        });
       }
 
       // GET /api/leads — Fetch all leads for authenticated user
       if (path === "/api/leads" && request.method === "GET") {
         const userId = (await resolveUserId(request, env)) || DEFAULT_GUEST_UUID;
-        const response = await supabaseServiceRequest(env, `leads?user_id=eq.${userId}&select=*&order=created_at.desc&limit=100`);
+        const response = await supabaseServiceRequest(
+          env,
+          `leads?user_id=eq.${userId}&select=*&order=created_at.desc&limit=100`,
+        );
         if (response.ok) {
           const leads = (await response.json()) as any[];
           if (leads && leads.length > 0) {
@@ -630,7 +827,17 @@ export default {
           leads = (await response.json()) as any[];
         }
 
-        const csvHeaders = ["Company Name", "Contact Name", "Title", "Email", "Phone", "Website", "ICP Match Score", "Verification Status", "Source URL"];
+        const csvHeaders = [
+          "Company Name",
+          "Contact Name",
+          "Title",
+          "Email",
+          "Phone",
+          "Website",
+          "ICP Match Score",
+          "Verification Status",
+          "Source URL",
+        ];
         const csvRows = [csvHeaders.join(",")];
 
         for (const l of leads) {
@@ -663,7 +870,10 @@ export default {
       const campLeadsMatch = matchRoute(path, "/api/campaigns/:id/leads");
       if (campLeadsMatch && request.method === "GET") {
         const campaignId = campLeadsMatch.id;
-        const response = await supabaseServiceRequest(env, `leads?campaign_id=eq.${campaignId}&select=*&order=created_at.desc`);
+        const response = await supabaseServiceRequest(
+          env,
+          `leads?campaign_id=eq.${campaignId}&select=*&order=created_at.desc`,
+        );
         if (response.ok) {
           const leads = (await response.json()) as any[];
           return json(env, request, leads || []);
@@ -681,7 +891,10 @@ export default {
           if (Array.isArray(jobs) && jobs.length > 0) {
             const j = jobs[0];
             if (j.status !== "completed" && j.campaign_id) {
-              const cResp = await supabaseServiceRequest(env, `lead_campaigns?id=eq.${j.campaign_id}&select=status`);
+              const cResp = await supabaseServiceRequest(
+                env,
+                `lead_campaigns?id=eq.${j.campaign_id}&select=status`,
+              );
               if (cResp.ok) {
                 const cData = (await cResp.json()) as any[];
                 if (cData.length > 0 && cData[0].status === "completed") {
@@ -709,10 +922,14 @@ export default {
 
       // 404 Fallback
       return json(env, request, { status: "error", message: "Route not found" }, 404);
-
     } catch (globalErr: any) {
       console.error("Global API Error:", globalErr);
-      return json(env, request, { status: "error", message: globalErr?.message || "Internal Server Error" }, 500);
+      return json(
+        env,
+        request,
+        { status: "error", message: globalErr?.message || "Internal Server Error" },
+        500,
+      );
     }
   },
 };

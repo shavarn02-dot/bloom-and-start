@@ -6,7 +6,9 @@
 
 import { supabase } from "@/lib/supabase";
 
-export const API_BASE = (import.meta as any).env?.VITE_API_BASE_URL || "https://leadflowx-api.sarthak2005shavarn.workers.dev";
+export const API_BASE =
+  (import.meta as any).env?.VITE_API_BASE_URL ||
+  "https://leadflowx-api.sarthak2005shavarn.workers.dev";
 
 /** Helper to attach Supabase JWT & user email to API requests for data isolation */
 export async function getAuthHeaders(): Promise<Record<string, string>> {
@@ -14,7 +16,9 @@ export async function getAuthHeaders(): Promise<Record<string, string>> {
     "Content-Type": "application/json",
   };
   try {
-    const { data: { session } } = await supabase.auth.getSession();
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
     if (session?.access_token) {
       headers["Authorization"] = `Bearer ${session.access_token}`;
     }
@@ -52,17 +56,27 @@ export interface Campaign {
   id: string;
   name: string;
   query: string;
-  status: 'draft' | 'queued' | 'running' | 'completed' | 'failed' | 'paused';
+  status: "draft" | "queued" | "running" | "completed" | "failed" | "paused";
   requested_limit: number;
   locations?: string[];
-  search_mode?: 'smart' | 'deep';
+  search_mode?: "smart" | "deep";
   created_at: string;
+}
+
+export interface SearchQuota {
+  plan: "free" | "premium";
+  searches_used: number;
+  searches_limit: number;
+  searches_remaining: number;
+  leads_per_search_limit: number;
+  monthly_leads_limit: number;
+  month: string;
 }
 
 export interface ScrapeJob {
   id: string;
   campaign_id: string;
-  status: 'queued' | 'running' | 'extracting' | 'verifying' | 'scoring' | 'completed' | 'failed';
+  status: "queued" | "running" | "extracting" | "verifying" | "scoring" | "completed" | "failed";
   progress: number;
   total_urls_found: number;
   total_urls_scraped: number;
@@ -82,8 +96,16 @@ export interface Lead {
   website?: string;
   source_url?: string;
   confidence?: number;
-  verification_status: 'unverified' | 'pending' | 'verified' | 'rejected' | 'risky' | 'stale' | 'suppressed';
+  verification_status:
+    "unverified" | "pending" | "verified" | "rejected" | "risky" | "stale" | "suppressed";
   metadata?: any;
+}
+
+/** Fetch the current user's monthly search quota. */
+export async function getSearchQuota(): Promise<SearchQuota> {
+  const resp = await authFetch(`${API_BASE}/api/quota`);
+  if (!resp.ok) throw new Error("Unable to load search quota");
+  return resp.json();
 }
 
 /** RC-A: Fetch user business profiles from Worker API */
@@ -106,7 +128,7 @@ export async function createCampaign(
   requestedLimit = 25,
   profileId?: string,
   locations: string[] = ["IN", "US"],
-  searchMode: "smart" | "deep" = "smart"
+  searchMode: "smart" | "deep" = "smart",
 ): Promise<Campaign> {
   const resp = await authFetch(`${API_BASE}/api/campaigns`, {
     method: "POST",
@@ -132,7 +154,9 @@ export async function createCampaign(
   throw new Error("Unexpected response from campaign creation");
 }
 
-export async function runCampaign(campaignId: string): Promise<{ status: string; job_id: string; leads_found?: number }> {
+export async function runCampaign(
+  campaignId: string,
+): Promise<{ status: string; job_id: string; leads_found?: number }> {
   const resp = await authFetch(`${API_BASE}/api/campaigns/${campaignId}/run`, {
     method: "POST",
   });
