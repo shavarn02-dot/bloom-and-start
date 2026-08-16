@@ -184,13 +184,12 @@ function NewCampaign() {
   useEffect(() => {
     const upgradeRequested =
       new URLSearchParams(window.location.search).get("upgrade") === "premium";
-    if (!upgradeRequested || !quota || quota.plan === "premium" || hasAutoOpenedUpgrade.current)
-      return;
+    if (!upgradeRequested || hasAutoOpenedUpgrade.current) return;
 
     hasAutoOpenedUpgrade.current = true;
     window.history.replaceState({}, "", window.location.pathname);
     void handleUpgrade();
-  }, [quota]);
+  }, []);
 
   const handleLaunch = async () => {
     if (quota && quota.searches_remaining <= 0) {
