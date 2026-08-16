@@ -63,6 +63,14 @@ export interface Campaign {
   created_at: string;
 }
 
+export interface PremiumOrder {
+  key_id: string;
+  order_id: string;
+  amount: number;
+  currency: string;
+  plan: "premium";
+}
+
 export interface SearchQuota {
   plan: "free" | "premium";
   searches_used: number;
@@ -99,6 +107,33 @@ export interface Lead {
   verification_status:
     "unverified" | "pending" | "verified" | "rejected" | "risky" | "stale" | "suppressed";
   metadata?: any;
+}
+
+/** Create a Razorpay premium order on the server. */
+export async function createPremiumOrder(): Promise<PremiumOrder> {
+  const resp = await authFetch(`${API_BASE}/api/billing/create-order`, { method: "POST" });
+  if (!resp.ok) {
+    const detail = await resp.text().catch(() => "Unable to create premium order");
+    throw new Error(detail);
+  }
+  return resp.json();
+}
+
+/** Verify Razorpay Checkout response and activate premium on the server. */
+export async function verifyPremiumPayment(payload: {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}): Promise<{ status: string; plan: "premium"; payment_id: string }> {
+  const resp = await authFetch(`${API_BASE}/api/billing/verify`, {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  if (!resp.ok) {
+    const detail = await resp.text().catch(() => "Unable to verify payment");
+    throw new Error(detail);
+  }
+  return resp.json();
 }
 
 /** Fetch the current user's monthly search quota. */
