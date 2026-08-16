@@ -38,7 +38,7 @@ const plans = [
       "Secure Razorpay checkout",
     ],
     cta: "Upgrade in dashboard",
-    href: "/app/campaigns/new" as const,
+    href: "/app/campaigns/new?upgrade=premium" as const,
     className: "border-primary/40 bg-primary/[0.04] shadow-[var(--shadow-lift)]",
     ctaClassName: "bg-foreground text-background hover:bg-foreground/90",
   },

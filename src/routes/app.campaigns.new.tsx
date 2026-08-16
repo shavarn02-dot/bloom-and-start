@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Check, Building2, Plus, Sparkles, Search, Globe } from "lucide-react";
 import { PageHeader, Panel } from "@/components/dashboard/primitives";
 import { FormSkeleton } from "@/components/dashboard/skeletons";
@@ -9,6 +9,8 @@ import {
   getJobStatus,
   getProfiles,
   getSearchQuota,
+  createPremiumOrder,
+  verifyPremiumPayment,
   ScrapeJob,
   API_BASE,
   type BusinessProfile,
@@ -59,6 +61,8 @@ function NewCampaign() {
   const [jobId, setJobId] = useState<string | null>(null);
   const [jobStatus, setJobStatus] = useState<ScrapeJob | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [isUpgrading, setIsUpgrading] = useState(false);
+  const hasAutoOpenedUpgrade = useRef(false);
 
   // Fetch profiles and current plan quota on mount
   useEffect(() => {
@@ -125,6 +129,68 @@ function NewCampaign() {
 
     return () => clearInterval(interval);
   }, [jobId, step]);
+
+  const handleUpgrade = async () => {
+    setIsUpgrading(true);
+    setError(null);
+    try {
+      const order = await createPremiumOrder();
+      const razorpayWindow = window as Window & {
+        Razorpay?: new (options: Record<string, unknown>) => { open: () => void };
+      };
+      if (!razorpayWindow.Razorpay) {
+        await new Promise<void>((resolve, reject) => {
+          const script = document.createElement("script");
+          script.src = "https://checkout.razorpay.com/v1/checkout.js";
+          script.onload = () => resolve();
+          script.onerror = () => reject(new Error("Unable to load Razorpay Checkout"));
+          document.body.appendChild(script);
+        });
+      }
+      const Checkout = razorpayWindow.Razorpay;
+      if (!Checkout) throw new Error("Razorpay Checkout is unavailable");
+      new Checkout({
+        key: order.key_id,
+        amount: order.amount,
+        currency: order.currency,
+        name: "LeadFlowX",
+        description: "Premium lead-generation plan",
+        order_id: order.order_id,
+        handler: async (response: {
+          razorpay_order_id: string;
+          razorpay_payment_id: string;
+          razorpay_signature: string;
+        }) => {
+          try {
+            await verifyPremiumPayment(response);
+            const currentQuota = await getSearchQuota();
+            setQuota(currentQuota);
+            setLimit(currentQuota.leads_per_search_limit);
+          } catch (err: any) {
+            setError(err.message || "Payment verification failed");
+          } finally {
+            setIsUpgrading(false);
+          }
+        },
+        modal: { ondismiss: () => setIsUpgrading(false) },
+        theme: { color: "#2563eb" },
+      }).open();
+    } catch (err: any) {
+      setError(err.message || "Unable to start premium checkout");
+      setIsUpgrading(false);
+    }
+  };
+
+  useEffect(() => {
+    const upgradeRequested =
+      new URLSearchParams(window.location.search).get("upgrade") === "premium";
+    if (!upgradeRequested || !quota || quota.plan === "premium" || hasAutoOpenedUpgrade.current)
+      return;
+
+    hasAutoOpenedUpgrade.current = true;
+    window.history.replaceState({}, "", window.location.pathname);
+    void handleUpgrade();
+  }, [quota]);
 
   const handleLaunch = async () => {
     if (quota && quota.searches_remaining <= 0) {
@@ -320,11 +386,24 @@ function NewCampaign() {
               />
             </div>
             {quota && (
-              <div className="rounded-md border border-border bg-muted/30 px-3 py-2 text-[12.5px] text-muted-foreground">
-                {quota.plan === "premium" ? "Premium" : "Free"} plan: {quota.searches_remaining} of{" "}
-                {quota.searches_limit} searches remaining this month, up to{" "}
-                {quota.leads_per_search_limit} unique leads per search.
-              </div>
+              <>
+                <div className="rounded-md border border-border bg-muted/30 px-3 py-2 text-[12.5px] text-muted-foreground">
+                  {quota.plan === "premium" ? "Premium" : "Free"} plan: {quota.searches_remaining}{" "}
+                  of {quota.searches_limit} searches remaining this month, up to{" "}
+                  {quota.leads_per_search_limit} unique leads per search.
+                </div>
+                {quota.plan === "free" && (
+                  <button
+                    type="button"
+                    onClick={handleUpgrade}
+                    disabled={isUpgrading}
+                    className="inline-flex items-center gap-2 rounded-md bg-primary px-3 py-2 text-[13px] font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                  >
+                    <Sparkles className="size-3.5" />
+                    {isUpgrading ? "Opening secure checkout…" : "Upgrade to Premium"}
+                  </button>
+                )}
+              </>
             )}
           </div>
         </Panel>
