@@ -27,6 +27,8 @@ export const Route = createFileRoute("/app/campaigns/")({
 function Campaigns() {
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   const loadCampaigns = async () => {
     setIsLoading(true);
@@ -49,14 +51,22 @@ function Campaigns() {
     loadCampaigns();
   }, []);
 
-  const handleDeleteCampaign = async (id: string) => {
+  const handleDeleteCampaign = async (id: string, name: string) => {
+    if (!window.confirm(`Delete “${name}”? This action cannot be undone.`)) return;
+
+    setDeletingId(id);
+    setDeleteError(null);
     try {
       const resp = await authFetch(`${API_BASE}/api/campaigns/${id}`, { method: "DELETE" });
-      if (resp.ok) {
-        setCampaigns((prev) => prev.filter((c) => c.id !== id));
+      if (!resp.ok) {
+        throw new Error(`Delete request failed with status ${resp.status}`);
       }
+      setCampaigns((prev) => prev.filter((c) => c.id !== id));
     } catch (err) {
       console.error("Failed to delete campaign:", err);
+      setDeleteError("We couldn’t delete that campaign. Please try again.");
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -73,6 +83,14 @@ function Campaigns() {
       />
 
       <Panel title="All campaigns">
+        {deleteError && (
+          <div
+            role="alert"
+            className="mx-4 mt-4 rounded-md border border-destructive/20 bg-destructive/5 px-3 py-2 text-[13px] text-destructive"
+          >
+            {deleteError}
+          </div>
+        )}
         {isLoading ? (
           <CampaignListSkeleton rows={5} />
         ) : campaigns.length === 0 ? (
@@ -140,11 +158,13 @@ function Campaigns() {
                     <td className="px-4 py-3">
                       <button
                         type="button"
-                        onClick={() => handleDeleteCampaign(c.id)}
-                        className="text-destructive hover:text-destructive/80 transition-all duration-200 hover:scale-110 p-1"
-                        title="Delete campaign"
+                        onClick={() => handleDeleteCampaign(c.id, c.name)}
+                        disabled={deletingId === c.id}
+                        className="p-1 text-destructive transition-all duration-200 hover:scale-110 hover:text-destructive/80 disabled:cursor-wait disabled:opacity-50"
+                        title={deletingId === c.id ? "Deleting campaign" : "Delete campaign"}
+                        aria-label={deletingId === c.id ? `Deleting ${c.name}` : `Delete ${c.name}`}
                       >
-                        <Trash2 className="size-4" />
+                        <Trash2 className={`size-4 ${deletingId === c.id ? "animate-pulse" : ""}`} />
                       </button>
                     </td>
                   </tr>
