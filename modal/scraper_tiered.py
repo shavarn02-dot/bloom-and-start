@@ -38,11 +38,12 @@ logger = logging.getLogger("scraper")
 
 @dataclass
 class ExtractedContact:
-    """A single contact person found on a page."""
+    """A single contact person explicitly found on a public page."""
     name: str = ""
     title: str = ""
     email: str = ""
     phone: str = ""
+    source_url: str = ""
 
 @dataclass
 class ExtractedCompany:
@@ -162,7 +163,7 @@ def _extract_company_from_html(html: str, url: str) -> ExtractedCompany:
     ][:10]  # max 10 phones
 
     # Try to extract structured contact data (common patterns)
-    company.contacts = _extract_contacts_from_soup(soup)
+    company.contacts = _extract_contacts_from_soup(soup, url)
 
     # Determine page type from URL
     path = urlparse(url).path.lower()
@@ -182,8 +183,8 @@ def _extract_company_from_html(html: str, url: str) -> ExtractedCompany:
     return company
 
 
-def _extract_contacts_from_soup(soup: BeautifulSoup) -> list[ExtractedContact]:
-    """Try to extract individual contacts from structured HTML."""
+def _extract_contacts_from_soup(soup: BeautifulSoup, source_url: str = "") -> list[ExtractedContact]:
+    """Extract only contacts explicitly represented in structured page content."""
     contacts = []
 
     # Strategy 1: Look for team member cards (common patterns)
@@ -214,6 +215,7 @@ def _extract_contacts_from_soup(soup: BeautifulSoup) -> list[ExtractedContact]:
                 contact.email = email_link["href"].replace("mailto:", "").split("?")[0].strip()
 
             if contact.name:
+                contact.source_url = source_url
                 contacts.append(contact)
 
     return contacts
@@ -563,8 +565,9 @@ async def scrape_company(url: str) -> ExtractedCompany:
     # Deduplicate contacts by name
     seen_names = set()
     for c in all_contacts:
-        if c.name and c.name not in seen_names:
-            seen_names.add(c.name)
+        dedup_key = (c.name.strip().lower(), c.email.strip().lower())
+        if c.name and dedup_key not in seen_names:
+            seen_names.add(dedup_key)
             merged.contacts.append(c)
 
     return merged

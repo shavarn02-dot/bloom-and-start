@@ -4,7 +4,7 @@ import { Download, Search, RefreshCw, Loader2 } from "lucide-react";
 import { PageHeader, Panel } from "@/components/dashboard/primitives";
 import { TableSkeleton, MobileCardSkeleton } from "@/components/dashboard/skeletons";
 import { LeadTable, MatchBadge, StatusPill } from "@/components/leadgen/product";
-import { exampleLeads, type ExampleLead, type VerificationStatus } from "@/data/example";
+import { type ExampleLead, type VerificationStatus } from "@/data/example";
 import { getCampaignLeads, authFetch, API_BASE, Lead } from "@/lib/api";
 import {
   Sheet,
@@ -76,8 +76,10 @@ function Leads() {
             explicitVer = "Suppressed";
           }
 
-          const rawConf = Number(l.confidence || 85);
-          const matchVal = Math.min(100, Math.round(rawConf > 100 ? rawConf / 100 : rawConf));
+          const rawConf = Number(l.confidence);
+          const matchVal = Number.isFinite(rawConf)
+            ? Math.min(100, Math.max(0, Math.round(rawConf > 100 ? rawConf / 100 : rawConf)))
+            : 0;
           
           // Clean listicle page titles into neat company names
           let rawComp = l.company_name || l.canonical_name || "";
@@ -93,10 +95,10 @@ function Leads() {
           }
           if (rawComp.toLowerCase().includes("startups india")) rawComp = "Startups India";
           if (rawComp.length > 50) rawComp = rawComp.slice(0, 48) + "...";
-          const compName = rawComp || "Target Business";
+          const compName = rawComp || "Unnamed company";
           
           // Truthful location formatting
-          let locStr = "India";
+          let locStr = "Not published";
           const cc = String(l.country_code || "").toUpperCase();
           if (cc === "IN") locStr = "India";
           else if (cc === "US") locStr = "United States";
@@ -104,7 +106,7 @@ function Leads() {
           else if (cc === "AU") locStr = "Australia";
           else if (cc === "FR") locStr = "France";
           else if (cc) locStr = cc;
-          else locStr = l.city || "India";
+          else locStr = l.city || "Not published";
 
           // Truthful Contact Name & Role (No Fabricated "Team" or "Executive")
           const rawContact = l.contact_name || l.full_name;
@@ -126,14 +128,14 @@ function Leads() {
             lastName: last,
             role: roleStr,
             company: compName,
-            industry: l.industry || "B2B / Services",
-            companySize: "10-100",
+            industry: l.industry || "Not published",
+            companySize: l.company_size || l.size || "Not published",
             location: locStr,
-            email: l.email || "N/A",
+            email: l.email || "Not published",
             emailStatus: explicitVer,
             phone: l.phone || "",
             match: matchVal,
-            source: l.source_url || l.website || "Official Data Registry",
+            source: l.source_url || l.website || "No source recorded",
             status: "New",
           };
         });

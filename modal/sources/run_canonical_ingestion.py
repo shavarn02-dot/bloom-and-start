@@ -84,7 +84,7 @@ async def run_canonical_ingestion():
         # 1. Upsert Company into public.companies
         try:
             comp_payload = {
-                "canonical_name": comp.get("canonical_name", "Unknown Company"),
+                "canonical_name": comp.get("canonical_name"),
                 "legal_name": comp.get("legal_name", comp.get("canonical_name")),
                 "normalized_name": comp.get("normalized_name", comp.get("canonical_name", "").lower()),
                 "country_code": comp.get("country_code", "IN"),
@@ -92,7 +92,7 @@ async def run_canonical_ingestion():
                 "city": comp.get("city"),
                 "postal_code": comp.get("postal_code"),
                 "address": comp.get("address"),
-                "domain": comp.get("domain") or f"{comp.get('normalized_name', 'co').replace(' ', '')}.com",
+                "domain": comp.get("domain"),
                 "phone": comp.get("phone"),
                 "industry": comp.get("industry", "General Business"),
                 "registration_id": comp.get("registration_id"),
@@ -105,18 +105,18 @@ async def run_canonical_ingestion():
             created_comp = _supabase_request("companies", method="POST", body=comp_payload)
             comp_id = created_comp[0]["id"] if isinstance(created_comp, list) and created_comp else None
 
-            if comp_id:
-                # 2. Insert Contact into public.contacts
+            if comp_id and (comp.get("phone") or comp.get("email") or comp.get("contact_name")):
+                # 2. Insert only contact fields explicitly supplied by the source adapter.
                 contact_payload = {
                     "company_id": comp_id,
-                    "full_name": f"{comp.get('canonical_name', 'Company')} Executive",
-                    "contact_name": f"{comp.get('canonical_name', 'Company')} Executive",
-                    "role": "Executive",
-                    "title": "Director / Executive",
-                    "email": f"contact@{comp_payload['domain']}",
+                    "full_name": comp.get("contact_name"),
+                    "contact_name": comp.get("contact_name"),
+                    "role": comp.get("title"),
+                    "title": comp.get("title"),
+                    "email": comp.get("email"),
                     "phone": comp.get("phone"),
-                    "confidence": 90,
-                    "verification_status": "verified",
+                    "confidence": 60 if comp.get("email") or comp.get("phone") else 40,
+                    "verification_status": "unverified",
                     "is_public_business_contact": True
                 }
                 _supabase_request("contacts", method="POST", body=contact_payload)

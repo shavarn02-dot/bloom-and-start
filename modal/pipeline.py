@@ -135,7 +135,7 @@ async def run_campaign(campaign_id: str, job_id: str):
     sys.path.insert(0, "/root")
 
     from ai_router import call_ai_json, TaskType, get_usage_stats
-    from email_engine import generate_email_patterns, verify_emails_batch
+    from email_engine import verify_emails_batch
     from scraper_tiered import search_duckduckgo, scrape_company, ExtractedCompany
     from lead_scorer import score_leads_batch, ICPProfile, LeadData, deduplicate_leads
 
@@ -248,7 +248,7 @@ Return ONLY a JSON array of search query strings. Example: ["marketing agencies 
                 if comp_name:
                     all_companies.append(ExtractedCompany(
                         company_name=comp_name,
-                        website=f"https://{rec.get('domain')}" if rec.get("domain") else f"https://{rec.get('normalized_name')}.org",
+                        website=f"https://{rec.get('domain')}" if rec.get("domain") else "",
                         source_url=f"registry://{rec.get('_source_key', 'approved_source')}",
                         description=f"Approved Corporate Registry Record ({rec.get('country_code', 'IN')})",
                     ))
@@ -283,8 +283,6 @@ Return ONLY a JSON array of search query strings. Example: ["marketing agencies 
         raw_leads: list[LeadData] = []
 
         for company in scraped_companies:
-            domain = company.website.replace("https://", "").replace("http://", "").replace("www.", "").split("/")[0]
-
             for contact in company.contacts:
                 lead = LeadData(
                     company_name=company.company_name,
@@ -293,16 +291,11 @@ Return ONLY a JSON array of search query strings. Example: ["marketing agencies 
                     email=contact.email,
                     phone=contact.phone or (company.phones[0] if company.phones else ""),
                     website=company.website,
-                    source_url=company.source_url or company.website,
+                    source_url=contact.source_url or company.source_url or company.website,
                     description=company.description,
                 )
-                if not lead.email and contact.name and domain:
-                    parts = contact.name.split()
-                    if len(parts) >= 2:
-                        patterns = generate_email_patterns(parts[0], parts[-1], domain)
-                        if patterns:
-                            lead.email = patterns[0]
-
+                # Never infer a personal email from a person's name. Store only
+                # contact details explicitly published on the source page.
                 raw_leads.append(lead)
 
             if not company.contacts and company.emails:
@@ -378,7 +371,10 @@ Return ONLY a JSON array of search query strings. Example: ["marketing agencies 
             ld = s.lead
             ev = ld.email_verification
             v_status = _map_verification_status(ev)
-            comp_name = ld.company_name or "Unknown Company"
+            comp_name = ld.company_name.strip()
+            if not comp_name:
+                logger.info("Skipping lead without a source-backed company name")
+                continue
 
             # 1. Canonical Company Insertion/Upsert
             comp_id = None
@@ -392,9 +388,9 @@ Return ONLY a JSON array of search query strings. Example: ["marketing agencies 
                     "country_code": "IN",
                     "domain": domain_val,
                     "status": "active",
-                    "lead_score": 85.00,
-                    "freshness_score": 100.00,
-                    "contact_completeness_score": 90.00,
+                    "lead_score": float(s.total_score),
+                    "freshness_score": 100.00 if ld.source_url else 0.00,
+                    "contact_completeness_score": _contact_completeness(ld),
                 }).execute()
                 if c_res.data and len(c_res.data) > 0:
                     comp_id = c_res.data[0].get("id")
@@ -406,11 +402,11 @@ Return ONLY a JSON array of search query strings. Example: ["marketing agencies 
                 try:
                     sb.table("contacts").insert({
                         "company_id": comp_id,
-                        "full_name": ld.contact_name or "Decision Maker",
-                        "role": ld.title or "Executive",
+                        "full_name": ld.contact_name or None,
+                        "role": ld.title or None,
                         "email": ld.email or None,
                         "phone": ld.phone or None,
-                        "confidence": 90.00,
+                        "confidence": _contact_confidence(ld),
                         "status": "active",
                         "verification_method": "smtp" if v_status == "verified" else "unverified",
                     }).execute()
@@ -418,13 +414,14 @@ Return ONLY a JSON array of search query strings. Example: ["marketing agencies 
                     logger.warning(f"Canonical contact insert notice: {ct_err}")
 
             # 3. Company Source Provenance Insertion
-            if comp_id:
+            source_url = ld.source_url or ld.website
+            if comp_id and source_url:
                 try:
                     sb.table("company_sources").insert({
                         "company_id": comp_id,
-                        "source_url": ld.source_url or ld.website or "https://web.crawl",
+                        "source_url": source_url,
                         "source_status": "active",
-                        "confidence": 90.00,
+                        "confidence": _source_confidence(ld),
                     }).execute()
                 except Exception as cs_err:
                     logger.warning(f"Company source provenance insert notice: {cs_err}")
@@ -443,7 +440,15 @@ Return ONLY a JSON array of search query strings. Example: ["marketing agencies 
                 "source_type": "public_web",
                 "confidence": float(s.total_score),
                 "verification_status": v_status,
-                "metadata": {"breakdown": s.breakdown} if s.breakdown else {},
+                "metadata": {
+                    "breakdown": s.breakdown,
+                    "provenance": {
+                        "source_url": ld.source_url or None,
+                        "email_explicitly_published": bool(ld.email),
+                        "email_inferred": False,
+                        "phone_explicitly_published": bool(ld.phone),
+                    },
+                },
             }
             leads_to_insert.append(lead_record)
 
@@ -495,6 +500,29 @@ Return ONLY a JSON array of search query strings. Example: ["marketing agencies 
             logger.error(f"Failed to update status on error: {update_err}")
 
         raise
+
+
+def _contact_completeness(ld) -> float:
+    """Score only fields actually present in the source-backed lead."""
+    fields = [ld.contact_name, ld.title, ld.email, ld.phone, ld.website, ld.source_url]
+    return round(sum(bool(value) for value in fields) / len(fields) * 100, 2)
+
+
+def _contact_confidence(ld) -> float:
+    """Return a conservative confidence score without treating guesses as facts."""
+    score = 20.0 if ld.source_url else 0.0
+    score += 25.0 if ld.contact_name else 0.0
+    score += 15.0 if ld.title else 0.0
+    score += 20.0 if ld.email else 0.0
+    score += 20.0 if ld.phone else 0.0
+    return min(score, 100.0)
+
+
+def _source_confidence(ld) -> float:
+    """Registry or page provenance is stronger than an unreferenced record."""
+    if not ld.source_url:
+        return 0.0
+    return 100.0 if ld.source_url.startswith("registry://") else 85.0
 
 
 def _map_verification_status(ev: dict) -> str:

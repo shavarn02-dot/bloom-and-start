@@ -56,7 +56,8 @@ class USASECAdapter(SourceAdapter):
                         "country": "US",
                         "status": "Active",
                         "sec_url": f"https://www.sec.gov/edgar/browse/?CIK={cik_str}",
-                        "website": f"https://www.{ticker.lower()}.com" if ticker else None
+                        # EDGAR does not provide a company website; do not guess one from a ticker.
+                        "website": None
                     })
                 return records
         except Exception as e:
